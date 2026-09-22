@@ -1,0 +1,15 @@
+{
+  "name": "control-fallas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Control de fallas técnicas y sus soluciones para maquinaria industrial",
+  "scripts": {
+    "instalar": "npm --prefix backend install && npm --prefix frontend-angular install",
+    "seed": "npm --prefix backend run seed",
+    "seed:reset": "npm --prefix backend run seed -- --reset",
+    "dev": "node dev.mjs",
+    "build": "npm --prefix frontend-angular run build",
+    "start": "npm --prefix backend start",
+    "test": "npm --prefix frontend-angular test"
+  }
+}

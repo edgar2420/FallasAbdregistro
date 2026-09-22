@@ -1,0 +1,479 @@
+.page-content {
+  padding-top: 26px;
+  flex: 1;
+}
+
+.page-content > h1,
+.module-title h1 {
+  font-size: 34px;
+  margin: 8px 0;
+}
+
+.module-title {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.module-title p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  max-width: 62ch;
+}
+
+/* ---------------------------------------------------------------- tarjetas */
+
+.module-card {
+  padding: 22px;
+  margin: 14px 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+
+.module-card h2 {
+  font-size: 22px;
+  margin: 0 0 8px;
+}
+
+.module-card > p {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.module-grid .module-card {
+  margin: 0;
+}
+
+.machine-card,
+.solution-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 168px;
+  transition: border-color var(--step);
+}
+
+.machine-card:hover,
+.solution-card:hover {
+  border-color: var(--line-strong);
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.machine-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-sm);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  font-size: 18px;
+}
+
+.machine-card h2,
+.solution-card h2 {
+  font-size: 19px;
+  margin: 0;
+}
+
+.machine-card small {
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.solution-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--ok-tint);
+  color: var(--ok-text);
+  font-size: 15px;
+}
+
+.solution-mark.pending {
+  background: var(--warn-tint);
+  color: var(--warn-text);
+}
+
+.solution-body {
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.machine-failures {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.machine-failures p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.link-button {
+  margin-top: auto;
+  padding: 10px 0 0;
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.link-button:hover {
+  color: var(--accent-hover);
+}
+
+/* ------------------------------------------------------------------ tablas */
+
+.table-card {
+  padding: 8px 22px 14px;
+}
+
+.table-head,
+.table-row {
+  display: grid;
+  grid-template-columns: 100px minmax(160px, 1fr) 110px 120px 150px;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.table-head {
+  position: sticky;
+  top: 74px;
+  z-index: 1;
+  background: var(--surface);
+  color: var(--faint);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.table-head.table-4,
+.table-row.table-4 {
+  grid-template-columns: minmax(120px, 1fr) 130px minmax(140px, 1.4fr) 160px;
+}
+
+.table-row {
+  font-size: 12px;
+  transition: background var(--step);
+}
+
+.table-row:hover {
+  background: var(--surface-2);
+}
+
+.table-row:last-child {
+  border-bottom: 0;
+}
+
+.subline {
+  display: block;
+  margin-top: 5px;
+  color: var(--faint);
+  font-size: 11px;
+}
+
+/* ------------------------------------------------------------------ chips */
+
+.tag,
+.priority {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  color: var(--text-soft);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.tag.green,
+.priority.green {
+  background: var(--ok-tint);
+  color: var(--ok-text);
+}
+
+.priority.red {
+  background: var(--crit-tint);
+  color: var(--crit-text);
+}
+
+.priority.orange {
+  background: var(--warn-tint);
+  color: var(--warn-text);
+}
+
+/* ------------------------------------------------------- campos y acciones */
+
+input,
+select,
+textarea {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  padding: 9px 11px;
+  font-size: 12px;
+  outline: 0;
+  transition: border-color var(--step), box-shadow var(--step);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: var(--ring);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--faint);
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.row-actions button,
+.user-row > button {
+  padding: 7px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-soft);
+  font-size: 11px;
+  font-weight: 600;
+  transition: background var(--step), color var(--step), border-color var(--step);
+}
+
+.row-actions button:hover,
+.user-row > button:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.row-actions .danger {
+  color: var(--crit-text);
+}
+
+.row-actions .danger:hover {
+  background: var(--crit-tint);
+  border-color: var(--crit);
+  color: var(--crit-text);
+}
+
+.filter-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 18px;
+}
+
+.filter-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.filter-row span {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.crud-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.crud-grid label,
+.module-card > label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.crud-grid .wide {
+  grid-column: 1 / -1;
+}
+
+.crud-grid textarea,
+.module-card > label textarea {
+  min-height: 78px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.check-label {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  align-self: end;
+  padding-bottom: 9px;
+}
+
+.check-label input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+/* ------------------------------------------------------- mensajes y estados */
+
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 11px 14px;
+  border: 1px solid var(--crit);
+  border-left-width: 3px;
+  border-radius: var(--r-sm);
+  background: var(--crit-tint);
+  color: var(--crit-text);
+  font-size: 13px;
+}
+
+.muted {
+  padding: 18px 10px;
+  color: var(--faint);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------ usuarios */
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.user-row:last-child {
+  border-bottom: 0;
+}
+
+.user-row > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-row strong {
+  display: block;
+  font-size: 13px;
+}
+
+.user-row small {
+  display: block;
+  margin-top: 4px;
+  color: var(--faint);
+  font-size: 11px;
+}
+
+@media (max-width: 900px) {
+  .table-head,
+  .table-row {
+    grid-template-columns: 90px minmax(120px, 1fr) 110px;
+  }
+
+  .table-head span:nth-child(4),
+  .table-head span:nth-child(5),
+  .table-row > .tag {
+    display: none;
+  }
+
+  .table-row .row-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .module-title {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .crud-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .table-head {
+    display: none;
+  }
+
+  .table-row {
+    grid-template-columns: 90px minmax(0, 1fr);
+    row-gap: 8px;
+  }
+
+  .table-row > .priority {
+    grid-column: 1;
+  }
+
+  .module-card {
+    padding: 16px;
+  }
+
+  .table-card {
+    padding: 8px 16px 12px;
+  }
+
+  .user-row {
+    flex-wrap: wrap;
+  }
+}

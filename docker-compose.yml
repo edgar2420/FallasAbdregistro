@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: control_fallas
+      POSTGRES_USER: fallas_app
+      POSTGRES_PASSWORD: cambia_esta_clave
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  backend:
+    build: ./backend
+    environment:
+      PORT: 4010
+      DATABASE_URL: postgresql://fallas_app:cambia_esta_clave@postgres:5432/control_fallas
+    depends_on:
+      - postgres
+    ports:
+      - "4010:4010"
+volumes:
+  postgres_data:

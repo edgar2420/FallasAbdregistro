@@ -1,0 +1,105 @@
+@if (!logged()) {
+  <main class="login-shell">
+    <section class="login-card">
+      <div class="brand-mark">CF</div>
+      <span class="eyebrow">Planta industrial</span>
+      <h1>Control de Fallas</h1>
+      <p>Centro operativo para consultar, registrar y resolver incidentes de maquinaria.</p>
+
+      <form (submit)="$event.preventDefault(); iniciar()">
+        <label>
+          Usuario
+          <input
+            name="usuario"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+            required
+            [value]="login().usuario"
+            (input)="cambiar('usuario', $any($event.target).value)">
+        </label>
+        <label>
+          Contraseña
+          <input
+            type="password"
+            name="password"
+            autocomplete="current-password"
+            required
+            [value]="login().password"
+            (input)="cambiar('password', $any($event.target).value)">
+        </label>
+        <button class="primary" type="submit" [disabled]="busy">
+          {{ busy ? 'Validando…' : 'Ingresar al sistema' }}
+        </button>
+      </form>
+
+      @if (error) {
+        <p class="form-error" role="alert">{{ error }}</p>
+      }
+      <small>Acceso administrado por el responsable del sistema</small>
+    </section>
+  </main>
+} @else {
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark small">CF</div>
+        <div>
+          <strong>Control de Fallas</strong>
+          <span>Dragon Operations</span>
+        </div>
+      </div>
+
+      <nav aria-label="Secciones">
+        <a routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page"
+           [routerLinkActiveOptions]="{ exact: true }">
+          <svg class="icon" aria-hidden="true"><use href="#i-board"></use></svg>Tablero
+        </a>
+        <a routerLink="/fallas" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>Fallas
+        </a>
+        <a routerLink="/maquinaria" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <svg class="icon" aria-hidden="true"><use href="#i-machine"></use></svg>Maquinaria
+        </a>
+        <a routerLink="/soluciones" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg>Soluciones
+        </a>
+        @if (api.usuario()?.rol === 'admin') {
+          <a routerLink="/usuarios" routerLinkActive="active" ariaCurrentWhenActive="page">
+            <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg>Usuarios
+          </a>
+        }
+      </nav>
+
+      <div class="sidebar-bottom">
+        <span class="online-dot"></span>Sesión activa
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <span class="eyebrow">Control de fallas / Planta</span>
+        <div class="profile">
+          <div class="avatar" aria-hidden="true">{{ iniciales() }}</div>
+          <div>
+            <strong>{{ api.usuario()?.nombre }}</strong>
+            <span>{{ api.usuario()?.rol === 'admin' ? 'Administrador' : 'Operador' }}</span>
+          </div>
+          <button class="icon-button" type="button" title="Cerrar sesión" aria-label="Cerrar sesión"
+                  (click)="salir()">
+            <svg class="icon" aria-hidden="true"><use href="#i-logout"></use></svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="page-content">
+        <router-outlet />
+      </section>
+
+      <footer>
+        <span>Desarrollo de sistema <strong>Ing. Edgar Rojas Apaza</strong></span>
+        <span>Recolección de datos <strong>Ing. Airton Junior Gonzales Ramos</strong></span>
+      </footer>
+    </main>
+  </div>
+}
