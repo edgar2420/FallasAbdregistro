@@ -1,8 +1,8 @@
 @if (!logged()) {
   <main class="login-shell">
     <section class="login-card">
-      <div class="brand-mark">CF</div>
-      <span class="eyebrow">Planta industrial</span>
+      <div class="brand-mark"><svg class="logo" aria-hidden="true"><use href="#i-logo"></use></svg></div>
+      <span class="eyebrow">Laboratorios ABD</span>
       <h1>Control de Fallas</h1>
       <p>Centro operativo para consultar, registrar y resolver incidentes de maquinaria.</p>
 
@@ -42,7 +42,7 @@
 } @else if (api.debeCambiar()) {
   <main class="login-shell">
     <section class="login-card">
-      <div class="brand-mark">CF</div>
+      <div class="brand-mark"><svg class="logo" aria-hidden="true"><use href="#i-logo"></use></svg></div>
       <span class="eyebrow">Primer ingreso</span>
       <h1>Cambia tu contraseña</h1>
       <p>Hola {{ api.usuario()?.nombre }}. Elige una contraseña personal para continuar.</p>
@@ -52,57 +52,71 @@
   </main>
 } @else {
   <div class="app-shell" [class.menu-abierto]="menuMovil()">
-    <aside class="sidebar" id="menu-lateral">
+    <aside class="sidebar" id="menu-lateral" aria-label="Menú principal">
       <div class="brand">
-        <div class="brand-mark small">CF</div>
+        <div class="brand-mark small"><svg class="logo" aria-hidden="true"><use href="#i-logo"></use></svg></div>
         <div class="nav-texto">
-          <strong>Control de Fallas</strong>
-          <span>Dragon Operations</span>
+          <strong>Laboratorios ABD</strong>
+          <span>Control de Fallas</span>
         </div>
       </div>
+      <button type="button" class="menu-plegar" aria-controls="menu-lateral" [attr.aria-expanded]="!menuCerrado()"
+              [attr.aria-label]="menuCerrado() ? 'Expandir menú' : 'Contraer menú'"
+              [title]="(menuCerrado() ? 'Expandir menú' : 'Contraer menú') + ' (Ctrl+B)'" (click)="alternarMenu()">
+        <svg class="icon" aria-hidden="true"><use href="#i-chevron-l"></use></svg>
+      </button>
 
+      <span class="nav-seccion">Principal</span>
       <nav aria-label="Secciones">
-        <a routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page"
+        <a routerLink="/" data-sec="tablero" routerLinkActive="active" ariaCurrentWhenActive="page"
            [routerLinkActiveOptions]="{ exact: true }"
-           [attr.title]="menuCerrado() ? 'Tablero' : null" (click)="menuMovil.set(false)">
-          <svg class="icon" aria-hidden="true"><use href="#i-board"></use></svg><span class="nav-texto">Tablero</span>
+           (click)="menuMovil.set(false)">
+          <span class="nav-icono"><svg class="icon" aria-hidden="true"><use href="#i-board"></use></svg></span>
+          <span class="nav-texto">Tablero</span>
+          <span class="nav-tip" aria-hidden="true">Tablero</span>
         </a>
-        <a routerLink="/fallas" routerLinkActive="active" ariaCurrentWhenActive="page"
-           [attr.title]="menuCerrado() ? 'Fallas' : null" (click)="menuMovil.set(false)">
-          <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg><span class="nav-texto">Fallas</span>
+        <a routerLink="/fallas" data-sec="fallas" routerLinkActive="active" ariaCurrentWhenActive="page"
+           (click)="menuMovil.set(false)">
+          <span class="nav-icono"><svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg></span>
+          <span class="nav-texto">Fallas</span>
+          <span class="nav-tip" aria-hidden="true">Fallas</span>
         </a>
-        <a routerLink="/maquinaria" routerLinkActive="active" ariaCurrentWhenActive="page"
-           [attr.title]="menuCerrado() ? 'Maquinaria' : null" (click)="menuMovil.set(false)">
-          <svg class="icon" aria-hidden="true"><use href="#i-machine"></use></svg><span class="nav-texto">Maquinaria</span>
+        <a routerLink="/maquinaria" data-sec="maquinaria" routerLinkActive="active" ariaCurrentWhenActive="page"
+           (click)="menuMovil.set(false)">
+          <span class="nav-icono"><svg class="icon" aria-hidden="true"><use href="#i-machine"></use></svg></span>
+          <span class="nav-texto">Maquinaria</span>
+          <span class="nav-tip" aria-hidden="true">Maquinaria</span>
         </a>
-        @if (api.esAdmin()) {
-          <a routerLink="/usuarios" routerLinkActive="active" ariaCurrentWhenActive="page"
-             [attr.title]="menuCerrado() ? 'Usuarios' : null" (click)="menuMovil.set(false)">
-            <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg><span class="nav-texto">Usuarios</span>
-          </a>
-        }
       </nav>
+      @if (api.esAdmin()) {
+        <span class="nav-seccion">Administración</span>
+        <nav aria-label="Administración">
+          <a routerLink="/usuarios" data-sec="usuarios" routerLinkActive="active" ariaCurrentWhenActive="page"
+             (click)="menuMovil.set(false)">
+            <span class="nav-icono"><svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg></span>
+            <span class="nav-texto">Usuarios</span>
+            <span class="nav-tip" aria-hidden="true">Usuarios</span>
+          </a>
+        </nav>
+      }
 
-      <div class="sidebar-bottom">
-        <button type="button" class="menu-plegar" aria-controls="menu-lateral" [attr.aria-expanded]="!menuCerrado()"
-                [title]="menuCerrado() ? 'Expandir menú' : 'Contraer menú'" (click)="alternarMenu()">
-          <svg class="icon" aria-hidden="true"><use href="#i-chevron"></use></svg>
-          <span class="nav-texto">Contraer menú</span>
-        </button>
+      <div class="sidebar-bottom" [attr.title]="menuCerrado() ? 'Conectado · ' + (api.esAdmin() ? 'Administrador' : 'Operador') : null">
+        <span class="online-dot" aria-hidden="true"></span>
+        <span class="nav-texto">Conectado · {{ api.esAdmin() ? 'Administrador' : 'Operador' }}</span>
       </div>
     </aside>
     @if (menuMovil()) {
       <div class="menu-fondo" aria-hidden="true" (click)="menuMovil.set(false)"></div>
     }
 
-    <main class="workspace">
+    <main class="workspace" [attr.data-seccion]="seccion()">
       <header class="topbar">
         <div class="topbar-izq">
           <button class="icon-button menu-movil" type="button" aria-label="Abrir menú" aria-controls="menu-lateral"
                   [attr.aria-expanded]="menuMovil()" (click)="menuMovil.set(true)">
             <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
           </button>
-          <span class="eyebrow">Control de fallas / Planta</span>
+          <span class="eyebrow">Laboratorios ABD / Control de fallas</span>
         </div>
         <div class="profile">
           <a class="profile-link" routerLink="/cuenta" title="Mi cuenta">

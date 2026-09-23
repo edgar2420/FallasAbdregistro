@@ -135,3 +135,27 @@ export function slugCategoria(c: string | null | undefined) {
     .toLowerCase()
     .split(/[\s/(]/)[0];
 }
+
+/* ---------------- Color por departamento ---------------- */
+
+/** Paleta de departamentos: tonos bien distintos entre sí y legibles en claro y oscuro. */
+const PALETA_DEPARTAMENTOS = ['#3b82f6', '#14b8a6', '#8b5cf6', '#f59e0b', '#f43f5e', '#10b981', '#0ea5e9', '#d946ef'];
+const DEPARTAMENTOS_CONOCIDOS: Record<string, string> = {
+  produccion: '#3b82f6',
+  'servicios de apoyo': '#14b8a6',
+  acondicionamiento: '#8b5cf6',
+  mantenimiento: '#f59e0b',
+  calidad: '#10b981',
+  'control de calidad': '#10b981',
+  almacen: '#0ea5e9',
+};
+
+/** Color fijo para cada departamento: el mismo nombre siempre da el mismo color. */
+export function colorDepartamento(nombre: string | null | undefined) {
+  const clave = (nombre ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+  if (!clave) return '#94a3b8';
+  if (DEPARTAMENTOS_CONOCIDOS[clave]) return DEPARTAMENTOS_CONOCIDOS[clave];
+  let h = 0;
+  for (const c of clave) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return PALETA_DEPARTAMENTOS[h % PALETA_DEPARTAMENTOS.length];
+}

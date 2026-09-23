@@ -1,5 +1,7 @@
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { Api } from './api';
 import { CambiarPassword } from './componentes/cambiar-password';
 import { VerClave } from './componentes/ver-clave';
@@ -24,8 +26,16 @@ export class App {
   protected readonly menuCerrado = signal(document.documentElement.dataset['menu'] === 'cerrado');
   /** Menú abierto como cajón (pantallas chicas). */
   protected readonly menuMovil = signal(false);
+  /** Sección visible (tablero, fallas, maquinaria, usuarios, cuenta): define el color de la página. */
+  protected readonly seccion = signal('tablero');
   protected error = '';
   protected busy = false;
+
+  constructor() {
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd), takeUntilDestroyed())
+      .subscribe((e) => this.seccion.set(e.urlAfterRedirects.split(/[/?#]/)[1] || 'tablero'));
+  }
 
   async iniciar() {
     const { usuario, password } = this.login();
@@ -73,6 +83,15 @@ export class App {
     } catch {
       /* sin almacenamiento el estado dura lo que la pestaña */
     }
+  }
+
+  /** Ctrl+B (o ⌘+B) contrae o expande el menú, como en otros editores. */
+  @HostListener('document:keydown.control.b', ['$event'])
+  @HostListener('document:keydown.meta.b', ['$event'])
+  atajoMenu(evento: Event) {
+    if (!this.logged()) return;
+    evento.preventDefault();
+    this.alternarMenu();
   }
 
   @HostListener('document:keydown.escape')
