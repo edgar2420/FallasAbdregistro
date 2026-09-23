@@ -1,0 +1,413 @@
+/* ================================================================ menú lateral
+ * Expandido (256 px) o contraído a íconos (76 px, se recuerda en el navegador; Ctrl+B).
+ * En pantallas chicas es un cajón que se abre con el botón ☰ de la barra superior.
+ */
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: var(--sidebar-w);
+  height: 100vh;
+  padding: 18px 12px 16px;
+  border-right: 1px solid var(--side-line);
+  background: linear-gradient(180deg, var(--side-bg) 0%, var(--side-bg-2) 100%);
+  color: var(--side-text);
+  transition: width 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:root[data-menu='cerrado'] {
+  --sidebar-w: 76px;
+}
+
+.sidebar .nav-texto {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---- marca ---- */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 44px;
+  padding: 0 6px 18px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--side-line);
+}
+
+.sidebar .brand-mark {
+  flex: none;
+  background: linear-gradient(135deg, var(--side-brand), var(--side-marker));
+  box-shadow: 0 4px 14px rgb(42 138 200 / 35%);
+}
+
+.brand strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.brand span {
+  display: block;
+  margin-top: 2px;
+  color: var(--side-muted);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+}
+
+/* ---- botón circular para contraer / expandir, sobre el borde ---- */
+
+.menu-plegar {
+  position: absolute;
+  top: 31px;
+  right: -13px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--step), color var(--step), border-color var(--step), transform var(--step);
+}
+
+.menu-plegar:hover,
+.menu-plegar:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  transform: scale(1.08);
+}
+
+.menu-plegar .icon {
+  stroke-width: 2.2;
+  transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:root[data-menu='cerrado'] .menu-plegar .icon {
+  transform: rotate(180deg);
+}
+
+/* ---- secciones y enlaces ---- */
+
+.nav-seccion {
+  display: block;
+  padding: 6px 10px 8px;
+  color: var(--side-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.nav-seccion + nav,
+nav + .nav-seccion {
+  margin-top: 2px;
+}
+
+nav + .nav-seccion {
+  margin-top: 16px;
+}
+
+.sidebar nav {
+  display: grid;
+  gap: 3px;
+}
+
+.sidebar nav a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 42px;
+  padding: 0 8px;
+  border-radius: 10px;
+  color: var(--side-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--step), color var(--step);
+}
+
+.nav-icono {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 17px;
+  transition: background var(--step), color var(--step), box-shadow var(--step);
+}
+
+.sidebar nav a:hover {
+  background: var(--side-hover);
+  color: var(--side-text);
+}
+
+/* Cada sección tiene su color: el ícono lo muestra siempre y se llena al estar activa */
+.sidebar nav a[data-sec='tablero'] { --sec: var(--sec-tablero); }
+.sidebar nav a[data-sec='fallas'] { --sec: var(--sec-fallas); }
+.sidebar nav a[data-sec='maquinaria'] { --sec: var(--sec-maquinaria); }
+.sidebar nav a[data-sec='usuarios'] { --sec: var(--sec-usuarios); }
+
+.sidebar nav a .nav-icono {
+  background: color-mix(in srgb, var(--sec, var(--side-brand)) 14%, transparent);
+  color: var(--sec, var(--side-brand));
+}
+
+.sidebar nav a:hover .nav-icono {
+  background: color-mix(in srgb, var(--sec, var(--side-brand)) 26%, transparent);
+}
+
+.sidebar nav a.active {
+  background: color-mix(in srgb, var(--sec, var(--side-brand)) 16%, transparent);
+  color: var(--side-text);
+  font-weight: 650;
+}
+
+.sidebar nav a.active::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: -12px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--sec, var(--side-brand));
+}
+
+.sidebar nav a.active .nav-icono {
+  background: var(--sec, var(--side-brand));
+  color: #fff;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--sec, var(--side-brand)) 45%, transparent);
+}
+
+.sidebar nav a:focus-visible {
+  outline: 2px solid var(--side-marker);
+  outline-offset: 2px;
+}
+
+/* ---- etiqueta flotante con el nombre (sólo con el menú contraído) ---- */
+
+.nav-tip {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 14px);
+  z-index: 40;
+  padding: 6px 10px;
+  border-radius: 7px;
+  background: var(--side-tip);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-4px, -50%);
+  transition: opacity 0.15s, transform 0.15s;
+  display: none;
+}
+
+.nav-tip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -4px;
+  width: 8px;
+  height: 8px;
+  background: inherit;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+:root[data-menu='cerrado'] .nav-tip {
+  display: block;
+}
+
+:root[data-menu='cerrado'] .sidebar nav a:hover .nav-tip,
+:root[data-menu='cerrado'] .sidebar nav a:focus-visible .nav-tip {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+/* ---- pie del menú ---- */
+
+.sidebar-bottom {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: auto;
+  padding: 12px 10px 2px;
+  border-top: 1px solid var(--side-line);
+  color: var(--side-muted);
+  font-size: 11.5px;
+}
+
+.online-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 3px rgb(31 157 107 / 22%);
+}
+
+/* ---- contraído: sólo íconos, centrados ---- */
+
+:root[data-menu='cerrado'] .sidebar .nav-texto,
+:root[data-menu='cerrado'] .nav-seccion {
+  display: none;
+}
+
+:root[data-menu='cerrado'] nav + .nav-seccion {
+  display: block;
+  height: 1px;
+  margin: 12px 10px;
+  padding: 0;
+  overflow: hidden;
+  background: var(--side-line);
+  color: transparent;
+}
+
+:root[data-menu='cerrado'] .brand,
+:root[data-menu='cerrado'] .sidebar nav a,
+:root[data-menu='cerrado'] .sidebar-bottom {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* ---- botón ☰ y fondo del cajón (celular) ---- */
+
+/* .topbar .menu-movil: más específico que .icon-button, que también define display */
+.topbar .menu-movil,
+.menu-fondo {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .sidebar,
+  :root[data-menu='cerrado'] .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 60;
+    width: min(280px, 84vw);
+    height: 100dvh;
+    padding: 18px 14px 16px;
+    transform: translateX(-100%);
+    transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .menu-abierto .sidebar,
+  :root[data-menu='cerrado'] .menu-abierto .sidebar {
+    transform: none;
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* En el cajón siempre se ve todo, aunque en escritorio esté contraído */
+  :root[data-menu='cerrado'] .sidebar .nav-texto,
+  :root[data-menu='cerrado'] .nav-seccion {
+    display: block;
+  }
+
+  :root[data-menu='cerrado'] nav + .nav-seccion {
+    height: auto;
+    margin: 16px 0 0;
+    padding: 6px 10px 8px;
+    background: none;
+    color: var(--side-muted);
+  }
+
+  :root[data-menu='cerrado'] .brand,
+  :root[data-menu='cerrado'] .sidebar nav a,
+  :root[data-menu='cerrado'] .sidebar-bottom {
+    justify-content: flex-start;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .nav-tip,
+  :root[data-menu='cerrado'] .nav-tip,
+  .menu-plegar {
+    display: none;
+  }
+
+  .topbar .menu-movil {
+    display: grid;
+  }
+
+  .menu-fondo {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    display: block;
+    background: rgb(15 23 32 / 45%);
+    backdrop-filter: blur(2px);
+  }
+}
+
+/* ============================================ color de la sección en cada página */
+
+.workspace {
+  --sec: var(--accent);
+}
+
+.workspace[data-seccion='tablero'] { --sec: var(--sec-tablero); }
+.workspace[data-seccion='fallas'] { --sec: var(--sec-fallas); }
+.workspace[data-seccion='maquinaria'] { --sec: var(--sec-maquinaria); }
+.workspace[data-seccion='usuarios'] { --sec: var(--sec-usuarios); }
+.workspace[data-seccion='cuenta'] { --sec: var(--sec-cuenta); }
+
+/* Texto del color de la sección con buen contraste en cada tema */
+.workspace {
+  --sec-texto: color-mix(in srgb, var(--sec) 72%, #000);
+}
+
+:root[data-theme='dark'] .workspace {
+  --sec-texto: color-mix(in srgb, var(--sec) 70%, #fff);
+}
+
+.page-content .module-title .eyebrow,
+.page-content > .eyebrow {
+  color: var(--sec-texto);
+}
+
+.page-content .module-title h1::after,
+.page-content > h1::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 4px;
+  margin-top: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--sec), color-mix(in srgb, var(--sec) 35%, transparent));
+}
+
+/* ============================================ logo (engranaje con pulso) */
+
+.brand-mark .logo {
+  width: 68%;
+  height: 68%;
+  color: #fff;
+  --logo-pulso: #1b5f96;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 15%));
+}
+
+.brand-mark {
+  background: linear-gradient(135deg, #1f78b8, #4fb0ea);
+}

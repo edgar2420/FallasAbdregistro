@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Api } from '../api';
 import { Falla, Maquina } from '../modelos';
-import { consulta, contiene } from '../util';
+import { colorDepartamento, consulta, contiene } from '../util';
 import { Paginador, paginar } from '../componentes/paginador';
 
 /** Tablero: las máquinas como fichas de placa; un clic abre su ficha, fotos y fallas. */
@@ -38,13 +38,25 @@ import { Paginador, paginar } from '../componentes/paginador';
       <span class="contador">{{ visibles.length }} de {{ maquinas.length }} equipos</span>
     </form>
 
+    @if (leyenda.length > 1) {
+      <div class="leyenda-deptos" role="group" aria-label="Departamentos">
+        @for (d of leyenda; track d.nombre) {
+          <button type="button" class="depto-chip" [style.--dep]="d.color" [class.activo]="departamento === d.nombre"
+                  [attr.aria-pressed]="departamento === d.nombre"
+                  (click)="departamento = departamento === d.nombre ? '' : d.nombre; pagina = 1">
+            <span class="depto-punto" aria-hidden="true"></span>{{ d.nombre }}<span class="depto-n">{{ d.n }}</span>
+          </button>
+        }
+      </div>
+    }
+
     @if (error) {
       <p class="form-error" role="alert">{{ error }}</p>
     }
 
     <section class="placas">
       @for (m of paginadas; track m.id) {
-        <a class="placa" [routerLink]="['/maquinaria', m.id]">
+        <a class="placa" [routerLink]="['/maquinaria', m.id]" [style.--dep]="color(m.departamento)">
           <header class="placa-head">
             <span class="placa-codigo">{{ m.codigo }}</span>
             @if (m.fallas_abiertas) {
@@ -52,8 +64,8 @@ import { Paginador, paginar } from '../componentes/paginador';
             }
           </header>
           <h2>{{ m.nombre }}</h2>
+          <span class="placa-depto"><span class="depto-punto" aria-hidden="true"></span>{{ m.departamento || 'Sin departamento' }}</span>
           <dl>
-            <div><dt>Departamento</dt><dd>{{ m.departamento || '—' }}</dd></div>
             <div><dt>Área</dt><dd>{{ m.area || '—' }}</dd></div>
             <div><dt>Marca</dt><dd>{{ m.marca || '—' }}</dd></div>
             <div><dt>Modelo</dt><dd>{{ m.modelo || '—' }}</dd></div>
@@ -113,11 +125,25 @@ export class TableroPage implements OnInit {
     return paginar(this.visibles, this.pagina, this.porPagina);
   }
 
+  readonly color = colorDepartamento;
+
+  /** Departamentos con su color y cantidad de equipos (sirve de leyenda y de filtro rápido). */
+  get leyenda() {
+    const cuenta = new Map<string, number>();
+    for (const m of this.maquinas) {
+      const d = m.departamento || 'Sin departamento';
+      cuenta.set(d, (cuenta.get(d) ?? 0) + 1);
+    }
+    return [...cuenta].sort((a, b) => a[0].localeCompare(b[0])).map(([nombre, n]) => ({
+      nombre, n, color: colorDepartamento(nombre === 'Sin departamento' ? '' : nombre),
+    }));
+  }
+
   get visibles() {
     return this.maquinas.filter(
       (m) =>
         (!this.area || m.area === this.area) &&
-        (!this.departamento || m.departamento === this.departamento) &&
+        (!this.departamento || (m.departamento || 'Sin departamento') === this.departamento) &&
         contiene(`${m.codigo} ${m.nombre} ${m.area ?? ''} ${m.departamento ?? ''} ${m.poe ?? ''} ${m.modelo ?? ''}`, this.q),
     );
   }

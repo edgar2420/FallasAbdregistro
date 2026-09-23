@@ -1,6 +1,7 @@
 @use './tokens';
 @use './crud';
 @use './tablas';
+@use './menu';
 
 
 *,
@@ -274,97 +275,6 @@ h3 {
   display: flex;
   min-height: 100vh;
   background: var(--bg);
-}
-
-.sidebar {
-  width: var(--sidebar-w);
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  padding: 22px 14px;
-  border-right: 1px solid var(--side-line);
-  background: var(--side-bg);
-  color: var(--side-text);
-  position: sticky;
-  top: 0;
-  height: 100vh;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 0 6px 32px;
-}
-
-.brand strong {
-  display: block;
-  font-size: 14px;
-}
-
-.brand span {
-  display: block;
-  margin-top: 2px;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  color: var(--side-muted);
-}
-
-.sidebar nav {
-  display: grid;
-  gap: 4px;
-}
-
-.sidebar nav a {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 12px;
-  border-radius: var(--r-sm);
-  color: var(--side-muted);
-  font-size: 13px;
-  font-weight: 500;
-  text-decoration: none;
-  border-left: 2px solid transparent;
-  transition: background var(--step), color var(--step);
-}
-
-.sidebar nav a:hover {
-  background: var(--side-hover);
-  color: var(--side-text);
-}
-
-.sidebar nav a.active {
-  background: var(--side-active);
-  border-left-color: var(--side-marker);
-  color: var(--side-text);
-  font-weight: 600;
-}
-
-.sidebar .brand-mark {
-  background: var(--side-brand);
-}
-
-.sidebar nav a .icon {
-  font-size: 18px;
-}
-
-.sidebar-bottom {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  color: var(--side-muted);
-  font-size: 11px;
-}
-
-.online-dot {
-  width: 7px;
-  height: 7px;
-  flex: none;
-  border-radius: 50%;
-  background: var(--ok);
 }
 
 .workspace {
@@ -685,26 +595,6 @@ h3 {
     display: block;
   }
 
-  .sidebar {
-    position: static;
-    width: auto;
-    height: auto;
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .brand {
-    padding-bottom: 18px;
-  }
-
-  .sidebar nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .sidebar-bottom {
-    display: none;
-  }
-
   .workspace {
     padding: 0 14px 18px;
   }
@@ -728,91 +618,13 @@ h3 {
   }
 }
 
-/* ============================================= menú lateral plegable + pie fijo */
-
-.sidebar {
-  overflow: hidden;
-  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), padding 0.22s;
-}
-
-.sidebar .nav-texto {
-  white-space: nowrap;
-}
-
-.sidebar nav a {
-  white-space: nowrap;
-}
-
-.menu-plegar {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border: 1px solid var(--side-line);
-  border-radius: var(--r-sm);
-  background: transparent;
-  color: var(--side-muted);
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  transition: background var(--step), color var(--step);
-}
-
-.menu-plegar:hover {
-  background: var(--side-hover);
-  color: var(--side-text);
-}
-
-.menu-plegar .icon {
-  font-size: 17px;
-  transition: transform 0.22s;
-}
-
-.sidebar-bottom {
-  padding: 10px 0 0;
-}
-
-:root[data-menu='cerrado'] {
-  --sidebar-w: 76px;
-}
-
-:root[data-menu='cerrado'] .sidebar {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
-:root[data-menu='cerrado'] .sidebar .nav-texto {
-  display: none;
-}
-
-:root[data-menu='cerrado'] .brand {
-  justify-content: center;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-:root[data-menu='cerrado'] .sidebar nav a,
-:root[data-menu='cerrado'] .menu-plegar {
-  justify-content: center;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-:root[data-menu='cerrado'] .menu-plegar .icon {
-  transform: rotate(180deg);
-}
+/* ============================================= barra superior y pie fijo */
 
 .topbar-izq {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
-}
-
-.menu-movil,
-.menu-fondo {
-  display: none;
 }
 
 /* Pie siempre visible al fondo de la pantalla */
@@ -828,60 +640,6 @@ h3 {
 @media (max-width: 760px) {
   .app-shell {
     display: block;
-  }
-
-  /* En celular el menú es un cajón que se abre con el botón ☰ */
-  .sidebar,
-  :root[data-menu='cerrado'] .sidebar {
-    position: fixed;
-    inset: 0 auto 0 0;
-    z-index: 60;
-    width: min(270px, 82vw);
-    height: 100dvh;
-    padding: 22px 14px;
-    border-right: 1px solid var(--side-line);
-    border-bottom: 0;
-    transform: translateX(-100%);
-    transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .menu-abierto .sidebar,
-  :root[data-menu='cerrado'] .menu-abierto .sidebar {
-    transform: none;
-    box-shadow: var(--shadow-lg);
-  }
-
-  :root[data-menu='cerrado'] .sidebar .nav-texto {
-    display: block;
-  }
-
-  :root[data-menu='cerrado'] .brand {
-    justify-content: flex-start;
-  }
-
-  :root[data-menu='cerrado'] .sidebar nav a {
-    justify-content: flex-start;
-    padding: 11px 12px;
-  }
-
-  .sidebar nav {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar-bottom {
-    display: none;
-  }
-
-  .menu-movil {
-    display: grid;
-  }
-
-  .menu-fondo {
-    position: fixed;
-    inset: 0;
-    z-index: 55;
-    display: block;
-    background: rgb(15 23 32 / 45%);
   }
 
   .perfil-texto,

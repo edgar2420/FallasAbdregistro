@@ -48,7 +48,9 @@
   --falla-text: #9a4a05;
 
   /* Menú lateral */
-  --side-bg: #0f2a3f;
+  --side-bg: #11304a;
+  --side-bg-2: #0b2031;
+  --side-tip: #0b1a28;
   --side-line: #1d3b53;
   --side-text: #eaf1f8;
   --side-muted: #a8b9cb;
@@ -58,6 +60,13 @@
   --side-brand: #2a8ac8;
 
   --topbar-bg: rgb(243 245 248 / 88%);
+
+  /* Color propio de cada sección (menú lateral y encabezado de cada página) */
+  --sec-tablero: #3b82f6;
+  --sec-fallas: #f08c2e;
+  --sec-maquinaria: #14b8a6;
+  --sec-usuarios: #8b5cf6;
+  --sec-cuenta: #64748b;
 
   --r-sm: 8px;
   --r-md: 12px;
@@ -124,6 +133,8 @@
   --falla-text: #f7ae68;
 
   --side-bg: #0f1829;
+  --side-bg-2: #0b1220;
+  --side-tip: #1e2b42;
   --side-line: #22304a;
   --side-text: #e6edf7;
   --side-muted: #95a3b8;
