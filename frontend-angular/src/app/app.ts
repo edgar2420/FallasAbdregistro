@@ -18,6 +18,7 @@ export class App {
     () => (this.api.usuario()?.nombre ?? '').slice(0, 2).toUpperCase() || '—',
   );
   protected readonly login = signal({ usuario: '', password: '' });
+  protected readonly oscuro = signal(document.documentElement.dataset['theme'] === 'dark');
   protected error = '';
   protected busy = false;
 
@@ -42,6 +43,19 @@ export class App {
   async salir() {
     await this.api.logout();
     await this.router.navigateByUrl('/');
+  }
+
+  /** Alterna claro/oscuro y recuerda la elección en este navegador. */
+  alternarTema() {
+    const oscuro = !this.oscuro();
+    this.oscuro.set(oscuro);
+    if (oscuro) document.documentElement.dataset['theme'] = 'dark';
+    else delete document.documentElement.dataset['theme'];
+    try {
+      localStorage.setItem('cf_tema', oscuro ? 'dark' : 'light');
+    } catch {
+      /* sin almacenamiento el tema dura lo que la pestaña */
+    }
   }
 
   cambiar(campo: 'usuario' | 'password', valor: string) {

@@ -5,14 +5,18 @@
   <title>Control de Fallas — Maquinaria de planta</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0e1116">
+  <meta name="theme-color" content="#0f2a3f">
   <meta name="description"
         content="Registro y seguimiento de fallas técnicas, soluciones aplicadas y estado de la maquinaria de planta.">
-  <meta name="color-scheme" content="dark">
+  <meta name="color-scheme" content="light dark">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <style>html,body{background:#0e1116;margin:0}</style>
+  <style>html,body{background:#f3f5f8;margin:0}html[data-theme=dark],html[data-theme=dark] body{background:#0b1220}</style>
+  <script>
+    // Aplica el tema guardado antes de pintar, para evitar un parpadeo de colores.
+    try { if (localStorage.getItem('cf_tema') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch (e) {}
+  </script>
 </head>
 <body>
   <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
@@ -45,6 +49,13 @@
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
       <path d="m16 17 5-5-5-5"/>
       <path d="M21 12H9"/>
+    </symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+    </symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24">
+      <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/>
     </symbol>
     <symbol id="i-check" viewBox="0 0 24 24">
       <path d="m4 12 5.5 5.5L20 7"/>

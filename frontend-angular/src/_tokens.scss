@@ -1,38 +1,58 @@
+/*
+ * Tema claro profesional (predeterminado): fondo gris claro, tarjetas blancas, menú azul noche y
+ * acento azul petróleo. El rojo queda reservado para fallas críticas, errores y acciones de borrar.
+ * El modo oscuro se activa con data-theme="dark" en <html> (botón del encabezado).
+ */
 :root {
-  --bg: #0e1116;
-  --bg-elevated: #131820;
-  --surface: #161c25;
-  --surface-2: #1c232e;
-  --surface-3: #222b37;
+  color-scheme: light;
 
-  --line: #232b37;
-  --line-strong: #2f3a49;
+  --bg: #f3f5f8;
+  --bg-elevated: #eaeef3;
+  --surface: #ffffff;
+  --surface-2: #f5f7fa;
+  --surface-3: #e8edf3;
 
-  --text: #e9edf3;
-  --text-soft: #c2c9d4;
-  --muted: #929cac;
-  --faint: #6c7686;
+  --line: #e1e7ee;
+  --line-strong: #c9d3de;
 
-  --accent: #d6303f;
-  --accent-hover: #e34150;
-  --accent-press: #b62634;
-  --accent-tint: #2a1519;
-  --accent-text: #ff8c95;
+  --text: #16202c;
+  --text-soft: #334255;
+  --muted: #566476;
+  --faint: #6a7788;
 
-  --ok: #23b981;
-  --ok-tint: #12271f;
-  --ok-text: #4ad99a;
+  --accent: #0f5c8c;
+  --accent-hover: #0c4f7a;
+  --accent-press: #093f62;
+  --accent-tint: #e5f0f8;
+  --accent-text: #0c4f7a;
+  --on-accent: #ffffff;
 
-  --warn: #dda43a;
-  --warn-tint: #272016;
-  --warn-text: #f0bd5e;
+  --ok: #1f9d6b;
+  --ok-tint: #e3f5ec;
+  --ok-text: #0f6c47;
 
-  --crit: #e5484d;
-  --crit-tint: #2a1619;
-  --crit-text: #ff8b90;
+  --warn: #d08c0b;
+  --warn-tint: #fdf2d9;
+  --warn-text: #7f5200;
 
-  --info-tint: #16202e;
-  --info-text: #7fb0ff;
+  --crit: #d13b3b;
+  --crit-tint: #fde8e8;
+  --crit-text: #a52323;
+
+  --info-tint: #e6f0fb;
+  --info-text: #1a5ca5;
+
+  /* Menú lateral */
+  --side-bg: #0f2a3f;
+  --side-line: #1d3b53;
+  --side-text: #eaf1f8;
+  --side-muted: #a8b9cb;
+  --side-hover: rgb(255 255 255 / 7%);
+  --side-active: rgb(255 255 255 / 12%);
+  --side-marker: #5ab4ec;
+  --side-brand: #2a8ac8;
+
+  --topbar-bg: rgb(243 245 248 / 88%);
 
   --r-sm: 8px;
   --r-md: 12px;
@@ -40,15 +60,74 @@
   --r-xl: 22px;
   --r-pill: 999px;
 
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
-  --shadow-md: 0 8px 24px rgb(0 0 0 / 35%);
-  --shadow-lg: 0 24px 64px rgb(0 0 0 / 50%);
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 5%), 0 1px 3px rgb(16 24 40 / 4%);
+  --shadow-sm: 0 1px 2px rgb(16 24 40 / 8%);
+  --shadow-md: 0 6px 18px rgb(16 24 40 / 10%);
+  --shadow-lg: 0 20px 48px rgb(16 24 40 / 16%);
 
-  --ring: 0 0 0 3px rgb(214 48 63 / 35%);
+  --ring: 0 0 0 3px rgb(15 92 140 / 22%);
 
   --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --display: 'Barlow Condensed', 'Inter', sans-serif;
 
   --step: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   --sidebar-w: 248px;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0b1220;
+  --bg-elevated: #0f1829;
+  --surface: #121c2e;
+  --surface-2: #172338;
+  --surface-3: #1e2b42;
+
+  --line: #22304a;
+  --line-strong: #2f3f5c;
+
+  --text: #e6edf7;
+  --text-soft: #c3cedd;
+  --muted: #95a3b8;
+  --faint: #7888a2;
+
+  --accent: #2b7bb9;
+  --accent-hover: #3789c8;
+  --accent-press: #22699f;
+  --accent-tint: #11283f;
+  --accent-text: #7cc4f5;
+  --on-accent: #ffffff;
+
+  --ok: #22b07d;
+  --ok-tint: #0f2a21;
+  --ok-text: #4fd6a0;
+
+  --warn: #d9a23a;
+  --warn-tint: #2a2213;
+  --warn-text: #f0bd5e;
+
+  --crit: #e5484d;
+  --crit-tint: #2c1519;
+  --crit-text: #ff8b90;
+
+  --info-tint: #13233a;
+  --info-text: #86b8ff;
+
+  --side-bg: #0f1829;
+  --side-line: #22304a;
+  --side-text: #e6edf7;
+  --side-muted: #95a3b8;
+  --side-hover: #172338;
+  --side-active: #11283f;
+  --side-marker: #7cc4f5;
+  --side-brand: #2b7bb9;
+
+  --topbar-bg: rgb(11 18 32 / 85%);
+
+  --shadow-card: none;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 35%);
+  --shadow-lg: 0 24px 64px rgb(0 0 0 / 50%);
+
+  --ring: 0 0 0 3px rgb(124 196 245 / 30%);
 }
