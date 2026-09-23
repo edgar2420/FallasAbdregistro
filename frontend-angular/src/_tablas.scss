@@ -77,6 +77,8 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
+  /* Cifras de igual ancho: las columnas de códigos y fechas dejan de bailar al paginar. */
+  font-variant-numeric: tabular-nums;
 }
 
 .data-table th {

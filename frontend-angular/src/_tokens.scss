@@ -1,85 +1,89 @@
 /*
- * Tema claro profesional (predeterminado): fondo gris claro, tarjetas blancas, menú azul noche y
- * acento azul petróleo. El rojo queda reservado para fallas críticas, errores y acciones de borrar.
+ * Paleta industrial: pizarra como color estructural (menú, encabezados, botones primarios) y
+ * verde operativo como acento de estado y foco. El rojo queda reservado para fallas críticas,
+ * errores y acciones de borrar; el naranja identifica la falla como problema.
+ * Contrastes verificados sobre WCAG AA: ningún par de texto baja de 4.5:1.
  * El modo oscuro se activa con data-theme="dark" en <html> (botón del encabezado).
  */
 :root {
   color-scheme: light;
 
-  --bg: #f3f5f8;
-  --bg-elevated: #eaeef3;
+  --bg: #f5f7f9;
+  --bg-elevated: #eceff3;
   --surface: #ffffff;
-  --surface-2: #f5f7fa;
-  --surface-3: #e8edf3;
+  --surface-2: #f2f4f7;
+  --surface-3: #e6eaef;
 
-  --line: #e1e7ee;
-  --line-strong: #c9d3de;
+  --line: #e2e6eb;
+  --line-strong: #c8d0d9;
 
-  --text: #16202c;
-  --text-soft: #334255;
-  --muted: #566476;
-  --faint: #6a7788;
+  --text: #0f172a;
+  --text-soft: #334155;
+  --muted: #475569;
+  --faint: #64748b;
 
-  --accent: #0f5c8c;
-  --accent-hover: #0c4f7a;
-  --accent-press: #093f62;
-  --accent-tint: #e5f0f8;
-  --accent-text: #0c4f7a;
+  /* Acción primaria: pizarra. Blanco sobre este tono da 10.4:1. */
+  --accent: #334155;
+  --accent-hover: #3d4d63;
+  --accent-press: #263241;
+  --accent-tint: #eceff3;
+  --accent-text: #2b3a4d;
   --on-accent: #ffffff;
 
-  --ok: #1f9d6b;
-  --ok-tint: #e3f5ec;
-  --ok-text: #0f6c47;
+  /* Verde operativo: acento de estado, foco y marcador del menú. */
+  --ok: #047857;
+  --ok-tint: #e7f6ef;
+  --ok-text: #046c4e;
 
-  --warn: #d08c0b;
-  --warn-tint: #fdf2d9;
-  --warn-text: #7f5200;
+  --warn: #b7791f;
+  --warn-tint: #fcf3e0;
+  --warn-text: #7a5200;
 
-  --crit: #d13b3b;
-  --crit-tint: #fde8e8;
+  --crit: #c62b2b;
+  --crit-tint: #fdeaea;
   --crit-text: #a52323;
 
-  --info-tint: #e6f0fb;
-  --info-text: #1a5ca5;
+  --info-tint: #eef2f6;
+  --info-text: #2b3a4d;
 
   /* Falla (problema) en naranja; la solución usa --ok (verde) y lo pendiente --crit (rojo). */
-  --falla: #d9730d;
+  --falla: #c2670c;
   --falla-tint: #fdf0e3;
   --falla-text: #9a4a05;
 
-  /* Menú lateral */
-  --side-bg: #11304a;
-  --side-bg-2: #0b2031;
-  --side-tip: #0b1a28;
-  --side-line: #1d3b53;
-  --side-text: #eaf1f8;
-  --side-muted: #a8b9cb;
+  /* Menú lateral: pizarra profunda */
+  --side-bg: #1e293b;
+  --side-bg-2: #172030;
+  --side-tip: #0f172a;
+  --side-line: #2c3a4d;
+  --side-text: #e8ecf1;
+  --side-muted: #a3aebd;
   --side-hover: rgb(255 255 255 / 7%);
   --side-active: rgb(255 255 255 / 12%);
-  --side-marker: #5ab4ec;
-  --side-brand: #2a8ac8;
+  --side-marker: #34d399;
+  --side-brand: #10b981;
 
-  --topbar-bg: rgb(243 245 248 / 88%);
+  --topbar-bg: rgb(245 247 249 / 88%);
 
   /* Color propio de cada sección (menú lateral y encabezado de cada página) */
-  --sec-tablero: #3b82f6;
-  --sec-fallas: #f08c2e;
-  --sec-maquinaria: #14b8a6;
-  --sec-usuarios: #8b5cf6;
-  --sec-cuenta: #64748b;
+  --sec-tablero: #0e7490;
+  --sec-fallas: #c2670c;
+  --sec-maquinaria: #047857;
+  --sec-usuarios: #6d4aa8;
+  --sec-cuenta: #52606d;
 
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-xl: 22px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
   --r-pill: 999px;
 
-  --shadow-card: 0 1px 2px rgb(16 24 40 / 5%), 0 1px 3px rgb(16 24 40 / 4%);
-  --shadow-sm: 0 1px 2px rgb(16 24 40 / 8%);
-  --shadow-md: 0 6px 18px rgb(16 24 40 / 10%);
-  --shadow-lg: 0 20px 48px rgb(16 24 40 / 16%);
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 5%), 0 1px 3px rgb(15 23 42 / 4%);
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 8%);
+  --shadow-md: 0 6px 18px rgb(15 23 42 / 10%);
+  --shadow-lg: 0 20px 48px rgb(15 23 42 / 16%);
 
-  --ring: 0 0 0 3px rgb(15 92 140 / 22%);
+  --ring: 0 0 0 3px rgb(4 120 87 / 30%);
 
   --sans: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --display: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -92,63 +96,69 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --bg: #0b1220;
-  --bg-elevated: #0f1829;
-  --surface: #121c2e;
-  --surface-2: #172338;
-  --surface-3: #1e2b42;
+  --bg: #0d1218;
+  --bg-elevated: #111922;
+  --surface: #151c24;
+  --surface-2: #1b242e;
+  --surface-3: #232e3a;
 
-  --line: #22304a;
-  --line-strong: #2f3f5c;
+  --line: #26313d;
+  --line-strong: #35424f;
 
-  --text: #e6edf7;
-  --text-soft: #c3cedd;
-  --muted: #95a3b8;
-  --faint: #7888a2;
+  --text: #e8edf2;
+  --text-soft: #c5ceda;
+  --muted: #9aa7b5;
+  --faint: #7d8b9b;
 
-  --accent: #2b7bb9;
-  --accent-hover: #3789c8;
-  --accent-press: #22699f;
-  --accent-tint: #11283f;
-  --accent-text: #7cc4f5;
+  --accent: #475569;
+  --accent-hover: #55657c;
+  --accent-press: #3a4655;
+  --accent-tint: #1b242e;
+  --accent-text: #b9c5d3;
   --on-accent: #ffffff;
 
-  --ok: #22b07d;
-  --ok-tint: #0f2a21;
-  --ok-text: #4fd6a0;
+  --ok: #10b981;
+  --ok-tint: #0e2019;
+  --ok-text: #4ade9f;
 
   --warn: #d9a23a;
-  --warn-tint: #2a2213;
+  --warn-tint: #241d12;
   --warn-text: #f0bd5e;
 
   --crit: #e5484d;
-  --crit-tint: #2c1519;
+  --crit-tint: #2a1417;
   --crit-text: #ff8b90;
 
-  --info-tint: #13233a;
-  --info-text: #86b8ff;
+  --info-tint: #1b242e;
+  --info-text: #b9c5d3;
 
   --falla: #f08c2e;
-  --falla-tint: #2b1d10;
+  --falla-tint: #2a1c10;
   --falla-text: #f7ae68;
 
-  --side-bg: #0f1829;
-  --side-bg-2: #0b1220;
-  --side-tip: #1e2b42;
-  --side-line: #22304a;
-  --side-text: #e6edf7;
-  --side-muted: #95a3b8;
-  --side-hover: #172338;
-  --side-active: #11283f;
-  --side-marker: #7cc4f5;
-  --side-brand: #2b7bb9;
+  --side-bg: #111922;
+  --side-bg-2: #0d1218;
+  --side-tip: #232e3a;
+  --side-line: #26313d;
+  --side-text: #e8edf2;
+  --side-muted: #9aa7b5;
+  --side-hover: #1b242e;
+  --side-active: #232e3a;
+  --side-marker: #34d399;
+  --side-brand: #10b981;
 
-  --topbar-bg: rgb(11 18 32 / 85%);
+  --topbar-bg: rgb(13 18 24 / 85%);
+
+  --sec-tablero: #22a5c4;
+  --sec-fallas: #f08c2e;
+  --sec-maquinaria: #34d399;
+  --sec-usuarios: #a78bfa;
+  --sec-cuenta: #94a3b8;
 
   --shadow-card: none;
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
   --shadow-md: 0 8px 24px rgb(0 0 0 / 35%);
   --shadow-lg: 0 24px 64px rgb(0 0 0 / 50%);
 
-  --ring: 0 0 0 3px rgb(124 196 245 / 30%);
+  --ring: 0 0 0 3px rgb(52 211 153 / 32%);
 }
