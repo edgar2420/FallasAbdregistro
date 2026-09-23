@@ -98,6 +98,11 @@
               <span>{{ api.esAdmin() ? 'Administrador' : 'Operador · consulta' }}</span>
             </div>
           </a>
+          <button class="icon-button" type="button" (click)="alternarTema()"
+                  [title]="oscuro() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                  [attr.aria-label]="oscuro() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+            <svg class="icon" aria-hidden="true"><use [attr.href]="oscuro() ? '#i-sun' : '#i-moon'"></use></svg>
+          </button>
           <button class="icon-button" type="button" title="Cerrar sesión" aria-label="Cerrar sesión"
                   (click)="salir()">
             <svg class="icon" aria-hidden="true"><use href="#i-logout"></use></svg>

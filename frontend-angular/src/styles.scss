@@ -11,7 +11,7 @@
 }
 
 html {
-  color-scheme: dark;
+  background: var(--bg);
 }
 
 body {
@@ -44,7 +44,7 @@ button {
 
 ::selection {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 ::-webkit-scrollbar {
@@ -110,7 +110,7 @@ h3 {
 
 .primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   box-shadow: var(--shadow-sm);
 }
 
@@ -182,7 +182,7 @@ h3 {
 }
 
 .login-shell::after {
-  background: #1d6b52;
+  background: var(--ok);
   opacity: 0.12;
   bottom: -160px;
   right: -120px;
@@ -194,7 +194,7 @@ h3 {
   padding: 40px;
   border: 1px solid var(--line);
   border-radius: var(--r-xl);
-  background: var(--bg-elevated);
+  background: var(--surface);
   box-shadow: var(--shadow-lg);
   animation: rise 0.45s ease both;
 }
@@ -256,7 +256,7 @@ h3 {
   place-items: center;
   border-radius: var(--r-md);
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-family: var(--display);
   font-size: 24px;
   font-weight: 700;
@@ -283,8 +283,9 @@ h3 {
   display: flex;
   flex-direction: column;
   padding: 22px 14px;
-  border-right: 1px solid var(--line);
-  background: var(--bg-elevated);
+  border-right: 1px solid var(--side-line);
+  background: var(--side-bg);
+  color: var(--side-text);
   position: sticky;
   top: 0;
   height: 100vh;
@@ -307,7 +308,7 @@ h3 {
   margin-top: 2px;
   font-size: 10px;
   letter-spacing: 0.08em;
-  color: var(--faint);
+  color: var(--side-muted);
 }
 
 .sidebar nav {
@@ -321,7 +322,7 @@ h3 {
   gap: 12px;
   padding: 11px 12px;
   border-radius: var(--r-sm);
-  color: var(--muted);
+  color: var(--side-muted);
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;
@@ -330,14 +331,19 @@ h3 {
 }
 
 .sidebar nav a:hover {
-  background: var(--surface);
-  color: var(--text);
+  background: var(--side-hover);
+  color: var(--side-text);
 }
 
 .sidebar nav a.active {
-  background: var(--accent-tint);
-  border-left-color: var(--accent);
-  color: var(--accent-text);
+  background: var(--side-active);
+  border-left-color: var(--side-marker);
+  color: var(--side-text);
+  font-weight: 600;
+}
+
+.sidebar .brand-mark {
+  background: var(--side-brand);
 }
 
 .sidebar nav a .icon {
@@ -350,7 +356,7 @@ h3 {
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  color: var(--faint);
+  color: var(--side-muted);
   font-size: 11px;
 }
 
@@ -379,7 +385,7 @@ h3 {
   justify-content: space-between;
   gap: 16px;
   padding: 18px 0;
-  background: rgb(14 17 22 / 78%);
+  background: var(--topbar-bg);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
 }

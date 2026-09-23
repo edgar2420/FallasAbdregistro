@@ -27,6 +27,7 @@
 /* ---------------------------------------------------------------- tarjetas */
 
 .module-card {
+  box-shadow: var(--shadow-card);
   padding: 22px;
   margin: 14px 0;
   border: 1px solid var(--line);
@@ -52,6 +53,7 @@
 }
 
 .module-grid .module-card {
+  box-shadow: var(--shadow-card);
   margin: 0;
 }
 
@@ -466,6 +468,7 @@ textarea::placeholder {
   }
 
   .module-card {
+  box-shadow: var(--shadow-card);
     padding: 16px;
   }
 
