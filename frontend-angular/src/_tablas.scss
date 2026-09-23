@@ -1813,3 +1813,38 @@ a.primary {
 .plegable + #fotos-maquina {
   margin-top: 16px;
 }
+
+/* ===================================== acabado tecnico (IBM Plex)
+ * Todo dato identificable va en mono: series, modelos, referencias y
+ * capacidades se leen como placa de equipo, no como texto corrido.
+ */
+.placa dd,
+.placa-depto .depto-n,
+.metrics strong,
+.kpi-valor {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.placa dd {
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+/* La ficha se asienta en vez de flotar: el equipo esta anclado, no es una tarjeta de marketing. */
+.placa {
+  transition: border-color var(--step), box-shadow var(--step), background var(--step);
+}
+
+.placa:hover,
+.placa:focus-visible {
+  transform: none;
+  border-color: var(--dep, var(--accent));
+  box-shadow: var(--shadow-md);
+}
+
+.placa:focus-visible {
+  outline: 2px solid var(--dep, var(--accent));
+  outline-offset: 2px;
+}

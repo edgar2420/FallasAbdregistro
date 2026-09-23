@@ -85,8 +85,10 @@
 
   --ring: 0 0 0 3px rgb(4 120 87 / 30%);
 
-  --sans: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --display: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* IBM Plex: familia de producto tecnico. Sans para la interfaz, Mono para todo dato
+     identificable (codigos, series, fechas, cifras). */
+  --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --display: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
 
   --step: 0.18s cubic-bezier(0.4, 0, 0.2, 1);

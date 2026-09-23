@@ -3,7 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { Api } from '../api';
 import { Catalogos, Maquina, Tipo } from '../modelos';
 import { LIMITES } from '../limites';
-import { Contador } from './contador';
 
 const VACIA = {
   codigo: '',
@@ -27,7 +26,7 @@ const VACIA = {
 /** Ficha técnica de una máquina con los datos de su placa (alta y edición, sólo administradores). */
 @Component({
   selector: 'app-maquina-form',
-  imports: [FormsModule, Contador],
+  imports: [FormsModule],
   template: `
     <form class="modal-form" (submit)="$event.preventDefault(); guardar()">
       @if (error) {
