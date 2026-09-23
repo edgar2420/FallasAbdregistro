@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { Api } from '../api';
 import { Catalogos, Solucion, Tipo } from '../modelos';
 import { SolucionForm } from '../componentes/solucion-form';
+import { Modal } from '../componentes/modal';
 import { conPausa, consulta, fechaCorta } from '../util';
 
 @Component({
   selector: 'app-soluciones-page',
-  imports: [FormsModule, RouterLink, SolucionForm],
+  imports: [FormsModule, RouterLink, SolucionForm, Modal],
   template: `
     <div class="module-title">
       <div>
@@ -70,21 +71,24 @@ import { conPausa, consulta, fechaCorta } from '../util';
             {{ s.tiempo_minutos }} min · {{ fecha(s.fecha, false) }}
           </p>
           @if (api.esAdmin()) {
-            @if (editandoId === s.id) {
-              <app-solucion-form [fallaId]="s.falla_id" [solucion]="s"
-                                 (guardado)="editandoId = null; cargar()" (cancelar)="editandoId = null" />
-            } @else {
-              <div class="row-actions">
-                <button type="button" (click)="editandoId = s.id">Editar</button>
-                <button type="button" class="danger" (click)="borrar(s)">Borrar</button>
-              </div>
-            }
+            <div class="row-actions">
+              <button type="button" (click)="editada = s">Editar</button>
+              <button type="button" class="danger" (click)="borrar(s)">Borrar</button>
+            </div>
           }
         </article>
       } @empty {
         <p class="muted">{{ cargando ? 'Cargando soluciones…' : 'No hay soluciones con esos filtros' }}</p>
       }
     </section>
+
+    @if (editada; as s) {
+      <app-modal titulo="Editar solución" [subtitulo]="s.falla_codigo + ' · ' + s.maquina_codigo + ' · ' + s.falla_titulo"
+                 tamano="mediano" (cerrar)="editada = null">
+        <app-solucion-form [fallaId]="s.falla_id" [solucion]="s" (guardado)="editada = null; cargar()"
+                           (cancelar)="editada = null" />
+      </app-modal>
+    }
   `,
 })
 export class SolucionesPage implements OnInit {
@@ -95,7 +99,7 @@ export class SolucionesPage implements OnInit {
   f = { q: '', tipo_id: '', categoria: '', solo_efectivas: false };
   error = '';
   cargando = true;
-  editandoId: number | null = null;
+  editada: Solucion | null = null;
   private pedido = 0;
 
   readonly fecha = fechaCorta;

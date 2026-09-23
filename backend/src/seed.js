@@ -47,25 +47,27 @@ const MAQUINAS = [
   ['ETI-01', 'Etiquetadora autoadhesiva doble cara', 'Etiquetadora', 'Herma', '400', 'Acondicionado', 2019],
   ['COM-01', 'Compresor de tornillo 75 HP', 'Compresor', 'Atlas Copco', 'GA55', 'Servicios', 2014],
   ['ENV-01', 'Blistera alternativa', 'Envasadora', 'Uhlmann', 'UPS4', 'Sólidos', 2013],
-  ['OSM-01', 'Planta de ósmosis inversa doble paso', 'Ósmosis inversa', 'Veolia', 'Orion 2000', 'Ósmosis', 2019],
+  // Datos tomados de la placa real del equipo (Laboratorios ABD).
+  ['AM-015-01', 'Osmosis inversa IPA', 'Ósmosis inversa', 'N.A', 'DP-050-SV', 'Osmosis', null],
 ];
 
 /**
- * Ficha técnica de ejemplo: [POE, tensión, corriente, potencia, presión aire, consumo aire,
- * presión vapor, consumo vapor]. Reemplazar por los datos reales de placa de cada equipo.
+ * Ficha técnica: [departamento, capacidad, ref. POE, tensión, corriente, potencia, presión aire,
+ * consumo aire, presión vapor, consumo vapor]. Salvo AM-015-01 (placa real), son valores de
+ * ejemplo que deben reemplazarse por los datos de placa de cada equipo.
  */
 const FICHAS = {
-  'BP-460': ['POE-MAN-011; POE-PRO-021', '380 V trifásico 60 Hz', '95 A', '45 kW', '6-8 bar', '1200 L/min', '3 bar', '60 kg/h'],
-  'BP-321': ['POE-MAN-012; POE-PRO-022', '380 V trifásico 60 Hz', '70 A', '32 kW', '6-8 bar', '900 L/min', '3 bar', '45 kg/h'],
-  'SHV-AMP1': ['POE-MAN-020', '380 V trifásico 60 Hz', '25 A', '11 kW', '6 bar', '300 L/min', null, null],
-  'SHV-AUT1': ['POE-MAN-021; POE-VAL-004', '380 V trifásico 60 Hz', '16 A', '7.5 kW', '6 bar', '50 L/min', '3.5 bar', '180 kg/h'],
-  'TAP-01': ['POE-MAN-030', '220 V monofásico 60 Hz', '8 A', '1.5 kW', '6 bar', '150 L/min', null, null],
-  'TAP-02': ['POE-MAN-031', '220 V monofásico 60 Hz', '10 A', '2.2 kW', '6 bar', '200 L/min', null, null],
-  'LLE-01': ['POE-MAN-040', '380 V trifásico 60 Hz', '12 A', '4 kW', '6 bar', '250 L/min', null, null],
-  'ETI-01': ['POE-MAN-050', '220 V monofásico 60 Hz', '6 A', '1.2 kW', null, null, null, null],
-  'COM-01': ['POE-MAN-060', '380 V trifásico 60 Hz', '105 A', '55 kW', '7.5 bar (descarga)', '9.5 m³/min (entrega)', null, null],
-  'ENV-01': ['POE-MAN-070', '380 V trifásico 60 Hz', '40 A', '18 kW', '6 bar', '400 L/min', null, null],
-  'OSM-01': ['POE-MAN-080; POE-AGU-002', '380 V trifásico 60 Hz', '32 A', '15 kW', '6 bar', '20 L/min', null, null],
+  'BP-460': ['Producción', '4000 u/h', 'POE-MAN-011; POE-PRO-021', '380 V trifásico 60 Hz', '95 A', '45 kW', '6-8 bar', '1200 L/min', '3 bar', '60 kg/h'],
+  'BP-321': ['Producción', '3000 u/h', 'POE-MAN-012; POE-PRO-022', '380 V trifásico 60 Hz', '70 A', '32 kW', '6-8 bar', '900 L/min', '3 bar', '45 kg/h'],
+  'SHV-AMP1': ['Producción', '6000 amp/h', 'POE-MAN-020', '380 V trifásico 60 Hz', '25 A', '11 kW', '6 bar', '300 L/min', null, null],
+  'SHV-AUT1': ['Producción', '1000 L', 'POE-MAN-021; POE-VAL-004', '380 V trifásico 60 Hz', '16 A', '7.5 kW', '6 bar', '50 L/min', '3.5 bar', '180 kg/h'],
+  'TAP-01': ['Producción', '2400 u/h', 'POE-MAN-030', '220 V monofásico 60 Hz', '8 A', '1.5 kW', '6 bar', '150 L/min', null, null],
+  'TAP-02': ['Producción', '3600 u/h', 'POE-MAN-031', '220 V monofásico 60 Hz', '10 A', '2.2 kW', '6 bar', '200 L/min', null, null],
+  'LLE-01': ['Producción', '3000 u/h', 'POE-MAN-040', '380 V trifásico 60 Hz', '12 A', '4 kW', '6 bar', '250 L/min', null, null],
+  'ETI-01': ['Acondicionamiento', '6000 u/h', 'POE-MAN-050', '220 V monofásico 60 Hz', '6 A', '1.2 kW', null, null, null, null],
+  'COM-01': ['Servicios de apoyo', '9.5 m³/min', 'POE-MAN-060', '380 V trifásico 60 Hz', '105 A', '55 kW', '7.5 bar (descarga)', '9.5 m³/min (entrega)', null, null],
+  'ENV-01': ['Producción', '120 ciclos/min', 'POE-MAN-070', '380 V trifásico 60 Hz', '40 A', '18 kW', '6 bar', '400 L/min', null, null],
+  'AM-015-01': ['Servicios de apoyo', '1400 L/H', 'ASA-POE-003', null, null, null, null, null, null, null],
 };
 
 /** [maquina, titulo, sintomas, categoria, severidad, causa_raiz, paro_min, dias_atras, solucion] */
@@ -227,12 +229,13 @@ TIPOS.forEach(([nombre, desc]) => insertTipo.run(nombre, desc));
 MAQUINAS.forEach(([codigo, nombre, tipo, marca, modelo, area, anio]) =>
   insertMaquina.run(codigo, nombre, p(idTipo(tipo)), marca, modelo, area, anio, 'Operativa'));
 
-// Sólo completa la ficha de las máquinas que todavía no tienen datos técnicos cargados.
+// Sólo completa la ficha de las máquinas que todavía no tienen esos datos cargados.
 const completarFicha = db.prepare(`
-  UPDATE maquinas SET poe = ?, tension = ?, corriente = ?, potencia = ?, presion_aire = ?,
-    consumo_aire = ?, presion_vapor = ?, consumo_vapor = ?
-  WHERE codigo = ? AND poe IS NULL AND tension IS NULL`);
+  UPDATE maquinas SET departamento = ?, capacidad = ?, poe = ?, tension = ?, corriente = ?, potencia = ?,
+    presion_aire = ?, consumo_aire = ?, presion_vapor = ?, consumo_vapor = ?
+  WHERE codigo = ? AND departamento IS NULL AND capacidad IS NULL AND poe IS NULL`);
 Object.entries(FICHAS).forEach(([codigo, ficha]) => completarFicha.run(...ficha.map(p), codigo));
+db.prepare("UPDATE maquinas SET num_serie = 'N.A' WHERE codigo = 'AM-015-01' AND num_serie IS NULL").run();
 
 const yaHayFallas = row(db.prepare('SELECT COUNT(*) AS n FROM fallas')).n;
 if (yaHayFallas > 0) {

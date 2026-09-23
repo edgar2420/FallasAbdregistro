@@ -7,11 +7,12 @@ import { FallaDetalle } from '../componentes/falla-detalle';
 import { FallaForm } from '../componentes/falla-form';
 import { Galeria } from '../componentes/galeria';
 import { MaquinaForm } from '../componentes/maquina-form';
-import { claseEstadoFalla, claseEstadoMaquina, claseSeveridad, contiene, fechaCorta } from '../util';
+import { Modal } from '../componentes/modal';
+import { contiene, fechaCorta } from '../util';
 
 @Component({
   selector: 'app-maquina-detalle-page',
-  imports: [FormsModule, RouterLink, FallaDetalle, FallaForm, Galeria, MaquinaForm],
+  imports: [FormsModule, RouterLink, FallaDetalle, FallaForm, Galeria, MaquinaForm, Modal],
   template: `
     <a class="volver" routerLink="/maquinaria">← Volver a maquinaria</a>
 
@@ -22,16 +23,13 @@ import { claseEstadoFalla, claseEstadoMaquina, claseSeveridad, contiene, fechaCo
     @if (m; as m) {
       <div class="module-title">
         <div>
-          <span class="eyebrow">{{ m.tipo || 'Sin tipo' }} · {{ m.area || 'Área no indicada' }}</span>
+          <span class="eyebrow">{{ m.departamento || 'Sin departamento' }} · {{ m.area || 'Área no indicada' }}</span>
           <h1><span class="codigo-grande">{{ m.codigo }}</span> {{ m.nombre }}</h1>
-          <p>
-            <span class="tag" [class]="'tag ' + claseMaquina(m.estado)">{{ m.estado }}</span>
-            Fallas abiertas: <b>{{ m.fallas_abiertas }}</b> · Registradas: {{ m.total_fallas }}
-          </p>
+          <p>{{ m.total_fallas }} falla{{ m.total_fallas === 1 ? '' : 's' }} registrada{{ m.total_fallas === 1 ? '' : 's' }}</p>
         </div>
         @if (api.esAdmin()) {
           <div class="row-actions">
-            <button type="button" (click)="editando = !editando">Editar ficha</button>
+            <button type="button" (click)="editando = true">Editar ficha</button>
             <button type="button" class="danger" (click)="borrar(m)">Borrar máquina</button>
             <button class="primary" type="button" (click)="nuevaFalla = true">
               <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>Registrar falla
@@ -41,17 +39,29 @@ import { claseEstadoFalla, claseEstadoMaquina, claseSeveridad, contiene, fechaCo
       </div>
 
       @if (editando) {
-        <app-maquina-form [maquina]="m" (guardado)="editando = false; cargar()" (cancelar)="editando = false" />
+        <app-modal [titulo]="'Editar ' + m.codigo" [subtitulo]="m.nombre" (cerrar)="editando = false">
+          <app-maquina-form [maquina]="m" (guardado)="editando = false; cargar()" (cancelar)="editando = false" />
+        </app-modal>
+      }
+      @if (nuevaFalla) {
+        <app-modal titulo="Registrar falla" [subtitulo]="m.codigo + ' · ' + m.nombre" (cerrar)="nuevaFalla = false">
+          <app-falla-form [maquinaId]="m.id" (guardado)="fallaCreada($event)" (cancelar)="nuevaFalla = false" />
+        </app-modal>
       }
 
       <section class="module-card">
         <h2>Ficha técnica</h2>
         <dl class="ficha">
-          <div><dt>Código (Garantía de Calidad)</dt><dd><b>{{ m.codigo }}</b></dd></div>
-          <div class="dos"><dt>POE de referencia</dt><dd>{{ m.poe || '—' }}</dd></div>
+          <div><dt>Departamento</dt><dd>{{ m.departamento || '—' }}</dd></div>
+          <div><dt>Área</dt><dd>{{ m.area || '—' }}</dd></div>
+          <div><dt>Código</dt><dd><b>{{ m.codigo }}</b></dd></div>
+          <div class="dos"><dt>Equipo</dt><dd>{{ m.nombre }}</dd></div>
           <div><dt>Marca</dt><dd>{{ m.marca || '—' }}</dd></div>
           <div><dt>Modelo</dt><dd>{{ m.modelo || '—' }}</dd></div>
-          <div><dt>N° de serie</dt><dd>{{ m.num_serie || '—' }}</dd></div>
+          <div><dt>Serie</dt><dd>{{ m.num_serie || '—' }}</dd></div>
+          <div><dt>Capacidad</dt><dd>{{ m.capacidad || '—' }}</dd></div>
+          <div><dt>Ref. (POE)</dt><dd>{{ m.poe || '—' }}</dd></div>
+          <div><dt>Tipo</dt><dd>{{ m.tipo || '—' }}</dd></div>
           <div><dt>Año</dt><dd>{{ m.anio || '—' }}</dd></div>
         </dl>
         <h4>Datos eléctricos y de servicios</h4>
@@ -74,15 +84,11 @@ import { claseEstadoFalla, claseEstadoMaquina, claseSeveridad, contiene, fechaCo
         <app-galeria [adjuntos]="m.adjuntos ?? []" [maquinaId]="m.id" (cambio)="cargar()" />
       </section>
 
-      @if (nuevaFalla) {
-        <app-falla-form [maquinaId]="m.id" (guardado)="fallaCreada($event)" (cancelar)="nuevaFalla = false" />
-      }
-
       <section class="module-card tabla-card">
         <div class="tabla-titulo">
           <h2>Fallas y soluciones</h2>
           <div class="filtros compactos">
-            <input type="search" class="buscador" placeholder="Buscar por código, falla, síntoma o solución"
+            <input type="search" class="buscador" placeholder="Buscar por código, falla o solución"
                    aria-label="Buscar en las fallas de esta máquina" [(ngModel)]="q">
             <select aria-label="Filtrar por categoría" [(ngModel)]="categoria">
               <option value="">Todas las categorías</option>
@@ -90,11 +96,10 @@ import { claseEstadoFalla, claseEstadoMaquina, claseSeveridad, contiene, fechaCo
                 <option>{{ c }}</option>
               }
             </select>
-            <select aria-label="Filtrar por estado" [(ngModel)]="estado">
-              <option value="">Todos los estados</option>
-              <option value="abiertas">Sólo abiertas</option>
-              <option>Resuelta</option>
-              <option>Anulada</option>
+            <select aria-label="Filtrar por solución" [(ngModel)]="estado">
+              <option value="">Con y sin solución</option>
+              <option value="sin">Sin solución</option>
+              <option value="con">Con solución</option>
             </select>
           </div>
         </div>
@@ -106,8 +111,6 @@ import { claseEstadoFalla, claseEstadoMaquina, claseSeveridad, contiene, fechaCo
                 <th class="opcional">Fecha</th>
                 <th>Falla / error</th>
                 <th class="opcional">Categoría</th>
-                <th class="opcional">Severidad</th>
-                <th>Estado</th>
                 <th>Solución aplicada</th>
               </tr>
             </thead>
@@ -119,11 +122,9 @@ import { claseEstadoFalla, claseEstadoMaquina, claseSeveridad, contiene, fechaCo
                   <td class="fecha opcional">{{ fecha(f.fecha_deteccion, false) }}</td>
                   <td>
                     <strong>{{ f.titulo }}</strong>
-                    @if (f.sintomas) { <small class="subline recorte">{{ f.sintomas }}</small> }
+                    @if (f.descripcion) { <small class="subline recorte">{{ f.descripcion }}</small> }
                   </td>
                   <td class="opcional">{{ f.categoria }}</td>
-                  <td class="opcional"><span class="priority" [class]="'priority ' + sev(f.severidad)">{{ f.severidad }}</span></td>
-                  <td><span class="tag" [class]="'tag ' + est(f.estado)">{{ f.estado }}</span></td>
                   <td class="solucion-celda">
                     @if (f.ultima_solucion) {
                       <span class="recorte">{{ f.ultima_solucion }}</span>
@@ -134,11 +135,11 @@ import { claseEstadoFalla, claseEstadoMaquina, claseSeveridad, contiene, fechaCo
                 </tr>
                 @if (abiertaId === f.id) {
                   <tr class="fila-detalle">
-                    <td colspan="7"><app-falla-detalle [fallaId]="f.id" (cambio)="cargar()" /></td>
+                    <td colspan="5"><app-falla-detalle [fallaId]="f.id" (cambio)="cargar()" /></td>
                   </tr>
                 }
               } @empty {
-                <tr><td colspan="7" class="muted">
+                <tr><td colspan="5" class="muted">
                   {{ (m.fallas?.length ?? 0) ? 'Ninguna falla coincide con la búsqueda' : 'Esta máquina no tiene fallas registradas' }}
                 </td></tr>
               }
@@ -167,17 +168,13 @@ export class MaquinaDetallePage implements OnInit {
   categorias: string[] = [];
 
   readonly fecha = fechaCorta;
-  readonly sev = claseSeveridad;
-  readonly est = claseEstadoFalla;
-  readonly claseMaquina = claseEstadoMaquina;
 
   get fallas(): Falla[] {
-    const abiertas = ['Abierta', 'En proceso', 'Recurrente'];
     return (this.m?.fallas ?? []).filter(
       (f) =>
         (!this.categoria || f.categoria === this.categoria) &&
-        (!this.estado || (this.estado === 'abiertas' ? abiertas.includes(f.estado) : f.estado === this.estado)) &&
-        contiene(`${f.codigo} ${f.titulo} ${f.sintomas ?? ''} ${f.causa_raiz ?? ''} ${f.ultima_solucion ?? ''}`, this.q),
+        (!this.estado || (this.estado === 'con') === !!f.ultima_solucion) &&
+        contiene(`${f.codigo} ${f.titulo} ${f.descripcion ?? ''} ${f.causa_raiz ?? ''} ${f.ultima_solucion ?? ''}`, this.q),
     );
   }
 

@@ -48,6 +48,8 @@ const agregarColumnas = (tabla, columnas) => {
 
 agregarColumnas('usuarios', { debe_cambiar: 'INTEGER NOT NULL DEFAULT 0 CHECK (debe_cambiar IN (0,1))' });
 agregarColumnas('maquinas', {
+  departamento: 'TEXT',
+  capacidad: 'TEXT',
   poe: 'TEXT',
   tension: 'TEXT',
   corriente: 'TEXT',

@@ -5,14 +5,14 @@ import { Api } from '../api';
 import { Catalogos, Falla, Maquina, Tipo } from '../modelos';
 import { FallaDetalle } from '../componentes/falla-detalle';
 import { FallaForm } from '../componentes/falla-form';
-import { claseEstadoFalla, claseSeveridad, conPausa, consulta, fechaCorta } from '../util';
+import { Modal } from '../componentes/modal';
+import { conPausa, consulta, fechaCorta } from '../util';
 
 const FILTROS_VACIOS = {
   q: '',
   maquina_id: '',
   tipo_id: '',
   categoria: '',
-  severidad: '',
   estado: '',
   desde: '',
   hasta: '',
@@ -20,13 +20,13 @@ const FILTROS_VACIOS = {
 
 @Component({
   selector: 'app-fallas-page',
-  imports: [FormsModule, RouterLink, FallaDetalle, FallaForm],
+  imports: [FormsModule, RouterLink, FallaDetalle, FallaForm, Modal],
   template: `
     <div class="module-title">
       <div>
         <span class="eyebrow">Operaciones / Mantenimiento</span>
         <h1>Fallas técnicas</h1>
-        <p>Busca por código de falla o de máquina, síntoma o solución, y filtra por categoría, severidad y fechas.</p>
+        <p>Busca por código de falla o de máquina, por la falla o por la solución, y filtra por categoría y fechas.</p>
       </div>
       <div class="row-actions">
         <button class="ghost" type="button" [disabled]="exportando" (click)="exportar()">
@@ -45,11 +45,13 @@ const FILTROS_VACIOS = {
     }
 
     @if (creando) {
-      <app-falla-form (guardado)="creada($event)" (cancelar)="creando = false" />
+      <app-modal titulo="Registrar falla" subtitulo="Nueva falla técnica" (cerrar)="creando = false">
+        <app-falla-form (guardado)="creada($event)" (cancelar)="creando = false" />
+      </app-modal>
     }
 
     <section class="module-card filtros">
-      <input type="search" class="buscador" placeholder="Código (FAL-0001, BP-460), síntoma, solución…"
+      <input type="search" class="buscador" placeholder="Código (FAL-0001, AM-015-01), falla o solución…"
              aria-label="Buscar fallas" [(ngModel)]="f.q" (ngModelChange)="buscarConPausa()">
       <select aria-label="Máquina" [(ngModel)]="f.maquina_id" (ngModelChange)="buscar()">
         <option value="">Todas las máquinas</option>
@@ -69,18 +71,10 @@ const FILTROS_VACIOS = {
           <option>{{ c }}</option>
         }
       </select>
-      <select aria-label="Severidad" [(ngModel)]="f.severidad" (ngModelChange)="buscar()">
-        <option value="">Toda severidad</option>
-        @for (s of cat?.severidades ?? []; track s) {
-          <option>{{ s }}</option>
-        }
-      </select>
-      <select aria-label="Estado" [(ngModel)]="f.estado" (ngModelChange)="buscar()">
-        <option value="">Todos los estados</option>
-        <option value="abiertas">Sólo abiertas</option>
-        @for (s of cat?.estados_falla ?? []; track s) {
-          <option>{{ s }}</option>
-        }
+      <select aria-label="Solución" [(ngModel)]="f.estado" (ngModelChange)="buscar()">
+        <option value="">Con y sin solución</option>
+        <option value="abiertas">Sin solución</option>
+        <option value="Resuelta">Con solución</option>
       </select>
       <label class="rango">Desde<input type="date" [(ngModel)]="f.desde" (ngModelChange)="buscar()"></label>
       <label class="rango">Hasta<input type="date" [(ngModel)]="f.hasta" (ngModelChange)="buscar()"></label>
@@ -98,8 +92,6 @@ const FILTROS_VACIOS = {
               <th>Máquina</th>
               <th>Falla / error</th>
               <th class="opcional">Categoría</th>
-              <th class="opcional">Severidad</th>
-              <th>Estado</th>
               <th>Solución aplicada</th>
             </tr>
           </thead>
@@ -117,8 +109,6 @@ const FILTROS_VACIOS = {
                 </td>
                 <td><strong>{{ x.titulo }}</strong></td>
                 <td class="opcional">{{ x.categoria }}</td>
-                <td class="opcional"><span class="priority" [class]="'priority ' + sev(x.severidad)">{{ x.severidad }}</span></td>
-                <td><span class="tag" [class]="'tag ' + est(x.estado)">{{ x.estado }}</span></td>
                 <td class="solucion-celda">
                   @if (x.ultima_solucion) {
                     <span class="recorte">{{ x.ultima_solucion }}</span>
@@ -129,11 +119,11 @@ const FILTROS_VACIOS = {
               </tr>
               @if (abiertaId === x.id) {
                 <tr class="fila-detalle">
-                  <td colspan="8"><app-falla-detalle [fallaId]="x.id" (cambio)="cargar()" /></td>
+                  <td colspan="6"><app-falla-detalle [fallaId]="x.id" (cambio)="cargar()" /></td>
                 </tr>
               }
             } @empty {
-              <tr><td colspan="8" class="muted">{{ cargando ? 'Buscando…' : 'No hay fallas con esos filtros' }}</td></tr>
+              <tr><td colspan="6" class="muted">{{ cargando ? 'Buscando…' : 'No hay fallas con esos filtros' }}</td></tr>
             }
           </tbody>
         </table>
@@ -159,8 +149,6 @@ export class FallasPage implements OnInit {
   private pedido = 0;
 
   readonly fecha = fechaCorta;
-  readonly sev = claseSeveridad;
-  readonly est = claseEstadoFalla;
   readonly buscarConPausa = conPausa(() => this.buscar());
 
   async ngOnInit() {

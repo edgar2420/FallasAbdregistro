@@ -177,3 +177,32 @@ test('tras 5 intentos fallidos el acceso se bloquea temporalmente', async () => 
   }
   assert.deepEqual(estados, [401, 401, 401, 401, 401, 429]);
 });
+
+test('una falla se registra junto con su solución en un solo paso', async () => {
+  const r = await api('POST', '/api/fallas', {
+    token: adminToken,
+    body: {
+      maquina_id: maquina.id, titulo: 'Baja presión en bomba', categoria: 'Mecánica', departamento: 'x',
+      solucion: { descripcion: 'Cambio de sello mecánico', repuestos: 'Sello 1"', tecnico: 'Mantenimiento' },
+    },
+  });
+  assert.equal(r.status, 201);
+  assert.equal(r.datos.estado, 'Resuelta');
+  assert.equal(r.datos.soluciones, 1);
+  assert.equal(r.datos.ultima_solucion, 'Cambio de sello mecánico');
+  const sin = await api('POST', '/api/fallas', { token: adminToken, body: { maquina_id: maquina.id, titulo: 'Sin solución aún' } });
+  assert.equal(sin.datos.estado, 'Abierta');
+  assert.equal(sin.datos.soluciones, 0);
+});
+
+test('la máquina guarda departamento y capacidad de la placa', async () => {
+  const m = (await api('POST', '/api/maquinas', {
+    token: adminToken,
+    body: { codigo: 'AM-015-01', nombre: 'Osmosis inversa IPA', departamento: 'Servicios de apoyo', area: 'Osmosis',
+      marca: 'N.A', modelo: 'DP-050-SV', num_serie: 'N.A', capacidad: '1400 L/H', poe: 'ASA-POE-003' },
+  })).datos;
+  assert.equal(m.departamento, 'Servicios de apoyo');
+  assert.equal(m.capacidad, '1400 L/H');
+  const lista = (await api('GET', `/api/maquinas?departamento=${encodeURIComponent('Servicios de apoyo')}`, { token: adminToken })).datos;
+  assert.ok(lista.some((x) => x.codigo === 'AM-015-01'));
+});

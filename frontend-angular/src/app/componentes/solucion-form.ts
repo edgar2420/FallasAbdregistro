@@ -4,13 +4,12 @@ import { Api } from '../api';
 import { Solucion } from '../modelos';
 import { aInputFecha } from '../util';
 
-/** Alta o edición de una intervención (sólo administradores). */
+/** Alta o edición de una intervención (sólo administradores). Se muestra dentro de <app-modal>. */
 @Component({
   selector: 'app-solucion-form',
   imports: [FormsModule],
   template: `
-    <form class="module-card inline-form" (submit)="$event.preventDefault(); guardar()">
-      <h3>{{ solucion() ? 'Editar solución' : 'Registrar solución' }}</h3>
+    <form class="modal-form" (submit)="$event.preventDefault(); guardar()">
       @if (error) {
         <p class="form-error" role="alert">{{ error }}</p>
       }

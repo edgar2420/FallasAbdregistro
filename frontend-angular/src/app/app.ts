@@ -2,10 +2,11 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Api } from './api';
 import { CambiarPassword } from './componentes/cambiar-password';
+import { VerClave } from './componentes/ver-clave';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, CambiarPassword],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, CambiarPassword, VerClave],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

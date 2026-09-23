@@ -82,6 +82,12 @@ async function prepararArchivo(archivo: File): Promise<string> {
               <span class="foto-pdf">…</span>
             }
           </button>
+          @if (api.esAdmin()) {
+            <button type="button" class="foto-quitar" title="Quitar"
+                    [attr.aria-label]="'Quitar ' + (a.descripcion || a.nombre_original || 'archivo')" (click)="borrar(a)">
+              <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>
+            </button>
+          }
           <figcaption>
             <span class="tag">{{ etiqueta(a.categoria) }}</span>
             @if (a.falla_codigo && !fallaId()) {
@@ -132,7 +138,7 @@ async function prepararArchivo(archivo: File): Promise<string> {
                     <option [value]="c">{{ etiqueta(c) }}</option>
                   }
                 </select>
-                <button type="button" class="danger" (click)="borrar(a)">Borrar</button>
+                <button type="button" class="danger" (click)="borrar(a)">Quitar foto</button>
               }
               <button type="button" (click)="abierta = null">Cerrar</button>
             </div>
@@ -266,7 +272,8 @@ export class Galeria implements OnChanges, OnDestroy {
   }
 
   async borrar(a: Adjunto) {
-    if (!confirm('¿Borrar este archivo? No se puede deshacer.')) return;
+    const que = a.mime === 'application/pdf' ? 'este documento' : 'esta foto';
+    if (!confirm(`¿Quitar ${que}${a.descripcion ? ` («${a.descripcion}»)` : ''}? No se puede deshacer.`)) return;
     try {
       await this.api.delete(`/adjuntos/${a.id}`);
       this.abierta = null;

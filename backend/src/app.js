@@ -51,7 +51,7 @@ const celdaCsv = (v) => {
 
 app.get('/api/export/fallas.csv', auth, wrap((req, res) => {
   const datos = rows(db.prepare(`
-    SELECT f.codigo, m.codigo AS maquina, m.nombre AS maquina_nombre, t.nombre AS tipo, m.area, m.poe,
+    SELECT f.codigo, m.codigo AS maquina, m.nombre AS maquina_nombre, t.nombre AS tipo, m.departamento, m.area, m.capacidad, m.poe,
            f.titulo, f.sintomas, f.categoria, f.severidad, f.estado, f.causa_raiz,
            f.fecha_deteccion, f.fecha_resolucion, f.paro_minutos, f.responsable,
            (SELECT GROUP_CONCAT(s.descripcion, ' | ') FROM soluciones s WHERE s.falla_id = f.id) AS soluciones
