@@ -53,21 +53,21 @@ const MAQUINAS = [
 
 /**
  * Ficha técnica: [departamento, capacidad, ref. POE, tensión, corriente, potencia, presión aire,
- * consumo aire, presión vapor, consumo vapor]. Salvo AM-015-01 (placa real), son valores de
+ * presión vapor]. Salvo AM-015-01 (placa real), son valores de
  * ejemplo que deben reemplazarse por los datos de placa de cada equipo.
  */
 const FICHAS = {
-  'BP-460': ['Producción', '4000 u/h', 'POE-MAN-011; POE-PRO-021', '380 V trifásico 60 Hz', '95 A', '45 kW', '6-8 bar', '1200 L/min', '3 bar', '60 kg/h'],
-  'BP-321': ['Producción', '3000 u/h', 'POE-MAN-012; POE-PRO-022', '380 V trifásico 60 Hz', '70 A', '32 kW', '6-8 bar', '900 L/min', '3 bar', '45 kg/h'],
-  'SHV-AMP1': ['Producción', '6000 amp/h', 'POE-MAN-020', '380 V trifásico 60 Hz', '25 A', '11 kW', '6 bar', '300 L/min', null, null],
-  'SHV-AUT1': ['Producción', '1000 L', 'POE-MAN-021; POE-VAL-004', '380 V trifásico 60 Hz', '16 A', '7.5 kW', '6 bar', '50 L/min', '3.5 bar', '180 kg/h'],
-  'TAP-01': ['Producción', '2400 u/h', 'POE-MAN-030', '220 V monofásico 60 Hz', '8 A', '1.5 kW', '6 bar', '150 L/min', null, null],
-  'TAP-02': ['Producción', '3600 u/h', 'POE-MAN-031', '220 V monofásico 60 Hz', '10 A', '2.2 kW', '6 bar', '200 L/min', null, null],
-  'LLE-01': ['Producción', '3000 u/h', 'POE-MAN-040', '380 V trifásico 60 Hz', '12 A', '4 kW', '6 bar', '250 L/min', null, null],
-  'ETI-01': ['Acondicionamiento', '6000 u/h', 'POE-MAN-050', '220 V monofásico 60 Hz', '6 A', '1.2 kW', null, null, null, null],
-  'COM-01': ['Servicios de apoyo', '9.5 m³/min', 'POE-MAN-060', '380 V trifásico 60 Hz', '105 A', '55 kW', '7.5 bar (descarga)', '9.5 m³/min (entrega)', null, null],
-  'ENV-01': ['Producción', '120 ciclos/min', 'POE-MAN-070', '380 V trifásico 60 Hz', '40 A', '18 kW', '6 bar', '400 L/min', null, null],
-  'AM-015-01': ['Servicios de apoyo', '1400 L/H', 'ASA-POE-003', null, null, null, null, null, null, null],
+  'BP-460': ['Producción', '4000 u/h', 'POE-MAN-011; POE-PRO-021', '380 V trifásico 60 Hz', '95 A', '45 kW', '6-8 bar', '3 bar'],
+  'BP-321': ['Producción', '3000 u/h', 'POE-MAN-012; POE-PRO-022', '380 V trifásico 60 Hz', '70 A', '32 kW', '6-8 bar', '3 bar'],
+  'SHV-AMP1': ['Producción', '6000 amp/h', 'POE-MAN-020', '380 V trifásico 60 Hz', '25 A', '11 kW', '6 bar', null],
+  'SHV-AUT1': ['Producción', '1000 L', 'POE-MAN-021; POE-VAL-004', '380 V trifásico 60 Hz', '16 A', '7.5 kW', '6 bar', '3.5 bar'],
+  'TAP-01': ['Producción', '2400 u/h', 'POE-MAN-030', '220 V monofásico 60 Hz', '8 A', '1.5 kW', '6 bar', null],
+  'TAP-02': ['Producción', '3600 u/h', 'POE-MAN-031', '220 V monofásico 60 Hz', '10 A', '2.2 kW', '6 bar', null],
+  'LLE-01': ['Producción', '3000 u/h', 'POE-MAN-040', '380 V trifásico 60 Hz', '12 A', '4 kW', '6 bar', null],
+  'ETI-01': ['Acondicionamiento', '6000 u/h', 'POE-MAN-050', '220 V monofásico 60 Hz', '6 A', '1.2 kW', null, null],
+  'COM-01': ['Servicios de apoyo', '9.5 m³/min', 'POE-MAN-060', '380 V trifásico 60 Hz', '105 A', '55 kW', '7.5 bar (descarga)', null],
+  'ENV-01': ['Producción', '120 ciclos/min', 'POE-MAN-070', '380 V trifásico 60 Hz', '40 A', '18 kW', '6 bar', null],
+  'AM-015-01': ['Servicios de apoyo', '1400 L/H', 'ASA-POE-003', null, null, null, null, null],
 };
 
 /** [maquina, titulo, sintomas, categoria, severidad, causa_raiz, paro_min, dias_atras, solucion] */
@@ -232,7 +232,7 @@ MAQUINAS.forEach(([codigo, nombre, tipo, marca, modelo, area, anio]) =>
 // Sólo completa la ficha de las máquinas que todavía no tienen esos datos cargados.
 const completarFicha = db.prepare(`
   UPDATE maquinas SET departamento = ?, capacidad = ?, poe = ?, tension = ?, corriente = ?, potencia = ?,
-    presion_aire = ?, consumo_aire = ?, presion_vapor = ?, consumo_vapor = ?
+    presion_aire = ?, presion_vapor = ?
   WHERE codigo = ? AND departamento IS NULL AND capacidad IS NULL AND poe IS NULL`);
 Object.entries(FICHAS).forEach(([codigo, ficha]) => completarFicha.run(...ficha.map(p), codigo));
 db.prepare("UPDATE maquinas SET num_serie = 'N.A' WHERE codigo = 'AM-015-01' AND num_serie IS NULL").run();

@@ -30,6 +30,10 @@ import { Contador } from './contador';
           </select>
         </label>
         <label>Fecha<input name="fecha" type="datetime-local" [(ngModel)]="d.fecha_deteccion"></label>
+        <label>Código *
+          <input name="codigo" [maxlength]="L.falla.codigo" required placeholder="Ej.: FAL-0007"
+                 [(ngModel)]="d.codigo">
+        </label>
         <label class="dos">Falla / error *
           <input name="titulo" [maxlength]="L.falla.titulo" required placeholder="Ej.: Baja presión en bomba de alta" [(ngModel)]="d.titulo">
         </label>
@@ -84,6 +88,7 @@ export class FallaForm implements OnInit {
   guardando = false;
   d = {
     maquina_id: null as number | null,
+    codigo: '',
     titulo: '',
     categoria: 'Mecánica',
     fecha_deteccion: '',
@@ -103,6 +108,7 @@ export class FallaForm implements OnInit {
     if (f) {
       this.d = {
         maquina_id: f.maquina_id,
+        codigo: f.codigo,
         titulo: f.titulo,
         categoria: f.categoria,
         fecha_deteccion: aInputFecha(f.fecha_deteccion),

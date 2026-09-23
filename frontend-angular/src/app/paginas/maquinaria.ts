@@ -5,9 +5,9 @@ import { Api } from '../api';
 import { Maquina, Tipo } from '../modelos';
 import { MaquinaForm } from '../componentes/maquina-form';
 import { Modal } from '../componentes/modal';
-import { Paginador, paginar } from '../componentes/paginador';
+import { Paginador } from '../componentes/paginador';
 import { LIMITES, POR_PAGINA } from '../limites';
-import { contiene } from '../util';
+import { conPausa, consulta } from '../util';
 
 @Component({
   selector: 'app-maquinaria-page',
@@ -70,26 +70,26 @@ import { contiene } from '../util';
 
     <section class="module-card filtros">
       <input type="search" class="buscador" placeholder="Buscar por código, equipo, área o Ref. POE"
-             aria-label="Buscar máquina por código o nombre" [(ngModel)]="q" (ngModelChange)="pagina = 1">
-      <select aria-label="Filtrar por departamento" [(ngModel)]="departamento" (ngModelChange)="pagina = 1">
+             aria-label="Buscar máquina por código o nombre" [(ngModel)]="q" (ngModelChange)="buscarConPausa()">
+      <select aria-label="Filtrar por departamento" [(ngModel)]="departamento" (ngModelChange)="buscar()">
         <option value="">Todos los departamentos</option>
         @for (d of departamentos; track d) {
           <option>{{ d }}</option>
         }
       </select>
-      <select aria-label="Filtrar por tipo" [(ngModel)]="tipoId" (ngModelChange)="pagina = 1">
+      <select aria-label="Filtrar por tipo" [(ngModel)]="tipoId" (ngModelChange)="buscar()">
         <option [ngValue]="null">Todos los tipos</option>
         @for (t of tipos; track t.id) {
           <option [ngValue]="t.id">{{ t.nombre }}</option>
         }
       </select>
-      <select aria-label="Filtrar por área" [(ngModel)]="area" (ngModelChange)="pagina = 1">
+      <select aria-label="Filtrar por área" [(ngModel)]="area" (ngModelChange)="buscar()">
         <option value="">Todas las áreas</option>
         @for (a of areas; track a) {
           <option>{{ a }}</option>
         }
       </select>
-      <span class="contador">{{ filtradas.length }} de {{ items.length }}</span>
+      <span class="contador">{{ total }} {{ total === 1 ? 'máquina' : 'máquinas' }}</span>
     </section>
 
     <section class="module-card tabla-card">
@@ -107,7 +107,7 @@ import { contiene } from '../util';
             </tr>
           </thead>
           <tbody>
-            @for (m of paginadas; track m.id) {
+            @for (m of items; track m.id) {
               <tr class="clicable" tabindex="0" (click)="abrir(m)" (keydown.enter)="abrir(m)">
                 <td><a class="codigo" [routerLink]="['/maquinaria', m.id]" (click)="$event.stopPropagation()">{{ m.codigo }}</a></td>
                 <td>
@@ -130,8 +130,8 @@ import { contiene } from '../util';
           </tbody>
         </table>
       </div>
-      <app-paginador [total]="filtradas.length" [pagina]="pagina" [porPagina]="porPagina"
-                     (cambio)="pagina = $event.pagina; porPagina = $event.porPagina" />
+      <app-paginador [total]="total" [pagina]="pagina" [porPagina]="porPagina"
+                     (cambio)="cambiarPagina($event.pagina, $event.porPagina)" />
     </section>
   `,
 })
@@ -142,6 +142,10 @@ export class MaquinariaPage implements OnInit {
 
   items: Maquina[] = [];
   tipos: Tipo[] = [];
+  areas: string[] = [];
+  departamentos: string[] = [];
+  total = 0;
+  private pedido = 0;
   q = '';
   tipoId: number | null = null;
   area = '';
@@ -158,26 +162,18 @@ export class MaquinariaPage implements OnInit {
   nuevoTipo = { nombre: '', descripcion: '' };
 
 
-  get areas() {
-    return [...new Set(this.items.map((m) => m.area).filter((a): a is string => !!a))].sort();
+  readonly buscarConPausa = conPausa(() => this.buscar());
+
+  /** Cualquier cambio de filtro vuelve a la primera página y vuelve a pedir al servidor. */
+  buscar() {
+    this.pagina = 1;
+    void this.cargar();
   }
 
-  get departamentos() {
-    return [...new Set(this.items.map((m) => m.departamento).filter((d): d is string => !!d))].sort();
-  }
-
-  get paginadas() {
-    return paginar(this.filtradas, this.pagina, this.porPagina);
-  }
-
-  get filtradas() {
-    return this.items.filter(
-      (m) =>
-        (!this.tipoId || m.tipo_id === this.tipoId) &&
-        (!this.area || m.area === this.area) &&
-        (!this.departamento || m.departamento === this.departamento) &&
-        contiene(`${m.codigo} ${m.nombre} ${m.poe ?? ''} ${m.marca ?? ''} ${m.modelo ?? ''} ${m.area ?? ''} ${m.departamento ?? ''}`, this.q),
-    );
+  cambiarPagina(pagina: number, porPagina: number) {
+    this.pagina = pagina;
+    this.porPagina = porPagina;
+    void this.cargar();
   }
 
   async ngOnInit() {
@@ -186,16 +182,30 @@ export class MaquinariaPage implements OnInit {
   }
 
   async cargar() {
+    const pedido = ++this.pedido;
     this.cargando = true;
     try {
-      [this.items, this.tipos] = await Promise.all([
-        this.api.get<Maquina[]>('/maquinas'),
+      const filtros = {
+        q: this.q, tipo_id: this.tipoId, area: this.area, departamento: this.departamento,
+        limite: this.porPagina, pagina: this.pagina,
+      };
+      const [lista, tipos, opciones] = await Promise.all([
+        this.api.lista<Maquina>(`/maquinas${consulta(filtros)}`),
         this.api.get<Tipo[]>('/tipos'),
+        this.api.get<{ areas: string[]; departamentos: string[] }>('/maquinas/filtros'),
       ]);
+      // Una respuesta vieja que llega tarde no debe pisar a la última.
+      if (pedido !== this.pedido) return;
+      this.items = lista.items;
+      this.total = lista.total;
+      this.tipos = tipos;
+      this.areas = opciones.areas;
+      this.departamentos = opciones.departamentos;
+      this.error = '';
     } catch (e: unknown) {
       this.error = Api.mensaje(e, 'No se pudo cargar la maquinaria');
     } finally {
-      this.cargando = false;
+      if (pedido === this.pedido) this.cargando = false;
     }
   }
 

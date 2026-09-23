@@ -72,18 +72,11 @@ import { contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../
           <div><dt>Corriente</dt><dd>{{ m.corriente || '—' }}</dd></div>
           <div><dt>Potencia</dt><dd>{{ m.potencia || '—' }}</dd></div>
           <div><dt>Presión de aire</dt><dd>{{ m.presion_aire || '—' }}</dd></div>
-          <div><dt>Consumo de aire</dt><dd>{{ m.consumo_aire || '—' }}</dd></div>
           <div><dt>Presión de vapor</dt><dd>{{ m.presion_vapor || '—' }}</dd></div>
-          <div><dt>Consumo de vapor</dt><dd>{{ m.consumo_vapor || '—' }}</dd></div>
           @if (m.notas) {
             <div class="wide"><dt>Notas</dt><dd class="texto">{{ m.notas }}</dd></div>
           }
         </dl>
-      </section>
-
-      <section class="module-card">
-        <h2>Fotos y documentos</h2>
-        <app-galeria [adjuntos]="m.adjuntos ?? []" [maquinaId]="m.id" (cambio)="cargar()" />
       </section>
 
       <section class="module-card tabla-card">
@@ -179,6 +172,19 @@ import { contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../
         <app-paginador [total]="fallas.length" [pagina]="pagina" [porPagina]="porPagina"
                        (cambio)="pagina = $event.pagina; porPagina = $event.porPagina" />
       </section>
+
+      <section class="module-card">
+        <button type="button" class="plegable" [attr.aria-expanded]="verFotos" aria-controls="fotos-maquina"
+                (click)="verFotos = !verFotos">
+          <svg class="icon" aria-hidden="true"><use href="#i-chevron"></use></svg>
+          <h2>Fotos y documentos ({{ m.adjuntos?.length ?? 0 }})</h2>
+        </button>
+        @if (verFotos) {
+          <div id="fotos-maquina">
+            <app-galeria [adjuntos]="m.adjuntos ?? []" [maquinaId]="m.id" (cambio)="cargar()" />
+          </div>
+        }
+      </section>
     } @else if (!error) {
       <p class="muted">Cargando máquina…</p>
     }
@@ -194,6 +200,8 @@ export class MaquinaDetallePage implements OnInit {
   editando = false;
   nuevaFalla = false;
   abiertaId: number | null = null;
+  /** Las fotos van al final y plegadas: la tabla de fallas es lo que se viene a ver. */
+  verFotos = false;
   q = '';
   categoria = '';
   estado = '';

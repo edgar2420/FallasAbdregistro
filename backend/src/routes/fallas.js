@@ -108,6 +108,15 @@ const normalizar = (v) => {
   return d;
 };
 
+/** El código lo escribe quien registra la falla; si lo deja vacío se genera uno correlativo. */
+const codigoFalla = (valor, id = 0) => {
+  const codigo = limitar({ codigo: texto(valor) }, LIMITES.falla).codigo || siguienteCodigoFalla();
+  if (row(db.prepare('SELECT id FROM fallas WHERE codigo = ? COLLATE NOCASE AND id <> ?'), codigo, id)) {
+    throw new HttpError(409, `Ya existe otra falla con el código "${codigo}"`);
+  }
+  return codigo;
+};
+
 const insertarSolucion = (fallaId, s) => db.prepare(`
   INSERT INTO soluciones (falla_id, descripcion, repuestos, herramientas, tiempo_minutos, costo,
                           tecnico, efectiva, preventivo, fecha)
@@ -126,7 +135,7 @@ fallasRouter.post('/', admin, wrap((req, res) => {
     datos.estado = 'En proceso';
   }
   const id = transaccion(() => {
-    const codigo = limitar({ codigo: texto(req.body.codigo) }, LIMITES.falla).codigo || siguienteCodigoFalla();
+    const codigo = codigoFalla(req.body.codigo);
     const { lastInsertRowid } = db.prepare(
       `INSERT INTO fallas (codigo, ${CAMPOS.join(',')}) VALUES (${Array(CAMPOS.length + 1).fill('?').join(',')})`,
     ).run(codigo, ...CAMPOS.map((c) => p(datos[c])));
@@ -141,9 +150,10 @@ fallasRouter.put('/:id', admin, wrap((req, res) => {
   const actual = row(obtener, Number(req.params.id));
   if (!actual) throw new HttpError(404, 'Falla no encontrada');
   const datos = normalizar({ ...actual, ...req.body });
+  const codigo = codigoFalla(req.body.codigo ?? actual.codigo, actual.id);
   transaccion(() => {
-    db.prepare(`UPDATE fallas SET ${CAMPOS.map((c) => `${c} = ?`).join(', ')}, actualizado_en = ? WHERE id = ?`)
-      .run(...CAMPOS.map((c) => p(datos[c])), ahora(), actual.id);
+    db.prepare(`UPDATE fallas SET codigo = ?, ${CAMPOS.map((c) => `${c} = ?`).join(', ')}, actualizado_en = ? WHERE id = ?`)
+      .run(codigo, ...CAMPOS.map((c) => p(datos[c])), ahora(), actual.id);
     if (datos.maquina_id !== actual.maquina_id) {
       db.prepare('UPDATE adjuntos SET maquina_id = ? WHERE falla_id = ?').run(datos.maquina_id, actual.id);
       sincronizarMaquina(actual.maquina_id);

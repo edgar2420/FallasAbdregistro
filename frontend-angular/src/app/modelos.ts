@@ -120,9 +120,7 @@ export interface Maquina {
   corriente: string | null;
   potencia: string | null;
   presion_aire: string | null;
-  consumo_aire: string | null;
   presion_vapor: string | null;
-  consumo_vapor: string | null;
   notas: string | null;
   total_fallas?: number;
   fallas_abiertas?: number;

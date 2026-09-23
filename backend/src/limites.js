@@ -8,7 +8,7 @@ export const LIMITES = {
   maquina: {
     codigo: 30, nombre: 120, departamento: 80, area: 80, marca: 80, modelo: 80, num_serie: 80,
     capacidad: 60, poe: 200, tension: 60, corriente: 60, potencia: 60, presion_aire: 60,
-    consumo_aire: 60, presion_vapor: 60, consumo_vapor: 60, notas: 2000,
+    presion_vapor: 60, notas: 2000,
   },
   falla: {
     codigo: 30, titulo: 150, descripcion: 2000, causa_raiz: 2000, sintomas: 2000,
@@ -23,8 +23,8 @@ export const LIMITES = {
 const NOMBRES = {
   codigo: 'Código', nombre: 'Nombre', departamento: 'Departamento', area: 'Área', marca: 'Marca',
   modelo: 'Modelo', num_serie: 'Serie', capacidad: 'Capacidad', poe: 'Ref. (POE)', tension: 'Tensión',
-  corriente: 'Corriente', potencia: 'Potencia', presion_aire: 'Presión de aire', consumo_aire: 'Consumo de aire',
-  presion_vapor: 'Presión de vapor', consumo_vapor: 'Consumo de vapor', notas: 'Notas', titulo: 'Falla / error',
+  corriente: 'Corriente', potencia: 'Potencia', presion_aire: 'Presión de aire',
+  presion_vapor: 'Presión de vapor', notas: 'Notas', titulo: 'Falla / error',
   descripcion: 'Descripción', causa_raiz: 'Causa', sintomas: 'Síntomas', reportado_por: 'Reportado por',
   responsable: 'Responsable', repuestos: 'Repuestos', herramientas: 'Herramientas', tecnico: 'Técnico',
   preventivo: 'Acción preventiva',

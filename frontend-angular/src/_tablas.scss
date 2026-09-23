@@ -1774,3 +1774,40 @@ a.primary {
   font-size: 11px;
   text-align: center;
 }
+
+/* Encabezado que pliega una sección (fotos de la máquina). */
+.plegable {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+
+.plegable h2 {
+  margin: 0;
+}
+
+.plegable .icon {
+  flex: none;
+  font-size: 18px;
+  color: var(--muted);
+  transform: rotate(-90deg);
+  transition: transform var(--step);
+}
+
+.plegable[aria-expanded='true'] .icon {
+  transform: rotate(90deg);
+}
+
+.plegable:hover .icon {
+  color: var(--accent);
+}
+
+.plegable + #fotos-maquina {
+  margin-top: 16px;
+}

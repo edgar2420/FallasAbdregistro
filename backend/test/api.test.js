@@ -228,6 +228,38 @@ test('límites: caracteres por campo, paginación de fallas y fotos por falla', 
   assert.equal(cat.limites.adjunto.por_falla, 10);
 });
 
+test('máquinas: la lista se pagina y los filtros llegan aparte', async () => {
+  for (let i = 0; i < 3; i += 1) {
+    const r = await api('POST', '/api/maquinas', {
+      token: adminToken,
+      body: { codigo: `PAG-${i}`, nombre: `Equipo paginado ${i}`, area: 'Envasado', departamento: 'Producción' },
+    });
+    assert.equal(r.status, 201);
+  }
+
+  // Sin "limite" siguen viniendo todas: los formularios dependen de la lista completa.
+  const todas = await api('GET', '/api/maquinas', { token: adminToken });
+  assert.ok(todas.datos.length >= 4);
+
+  const pagina = await api('GET', '/api/maquinas?limite=2&pagina=1', { token: adminToken });
+  assert.equal(pagina.datos.length, 2);
+  const total = Number(pagina.headers.get('x-total-count'));
+  assert.equal(total, todas.datos.length);
+
+  const segunda = await api('GET', '/api/maquinas?limite=2&pagina=2', { token: adminToken });
+  assert.notEqual(segunda.datos[0].id, pagina.datos[0].id);
+
+  // El total refleja el filtro, no el parque completo.
+  const filtrada = await api('GET', '/api/maquinas?departamento=Producción&limite=2&pagina=1', { token: adminToken });
+  assert.ok(Number(filtrada.headers.get('x-total-count')) >= 3);
+  assert.ok(filtrada.datos.every((m) => m.departamento === 'Producción'));
+
+  const filtros = await api('GET', '/api/maquinas/filtros', { token: adminToken });
+  assert.equal(filtros.status, 200);
+  assert.ok(filtros.datos.areas.includes('Envasado'));
+  assert.ok(filtros.datos.departamentos.includes('Producción'));
+});
+
 test('seguridad: cabeceras CSP y salud de la base', async () => {
   const r = await api('GET', '/api/salud');
   assert.equal(r.status, 200);

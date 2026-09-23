@@ -21,9 +21,7 @@ const VACIA = {
   corriente: '',
   potencia: '',
   presion_aire: '',
-  consumo_aire: '',
   presion_vapor: '',
-  consumo_vapor: '',
   notas: '',
 };
 
@@ -73,9 +71,7 @@ const VACIA = {
         <label>Corriente<input name="corriente" [maxlength]="L.corriente" placeholder="32 A" [(ngModel)]="d.corriente"></label>
         <label>Potencia<input name="potencia" [maxlength]="L.potencia" placeholder="15 kW" [(ngModel)]="d.potencia"></label>
         <label>Presión de aire<input name="presion_aire" [maxlength]="L.presion_aire" placeholder="6 bar" [(ngModel)]="d.presion_aire"></label>
-        <label>Consumo de aire<input name="consumo_aire" [maxlength]="L.consumo_aire" placeholder="300 L/min" [(ngModel)]="d.consumo_aire"></label>
         <label>Presión de vapor<input name="presion_vapor" [maxlength]="L.presion_vapor" placeholder="3 bar" [(ngModel)]="d.presion_vapor"></label>
-        <label>Consumo de vapor<input name="consumo_vapor" [maxlength]="L.consumo_vapor" placeholder="60 kg/h" [(ngModel)]="d.consumo_vapor"></label>
         <label class="wide">Notas técnicas<textarea name="notas" [maxlength]="L.notas" [(ngModel)]="d.notas"></textarea></label>
       </div>
 

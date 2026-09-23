@@ -33,8 +33,29 @@ maquinasRouter.get('/', wrap((req, res) => {
   if (estado) { cond.push('m.estado = ?'); args.push(String(estado)); }
   if (area) { cond.push('m.area = ?'); args.push(String(area)); }
   if (departamento) { cond.push('m.departamento = ?'); args.push(String(departamento)); }
-  const sql = `${SELECT_BASE} ${cond.length ? `WHERE ${cond.join(' AND ')}` : ''} ORDER BY m.codigo`;
-  res.json(rows(db.prepare(sql), ...args));
+  const where = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
+  // Sin "limite" devuelve todo: los selectores de máquina de los formularios necesitan la lista completa.
+  const limite = entero(req.query.limite, 'limite', { min: 1, max: 200 });
+  if (!limite) {
+    return res.json(rows(db.prepare(`${SELECT_BASE} ${where} ORDER BY m.codigo`), ...args));
+  }
+  const pagina = entero(req.query.pagina, 'pagina', { min: 1 }) ?? 1;
+  const { total } = row(db.prepare(`SELECT COUNT(*) AS total FROM maquinas m ${where}`), ...args);
+  res.setHeader('X-Total-Count', String(total));
+  res.json(rows(db.prepare(`${SELECT_BASE} ${where} ORDER BY m.codigo LIMIT ? OFFSET ?`),
+    ...args, limite, (pagina - 1) * limite));
+}));
+
+/**
+ * Valores para los desplegables de filtro. Van aparte porque con la lista paginada
+ * el cliente ya no ve todas las máquinas y no puede deducirlos.
+ * Se declara antes de "/:id" para que Express no lo tome por un identificador.
+ */
+maquinasRouter.get('/filtros', wrap((_req, res) => {
+  const distintos = (columna) => rows(db.prepare(
+    `SELECT DISTINCT ${columna} AS v FROM maquinas WHERE ${columna} IS NOT NULL AND ${columna} <> '' ORDER BY v`,
+  )).map((f) => f.v);
+  res.json({ areas: distintos('area'), departamentos: distintos('departamento') });
 }));
 
 maquinasRouter.get('/:id', wrap((req, res) => {
@@ -54,7 +75,7 @@ maquinasRouter.get('/:id', wrap((req, res) => {
 
 /** Ficha técnica: datos de texto libre para admitir valores como "380 V trifásico" o "6-8 bar". */
 const TEXTOS = ['codigo', 'nombre', 'departamento', 'marca', 'modelo', 'num_serie', 'capacidad', 'area', 'poe', 'tension', 'corriente',
-  'potencia', 'presion_aire', 'consumo_aire', 'presion_vapor', 'consumo_vapor', 'notas'];
+  'potencia', 'presion_aire', 'presion_vapor', 'notas'];
 const CAMPOS = [...TEXTOS, 'tipo_id', 'anio', 'estado'];
 
 const normalizar = (v) => {
