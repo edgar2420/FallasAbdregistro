@@ -1,13 +1,12 @@
 import { Router } from 'express';
 import { db, rows, row } from '../db.js';
 import { wrap } from '../errors.js';
+import { ABIERTAS_SQL as ABIERTAS } from '../catalogos.js';
 
 export const statsRouter = Router();
 
-const ABIERTAS = "('Abierta','En proceso','Recurrente')";
-
 statsRouter.get('/', wrap((req, res) => {
-  const dias = Number(req.query.dias) > 0 ? Number(req.query.dias) : 30;
+  const dias = Math.min(Math.max(Math.trunc(Number(req.query.dias)) || 30, 1), 3650);
   const desde = `-${dias} days`;
 
   const resumen = row(db.prepare(`
@@ -21,8 +20,8 @@ statsRouter.get('/', wrap((req, res) => {
       (SELECT COUNT(*) FROM fallas WHERE estado = 'Resuelta') AS fallas_resueltas,
       (SELECT COUNT(*) FROM soluciones) AS soluciones,
       (SELECT IFNULL(SUM(paro_minutos), 0) FROM fallas
-         WHERE date(fecha_deteccion) >= date('now', ?)) AS paro_minutos_periodo,
-      (SELECT COUNT(*) FROM fallas WHERE date(fecha_deteccion) >= date('now', ?)) AS fallas_periodo
+         WHERE date(fecha_deteccion) >= date('now', 'localtime', ?)) AS paro_minutos_periodo,
+      (SELECT COUNT(*) FROM fallas WHERE date(fecha_deteccion) >= date('now', 'localtime', ?)) AS fallas_periodo
   `), desde, desde);
 
   // MTTR: promedio de horas entre detección y resolución de las fallas cerradas.

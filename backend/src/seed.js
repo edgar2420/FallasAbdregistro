@@ -3,18 +3,24 @@
  * frecuentes con sus soluciones. Ejecutar con:  npm run seed
  * Usar  npm run seed -- --reset  para vaciar la base antes de cargar.
  */
-import { db, row } from './db.js';
+import fs from 'node:fs';
+import { db, row, adjuntosDir } from './db.js';
 import { p } from './utils.js';
 import { crearHash } from './auth.js';
 
-const crearUsuarios = db.prepare(`INSERT OR IGNORE INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)`);
-crearUsuarios.run('Administrador', 'admin', crearHash('Admin1234!'), 'admin');
-crearUsuarios.run('Operador de planta', 'operador', crearHash('Operador1234!'), 'operador');
+/*
+ * Cuentas iniciales: sólo se crean si no existen y deben cambiar su contraseña en el primer ingreso.
+ * Las claves pueden definirse con ADMIN_PASSWORD y OPERADOR_PASSWORD.
+ */
+const crearUsuario = db.prepare(`INSERT OR IGNORE INTO usuarios (nombre, email, password_hash, rol, debe_cambiar) VALUES (?, ?, ?, ?, 1)`);
+crearUsuario.run('Administrador', 'admin', crearHash(process.env.ADMIN_PASSWORD || 'Admin1234!'), 'admin');
+crearUsuario.run('Operador de planta', 'operador', crearHash(process.env.OPERADOR_PASSWORD || 'Operador1234!'), 'operador');
 
 const reset = process.argv.includes('--reset');
 if (reset) {
-  db.exec('DELETE FROM soluciones; DELETE FROM fallas; DELETE FROM maquinas; DELETE FROM tipos_maquina;');
-  db.exec("DELETE FROM sqlite_sequence WHERE name IN ('soluciones','fallas','maquinas','tipos_maquina');");
+  db.exec('DELETE FROM adjuntos; DELETE FROM soluciones; DELETE FROM fallas; DELETE FROM maquinas; DELETE FROM tipos_maquina;');
+  db.exec("DELETE FROM sqlite_sequence WHERE name IN ('adjuntos','soluciones','fallas','maquinas','tipos_maquina');");
+  for (const archivo of fs.readdirSync(adjuntosDir)) fs.rmSync(`${adjuntosDir}/${archivo}`, { force: true });
   console.log('Base vaciada.');
 }
 
@@ -27,6 +33,7 @@ const TIPOS = [
   ['Autoclave', 'Esterilizadores por vapor saturado'],
   ['Compresor', 'Compresores de aire de planta'],
   ['Envasadora', 'Envasadoras de blíster y sachet'],
+  ['Ósmosis inversa', 'Sistemas de tratamiento de agua purificada por ósmosis inversa'],
 ];
 
 const MAQUINAS = [
@@ -40,7 +47,26 @@ const MAQUINAS = [
   ['ETI-01', 'Etiquetadora autoadhesiva doble cara', 'Etiquetadora', 'Herma', '400', 'Acondicionado', 2019],
   ['COM-01', 'Compresor de tornillo 75 HP', 'Compresor', 'Atlas Copco', 'GA55', 'Servicios', 2014],
   ['ENV-01', 'Blistera alternativa', 'Envasadora', 'Uhlmann', 'UPS4', 'Sólidos', 2013],
+  ['OSM-01', 'Planta de ósmosis inversa doble paso', 'Ósmosis inversa', 'Veolia', 'Orion 2000', 'Ósmosis', 2019],
 ];
+
+/**
+ * Ficha técnica de ejemplo: [POE, tensión, corriente, potencia, presión aire, consumo aire,
+ * presión vapor, consumo vapor]. Reemplazar por los datos reales de placa de cada equipo.
+ */
+const FICHAS = {
+  'BP-460': ['POE-MAN-011; POE-PRO-021', '380 V trifásico 60 Hz', '95 A', '45 kW', '6-8 bar', '1200 L/min', '3 bar', '60 kg/h'],
+  'BP-321': ['POE-MAN-012; POE-PRO-022', '380 V trifásico 60 Hz', '70 A', '32 kW', '6-8 bar', '900 L/min', '3 bar', '45 kg/h'],
+  'SHV-AMP1': ['POE-MAN-020', '380 V trifásico 60 Hz', '25 A', '11 kW', '6 bar', '300 L/min', null, null],
+  'SHV-AUT1': ['POE-MAN-021; POE-VAL-004', '380 V trifásico 60 Hz', '16 A', '7.5 kW', '6 bar', '50 L/min', '3.5 bar', '180 kg/h'],
+  'TAP-01': ['POE-MAN-030', '220 V monofásico 60 Hz', '8 A', '1.5 kW', '6 bar', '150 L/min', null, null],
+  'TAP-02': ['POE-MAN-031', '220 V monofásico 60 Hz', '10 A', '2.2 kW', '6 bar', '200 L/min', null, null],
+  'LLE-01': ['POE-MAN-040', '380 V trifásico 60 Hz', '12 A', '4 kW', '6 bar', '250 L/min', null, null],
+  'ETI-01': ['POE-MAN-050', '220 V monofásico 60 Hz', '6 A', '1.2 kW', null, null, null, null],
+  'COM-01': ['POE-MAN-060', '380 V trifásico 60 Hz', '105 A', '55 kW', '7.5 bar (descarga)', '9.5 m³/min (entrega)', null, null],
+  'ENV-01': ['POE-MAN-070', '380 V trifásico 60 Hz', '40 A', '18 kW', '6 bar', '400 L/min', null, null],
+  'OSM-01': ['POE-MAN-080; POE-AGU-002', '380 V trifásico 60 Hz', '32 A', '15 kW', '6 bar', '20 L/min', null, null],
+};
 
 /** [maquina, titulo, sintomas, categoria, severidad, causa_raiz, paro_min, dias_atras, solucion] */
 const CASOS = [
@@ -200,6 +226,13 @@ const idTipo = (nombre) => row(db.prepare('SELECT id FROM tipos_maquina WHERE no
 TIPOS.forEach(([nombre, desc]) => insertTipo.run(nombre, desc));
 MAQUINAS.forEach(([codigo, nombre, tipo, marca, modelo, area, anio]) =>
   insertMaquina.run(codigo, nombre, p(idTipo(tipo)), marca, modelo, area, anio, 'Operativa'));
+
+// Sólo completa la ficha de las máquinas que todavía no tienen datos técnicos cargados.
+const completarFicha = db.prepare(`
+  UPDATE maquinas SET poe = ?, tension = ?, corriente = ?, potencia = ?, presion_aire = ?,
+    consumo_aire = ?, presion_vapor = ?, consumo_vapor = ?
+  WHERE codigo = ? AND poe IS NULL AND tension IS NULL`);
+Object.entries(FICHAS).forEach(([codigo, ficha]) => completarFicha.run(...ficha.map(p), codigo));
 
 const yaHayFallas = row(db.prepare('SELECT COUNT(*) AS n FROM fallas')).n;
 if (yaHayFallas > 0) {

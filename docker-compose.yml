@@ -1,22 +1,15 @@
+# Un solo contenedor: API + interfaz en http://localhost:4010.
+# La base SQLite, las fotos y los PDF quedan en el volumen "fallas_data" (sobreviven a reconstrucciones).
 services:
-  postgres:
-    image: postgres:16-alpine
+  app:
+    build: .
     environment:
-      POSTGRES_DB: control_fallas
-      POSTGRES_USER: fallas_app
-      POSTGRES_PASSWORD: cambia_esta_clave
+      # Contraseña inicial del usuario "admin" (se pide cambiarla en el primer ingreso).
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234!}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-  backend:
-    build: ./backend
-    environment:
-      PORT: 4010
-      DATABASE_URL: postgresql://fallas_app:cambia_esta_clave@postgres:5432/control_fallas
-    depends_on:
-      - postgres
+      - fallas_data:/data
     ports:
       - "4010:4010"
+    restart: unless-stopped
 volumes:
-  postgres_data:
+  fallas_data:
