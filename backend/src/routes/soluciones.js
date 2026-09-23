@@ -4,6 +4,7 @@ import { HttpError, wrap } from '../errors.js';
 import { p, texto, entero, decimal, fecha, busqueda } from '../utils.js';
 import { admin } from '../auth.js';
 import { recalcularFalla } from '../estado.js';
+import { LIMITES, limitar } from '../limites.js';
 
 export const solucionesRouter = Router();
 
@@ -12,7 +13,7 @@ export const normalizarSolucion = (v, previo = {}) => {
   const m = { ...previo, ...v };
   const descripcion = texto(m.descripcion);
   if (!descripcion) throw new HttpError(400, 'El campo "descripcion" es obligatorio');
-  return {
+  return limitar({
     descripcion,
     repuestos: texto(m.repuestos),
     herramientas: texto(m.herramientas),
@@ -22,7 +23,7 @@ export const normalizarSolucion = (v, previo = {}) => {
     efectiva: m.efectiva === undefined ? 1 : (m.efectiva && m.efectiva !== '0' ? 1 : 0),
     preventivo: texto(m.preventivo),
     fecha: fecha(m.fecha, 'fecha') || previo.fecha || ahora(),
-  };
+  }, LIMITES.solucion);
 };
 
 /** Base de conocimiento: soluciones con el contexto de su falla y su máquina. */

@@ -5,6 +5,7 @@ import {
   admin, auth, authPermitirCambio, cerrarSesiones, crearHash, HASH_SEÑUELO, iniciarSesion, politica,
   registrar, valido,
 } from '../auth.js';
+import { LIMITES, limitar } from '../limites.js';
 
 export const authRouter = Router();
 
@@ -104,7 +105,7 @@ authRouter.get('/actividad', auth, admin, wrap((req, res) => {
 }));
 
 authRouter.post('/usuarios', auth, admin, wrap((req, res) => {
-  const nombre = requerido(req.body.nombre, 'nombre');
+  const nombre = limitar({ nombre: requerido(req.body.nombre, 'nombre') }, LIMITES.usuario).nombre;
   const email = normalizarUsuario(req.body.email);
   const password = politica(req.body.password);
   if (row(db.prepare('SELECT id FROM usuarios WHERE email = ?'), email)) throw new HttpError(409, 'Ese usuario ya está registrado');
@@ -121,6 +122,7 @@ authRouter.patch('/usuarios/:id', auth, admin, wrap((req, res) => {
   if (!u) throw new HttpError(404, 'Usuario no encontrado');
 
   const nombre = req.body.nombre === undefined ? u.nombre : requerido(req.body.nombre, 'nombre');
+  limitar({ nombre }, LIMITES.usuario);
   const rol = ['admin', 'operador'].includes(req.body.rol) ? req.body.rol : u.rol;
   const activo = req.body.activo === undefined ? u.activo : (req.body.activo ? 1 : 0);
   const password = req.body.password ? politica(req.body.password) : null;

@@ -3,11 +3,13 @@ import { FormsModule } from '@angular/forms';
 import { Api } from '../api';
 import { Solucion } from '../modelos';
 import { aInputFecha } from '../util';
+import { LIMITES } from '../limites';
+import { Contador } from './contador';
 
 /** Alta o edición de una intervención (sólo administradores). Se muestra dentro de <app-modal>. */
 @Component({
   selector: 'app-solucion-form',
-  imports: [FormsModule],
+  imports: [FormsModule, Contador],
   template: `
     <form class="modal-form" (submit)="$event.preventDefault(); guardar()">
       @if (error) {
@@ -15,16 +17,16 @@ import { aInputFecha } from '../util';
       }
       <div class="crud-grid">
         <label class="wide">Intervención realizada (pasos) *
-          <textarea name="descripcion" required [(ngModel)]="d.descripcion"></textarea>
+          <textarea name="descripcion" [maxlength]="L.descripcion" required [(ngModel)]="d.descripcion"></textarea>
         </label>
-        <label>Repuestos<input name="repuestos" [(ngModel)]="d.repuestos"></label>
-        <label>Herramientas<input name="herramientas" [(ngModel)]="d.herramientas"></label>
-        <label>Técnico<input name="tecnico" [(ngModel)]="d.tecnico"></label>
+        <label>Repuestos<input name="repuestos" [maxlength]="L.repuestos" [(ngModel)]="d.repuestos"></label>
+        <label>Herramientas<input name="herramientas" [maxlength]="L.herramientas" [(ngModel)]="d.herramientas"></label>
+        <label>Técnico<input name="tecnico" [maxlength]="L.tecnico" [(ngModel)]="d.tecnico"></label>
         <label>Fecha<input name="fecha" type="datetime-local" [(ngModel)]="d.fecha"></label>
         <label>Tiempo (min)<input name="tiempo" type="number" min="0" [(ngModel)]="d.tiempo_minutos"></label>
         <label>Costo<input name="costo" type="number" min="0" step="0.01" [(ngModel)]="d.costo"></label>
         <label class="wide">Acción preventiva recomendada
-          <textarea name="preventivo" [(ngModel)]="d.preventivo"></textarea>
+          <textarea name="preventivo" [maxlength]="L.preventivo" [(ngModel)]="d.preventivo"></textarea>
         </label>
         <label class="check-label">
           <input name="efectiva" type="checkbox" [(ngModel)]="d.efectiva">
@@ -47,6 +49,7 @@ export class SolucionForm implements OnInit {
   readonly guardado = output<void>();
   readonly cancelar = output<void>();
 
+  readonly L = LIMITES.solucion;
   d = {
     descripcion: '',
     repuestos: '',

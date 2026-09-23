@@ -5,6 +5,7 @@ import { p, texto, unoDe, entero, busqueda } from '../utils.js';
 import { admin } from '../auth.js';
 import { ABIERTAS_SQL, ESTADOS_MAQUINA } from '../catalogos.js';
 import { sincronizarMaquina } from '../estado.js';
+import { LIMITES, limitar } from '../limites.js';
 import { archivosDe, borrarArchivos, listarAdjuntos } from './adjuntos.js';
 
 export const maquinasRouter = Router();
@@ -60,6 +61,7 @@ const normalizar = (v) => {
   const d = Object.fromEntries(TEXTOS.map((c) => [c, texto(v[c])]));
   if (!d.codigo) throw new HttpError(400, 'El campo "codigo" es obligatorio');
   if (!d.nombre) throw new HttpError(400, 'El campo "nombre" es obligatorio');
+  limitar(d, LIMITES.maquina);
   d.codigo = d.codigo.toUpperCase();
   d.tipo_id = entero(v.tipo_id, 'tipo_id', { min: 1 });
   if (d.tipo_id && !row(db.prepare('SELECT id FROM tipos_maquina WHERE id = ?'), d.tipo_id)) {

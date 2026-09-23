@@ -31,8 +31,8 @@ npm run build
 npm start
 ```
 
-Con Docker: `docker compose up --build` (o `iniciar-docker.bat`). La base y las fotos quedan en el
-volumen `fallas_data`.
+En un servidor o VPS con HTTPS: ver **[DESPLIEGUE.md](DESPLIEGUE.md)** (Docker Compose + Caddy, respaldos
+automáticos y seguridad del servidor).
 
 ### Primer ingreso
 
@@ -56,10 +56,10 @@ ingreso**, y lo mismo ocurre con las cuentas nuevas y las claves restablecidas p
     ven síntomas, causa raíz, todas las intervenciones y las fotos de esa falla.
 - **Fallas**: tabla de todas las fallas con búsqueda y filtros por máquina, tipo, categoría,
   severidad, estado y rango de fechas. Exportación a Excel (CSV).
-- **Soluciones**: base de conocimiento — se busca un síntoma y se ve qué se hizo, con qué repuestos y
-  cuánto tomó.
-- **Usuarios** (administrador): alta de cuentas, roles, activación, restablecimiento de clave y
-  bitácora de actividad (cambios, consultas de fichas, accesos y exportaciones).
+- **Usuarios** (administrador): alta de cuentas, roles, activación y restablecimiento de clave.
+
+**Límites**: cada campo tiene un máximo de caracteres (con contador en los textos largos), cada máquina
+admite 40 fotos/PDF y cada falla 10 (8 MB por archivo), y las tablas se muestran paginadas.
 
 Reglas automáticas: una solución marcada *efectiva* cierra la falla; si deja de serlo, la falla se
 reabre. Una máquina con fallas abiertas Alta/Crítica pasa a *En falla* y vuelve a *Operativa* al
@@ -75,6 +75,8 @@ resolverlas (salvo *Mantenimiento* o *Fuera de servicio*, que son estados manual
 - Un administrador no puede quitarse el rol ni desactivarse, y siempre queda al menos uno activo.
 - Los archivos subidos se validan por su firma (no por la extensión) y se sirven sólo con sesión.
 - La exportación CSV neutraliza fórmulas de Excel.
+- Política de contenido (CSP) estricta, límite general de peticiones por IP, base SQLite en modo WAL,
+  apagado ordenado y respaldos automáticos (`npm run respaldo` o `RESPALDO_HORAS=24`).
 
 ## Modelo de datos
 

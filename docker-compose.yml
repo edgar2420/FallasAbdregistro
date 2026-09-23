@@ -1,15 +1,62 @@
-# Un solo contenedor: API + interfaz en http://localhost:4010.
-# La base SQLite, las fotos y los PDF quedan en el volumen "fallas_data" (sobreviven a reconstrucciones).
+# Producción: la app detrás de Caddy, que pone HTTPS automático (Let's Encrypt) con tu dominio.
+# Configuración en el archivo .env (copiar de .env.example). Guía completa: DESPLIEGUE.md
+#
+#   docker compose up -d --build
+#
+# La base SQLite, las fotos y los respaldos diarios viven en el volumen "fallas_data".
 services:
   app:
     build: .
+    restart: unless-stopped
     environment:
       # Contraseña inicial del usuario "admin" (se pide cambiarla en el primer ingreso).
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234!}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Define ADMIN_PASSWORD en el archivo .env}
+      TRUST_PROXY: "1"          # Caddy está delante: la IP real del usuario llega en X-Forwarded-For
+      RESPALDO_HORAS: "24"      # respaldo automático diario dentro del volumen
+      RESPALDOS_GUARDAR: "14"   # conserva las últimas 2 semanas
     volumes:
       - fallas_data:/data
-    ports:
-      - "4010:4010"
+    expose:
+      - "4010"                  # sólo accesible desde Caddy, no desde Internet
+    # Endurecimiento del contenedor: sistema de archivos de sólo lectura (salvo /data y /tmp),
+    # sin privilegios extra y con memoria acotada.
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  caddy:
+    image: caddy:2-alpine
     restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      DOMINIO: ${DOMINIO:?Define DOMINIO en el archivo .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   fallas_data:
+  caddy_data:
+  caddy_config:

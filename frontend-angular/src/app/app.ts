@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Api } from './api';
 import { CambiarPassword } from './componentes/cambiar-password';
@@ -20,6 +20,10 @@ export class App {
   );
   protected readonly login = signal({ usuario: '', password: '' });
   protected readonly oscuro = signal(document.documentElement.dataset['theme'] === 'dark');
+  /** Menú lateral contraído a sólo íconos (escritorio). Se recuerda en el navegador. */
+  protected readonly menuCerrado = signal(document.documentElement.dataset['menu'] === 'cerrado');
+  /** Menú abierto como cajón (pantallas chicas). */
+  protected readonly menuMovil = signal(false);
   protected error = '';
   protected busy = false;
 
@@ -57,6 +61,23 @@ export class App {
     } catch {
       /* sin almacenamiento el tema dura lo que la pestaña */
     }
+  }
+
+  alternarMenu() {
+    const cerrado = !this.menuCerrado();
+    this.menuCerrado.set(cerrado);
+    if (cerrado) document.documentElement.dataset['menu'] = 'cerrado';
+    else delete document.documentElement.dataset['menu'];
+    try {
+      localStorage.setItem('cf_menu', cerrado ? 'cerrado' : 'abierto');
+    } catch {
+      /* sin almacenamiento el estado dura lo que la pestaña */
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  cerrarMenuMovil() {
+    this.menuMovil.set(false);
   }
 
   cambiar(campo: 'usuario' | 'password', valor: string) {

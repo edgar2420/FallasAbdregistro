@@ -42,6 +42,11 @@
   --info-tint: #e6f0fb;
   --info-text: #1a5ca5;
 
+  /* Falla (problema) en naranja; la solución usa --ok (verde) y lo pendiente --crit (rojo). */
+  --falla: #d9730d;
+  --falla-tint: #fdf0e3;
+  --falla-text: #9a4a05;
+
   /* Menú lateral */
   --side-bg: #0f2a3f;
   --side-line: #1d3b53;
@@ -67,8 +72,9 @@
 
   --ring: 0 0 0 3px rgb(15 92 140 / 22%);
 
-  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --display: 'Barlow Condensed', 'Inter', sans-serif;
+  --sans: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --display: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
 
   --step: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   --sidebar-w: 248px;
@@ -112,6 +118,10 @@
 
   --info-tint: #13233a;
   --info-text: #86b8ff;
+
+  --falla: #f08c2e;
+  --falla-tint: #2b1d10;
+  --falla-text: #f7ae68;
 
   --side-bg: #0f1829;
   --side-line: #22304a;

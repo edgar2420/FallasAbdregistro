@@ -206,3 +206,42 @@ test('la máquina guarda departamento y capacidad de la placa', async () => {
   const lista = (await api('GET', `/api/maquinas?departamento=${encodeURIComponent('Servicios de apoyo')}`, { token: adminToken })).datos;
   assert.ok(lista.some((x) => x.codigo === 'AM-015-01'));
 });
+
+test('límites: caracteres por campo, paginación de fallas y fotos por falla', async () => {
+  const largo = await api('POST', '/api/fallas', { token: adminToken, body: { maquina_id: maquina.id, titulo: 'x'.repeat(151) } });
+  assert.equal(largo.status, 400);
+  assert.match(largo.datos.error, /como máximo 150/);
+
+  const pagina = await api('GET', '/api/fallas?limite=2&pagina=1', { token: adminToken });
+  assert.equal(pagina.datos.length, 2);
+  assert.ok(Number(pagina.headers.get('x-total-count')) > 2);
+
+  const f = (await api('POST', '/api/fallas', { token: adminToken, body: { maquina_id: maquina.id, titulo: 'Fotos' } })).datos;
+  for (let i = 0; i < 10; i += 1) {
+    const r = await api('POST', '/api/adjuntos', { token: adminToken, body: { falla_id: f.id, datos: PNG.toString('base64') } });
+    assert.equal(r.status, 201);
+  }
+  const extra = await api('POST', '/api/adjuntos', { token: adminToken, body: { falla_id: f.id, datos: PNG.toString('base64') } });
+  assert.equal(extra.status, 409);
+
+  const cat = (await api('GET', '/api/catalogos')).datos;
+  assert.equal(cat.limites.adjunto.por_falla, 10);
+});
+
+test('seguridad: cabeceras CSP y salud de la base', async () => {
+  const r = await api('GET', '/api/salud');
+  assert.equal(r.status, 200);
+  assert.match(r.headers.get('content-security-policy'), /script-src 'self'/);
+  assert.equal(r.headers.get('x-frame-options'), 'DENY');
+});
+
+test('respaldo: copia la base y los adjuntos', async () => {
+  const { respaldar } = await import('../src/respaldo.js');
+  const destino = respaldar();
+  assert.ok(fs.existsSync(path.join(destino, 'fallas.db')));
+  assert.ok(fs.existsSync(path.join(destino, 'adjuntos')));
+  const { DatabaseSync } = await import('node:sqlite');
+  const copia = new DatabaseSync(path.join(destino, 'fallas.db'));
+  assert.ok(copia.prepare('SELECT COUNT(*) AS n FROM maquinas').get().n > 0);
+  copia.close();
+});

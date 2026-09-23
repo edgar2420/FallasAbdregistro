@@ -4,11 +4,12 @@ import { Router, RouterLink } from '@angular/router';
 import { Api } from '../api';
 import { Falla, Maquina } from '../modelos';
 import { consulta, contiene } from '../util';
+import { Paginador, paginar } from '../componentes/paginador';
 
 /** Tablero: las máquinas como fichas de placa; un clic abre su ficha, fotos y fallas. */
 @Component({
   selector: 'app-tablero-page',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, Paginador],
   template: `
     <div class="module-title">
       <div>
@@ -21,14 +22,14 @@ import { consulta, contiene } from '../util';
     <form class="module-card filtros tablero-filtros" role="search" (submit)="$event.preventDefault(); ir()">
       <input type="search" class="buscador" autocomplete="off" autocapitalize="characters"
              placeholder="Código (AM-015-01), equipo, área o Ref. POE" aria-label="Buscar equipo"
-             [(ngModel)]="q" name="q">
-      <select aria-label="Filtrar por departamento" [(ngModel)]="departamento" name="departamento">
+             [(ngModel)]="q" name="q" (ngModelChange)="pagina = 1">
+      <select aria-label="Filtrar por departamento" [(ngModel)]="departamento" name="departamento" (ngModelChange)="pagina = 1">
         <option value="">Todos los departamentos</option>
         @for (d of departamentos; track d) {
           <option>{{ d }}</option>
         }
       </select>
-      <select aria-label="Filtrar por área" [(ngModel)]="area" name="area">
+      <select aria-label="Filtrar por área" [(ngModel)]="area" name="area" (ngModelChange)="pagina = 1">
         <option value="">Todas las áreas</option>
         @for (a of areas; track a) {
           <option>{{ a }}</option>
@@ -42,7 +43,7 @@ import { consulta, contiene } from '../util';
     }
 
     <section class="placas">
-      @for (m of visibles; track m.id) {
+      @for (m of paginadas; track m.id) {
         <a class="placa" [routerLink]="['/maquinaria', m.id]">
           <header class="placa-head">
             <span class="placa-codigo">{{ m.codigo }}</span>
@@ -83,6 +84,8 @@ import { consulta, contiene } from '../util';
         </div>
       }
     </section>
+    <app-paginador [total]="visibles.length" [pagina]="pagina" [porPagina]="porPagina" [opciones]="[12, 24, 48]"
+                   (cambio)="pagina = $event.pagina; porPagina = $event.porPagina" />
   `,
 })
 export class TableroPage implements OnInit {
@@ -95,6 +98,8 @@ export class TableroPage implements OnInit {
   departamento = '';
   error = '';
   cargando = true;
+  pagina = 1;
+  porPagina = 12;
 
   get areas() {
     return [...new Set(this.maquinas.map((m) => m.area).filter((a): a is string => !!a))].sort();
@@ -102,6 +107,10 @@ export class TableroPage implements OnInit {
 
   get departamentos() {
     return [...new Set(this.maquinas.map((m) => m.departamento).filter((d): d is string => !!d))].sort();
+  }
+
+  get paginadas() {
+    return paginar(this.visibles, this.pagina, this.porPagina);
   }
 
   get visibles() {

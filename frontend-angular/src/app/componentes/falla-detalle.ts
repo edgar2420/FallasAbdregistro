@@ -1,11 +1,12 @@
 import { Component, OnChanges, inject, input, output } from '@angular/core';
 import { Api } from '../api';
 import { Falla, Solucion } from '../modelos';
-import { fechaCorta } from '../util';
+import { fechaCorta, fechaLarga, haceCuanto } from '../util';
 import { FallaForm } from './falla-form';
 import { Modal } from './modal';
 import { Galeria } from './galeria';
 import { SolucionForm } from './solucion-form';
+import { LIMITES } from '../limites';
 
 /** Categoría de foto sugerida según el tipo de falla. */
 function categoriaFoto(categoria: string) {
@@ -47,10 +48,35 @@ function categoriaFoto(categoria: string) {
         </app-modal>
       }
       <div class="detalle">
+        @switch (estado(f)) {
+          @case ('resuelta') {
+            <p class="estado-banda" data-estado="resuelta">
+              <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+              Solucionada{{ f.fecha_resolucion ? ' el ' + larga(f.fecha_resolucion) : '' }}
+            </p>
+          }
+          @case ('intento') {
+            <p class="estado-banda" data-estado="intento">
+              <svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg>
+              Se intentó una solución, pero la falla sigue sin resolverse
+            </p>
+          }
+          @default {
+            <p class="estado-banda" data-estado="pendiente">
+              <svg class="icon" aria-hidden="true"><use href="#i-clock"></use></svg>
+              Todavía no tiene solución registrada
+              @if (api.esAdmin()) {
+                <button type="button" class="primary" (click)="nuevaSolucion = true">Registrar solución</button>
+              }
+            </p>
+          }
+        }
         <div class="detalle-head">
           <div>
             <span class="issue-id">{{ f.codigo }}</span>
-            <h3>{{ f.titulo }}</h3>
+            <h3 class="titulo-falla">
+              <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>{{ f.titulo }}
+            </h3>
             <small class="subline">{{ f.maquina_codigo }} · {{ f.maquina_nombre }}</small>
           </div>
           <div class="chips">
@@ -59,7 +85,7 @@ function categoriaFoto(categoria: string) {
         </div>
 
         <dl class="ficha">
-          <div><dt>Fecha</dt><dd>{{ fecha(f.fecha_deteccion) }}</dd></div>
+          <div><dt>Fecha</dt><dd>{{ larga(f.fecha_deteccion) }} <small class="subline">{{ hace(f.fecha_deteccion) }}</small></dd></div>
           <div><dt>Categoría</dt><dd>{{ f.categoria }}</dd></div>
           @if (f.descripcion) {
             <div class="wide"><dt>Descripción</dt><dd class="texto">{{ f.descripcion }}</dd></div>
@@ -77,7 +103,10 @@ function categoriaFoto(categoria: string) {
           </div>
         }
 
-        <h4>Soluciones aplicadas ({{ f.soluciones_lista?.length ?? 0 }})</h4>
+        <h4 class="titulo-solucion">
+          <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+          Soluciones aplicadas ({{ f.soluciones_lista?.length ?? 0 }})
+        </h4>
         @for (s of f.soluciones_lista ?? []; track s.id) {
             <article class="solucion" [class.no-efectiva]="!s.efectiva">
               <div class="solucion-head">
@@ -103,7 +132,7 @@ function categoriaFoto(categoria: string) {
 
         <h4>Fotos de la falla ({{ f.adjuntos_lista?.length ?? 0 }})</h4>
         <app-galeria [adjuntos]="f.adjuntos_lista ?? []" [fallaId]="f.id" [maquinaId]="f.maquina_id"
-                     [categoriaInicial]="catFoto(f.categoria)" [conPestanas]="false" (cambio)="recargar()" />
+                     [categoriaInicial]="catFoto(f.categoria)" [conPestanas]="false" [maximo]="maxFotos" (cambio)="recargar()" />
       </div>
     }
   `,
@@ -120,7 +149,15 @@ export class FallaDetalle implements OnChanges {
   solucionEditada: Solucion | null = null;
 
   readonly fecha = fechaCorta;
+  readonly larga = fechaLarga;
+  readonly hace = haceCuanto;
+
+  estado(f: Falla) {
+    if (f.estado === 'Resuelta') return 'resuelta';
+    return f.soluciones_lista?.length ? 'intento' : 'pendiente';
+  }
   readonly catFoto = categoriaFoto;
+  readonly maxFotos = LIMITES.adjunto.por_falla;
 
   ngOnChanges() {
     void this.cargar();

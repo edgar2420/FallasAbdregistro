@@ -5,11 +5,13 @@ import { Api } from '../api';
 import { Maquina, Tipo } from '../modelos';
 import { MaquinaForm } from '../componentes/maquina-form';
 import { Modal } from '../componentes/modal';
+import { Paginador, paginar } from '../componentes/paginador';
+import { LIMITES, POR_PAGINA } from '../limites';
 import { contiene } from '../util';
 
 @Component({
   selector: 'app-maquinaria-page',
-  imports: [FormsModule, RouterLink, MaquinaForm, Modal],
+  imports: [FormsModule, RouterLink, MaquinaForm, Modal, Paginador],
   template: `
     <div class="module-title">
       <div>
@@ -43,8 +45,8 @@ import { contiene } from '../util';
           @for (t of tipos; track t.id) {
             <div class="user-row">
               @if (editandoTipo === t.id) {
-                <input aria-label="Nombre del tipo" [(ngModel)]="tipoDraft.nombre">
-                <input aria-label="Descripción del tipo" [(ngModel)]="tipoDraft.descripcion" placeholder="Descripción">
+                <input aria-label="Nombre del tipo" [maxlength]="LT.nombre" [(ngModel)]="tipoDraft.nombre">
+                <input aria-label="Descripción del tipo" [maxlength]="LT.descripcion" [(ngModel)]="tipoDraft.descripcion" placeholder="Descripción">
                 <button type="button" (click)="guardarTipo(t)">Guardar</button>
                 <button type="button" (click)="editandoTipo = null">Cancelar</button>
               } @else {
@@ -59,8 +61,8 @@ import { contiene } from '../util';
           }
         </div>
         <form class="filter-row nuevo-tipo" (submit)="$event.preventDefault(); crearTipo()">
-          <input aria-label="Nuevo tipo" placeholder="Nuevo tipo (ej. Ósmosis inversa)" name="nt" [(ngModel)]="nuevoTipo.nombre">
-          <input aria-label="Descripción" placeholder="Descripción" name="nd" [(ngModel)]="nuevoTipo.descripcion">
+          <input aria-label="Nuevo tipo" placeholder="Nuevo tipo (ej. Ósmosis inversa)" name="nt" [maxlength]="LT.nombre" [(ngModel)]="nuevoTipo.nombre">
+          <input aria-label="Descripción" placeholder="Descripción" name="nd" [maxlength]="LT.descripcion" [(ngModel)]="nuevoTipo.descripcion">
           <button class="primary" type="submit">Agregar tipo</button>
         </form>
       </app-modal>
@@ -68,20 +70,20 @@ import { contiene } from '../util';
 
     <section class="module-card filtros">
       <input type="search" class="buscador" placeholder="Buscar por código, equipo, área o Ref. POE"
-             aria-label="Buscar máquina por código o nombre" [(ngModel)]="q">
-      <select aria-label="Filtrar por departamento" [(ngModel)]="departamento">
+             aria-label="Buscar máquina por código o nombre" [(ngModel)]="q" (ngModelChange)="pagina = 1">
+      <select aria-label="Filtrar por departamento" [(ngModel)]="departamento" (ngModelChange)="pagina = 1">
         <option value="">Todos los departamentos</option>
         @for (d of departamentos; track d) {
           <option>{{ d }}</option>
         }
       </select>
-      <select aria-label="Filtrar por tipo" [(ngModel)]="tipoId">
+      <select aria-label="Filtrar por tipo" [(ngModel)]="tipoId" (ngModelChange)="pagina = 1">
         <option [ngValue]="null">Todos los tipos</option>
         @for (t of tipos; track t.id) {
           <option [ngValue]="t.id">{{ t.nombre }}</option>
         }
       </select>
-      <select aria-label="Filtrar por área" [(ngModel)]="area">
+      <select aria-label="Filtrar por área" [(ngModel)]="area" (ngModelChange)="pagina = 1">
         <option value="">Todas las áreas</option>
         @for (a of areas; track a) {
           <option>{{ a }}</option>
@@ -105,7 +107,7 @@ import { contiene } from '../util';
             </tr>
           </thead>
           <tbody>
-            @for (m of filtradas; track m.id) {
+            @for (m of paginadas; track m.id) {
               <tr class="clicable" tabindex="0" (click)="abrir(m)" (keydown.enter)="abrir(m)">
                 <td><a class="codigo" [routerLink]="['/maquinaria', m.id]" (click)="$event.stopPropagation()">{{ m.codigo }}</a></td>
                 <td>
@@ -128,6 +130,8 @@ import { contiene } from '../util';
           </tbody>
         </table>
       </div>
+      <app-paginador [total]="filtradas.length" [pagina]="pagina" [porPagina]="porPagina"
+                     (cambio)="pagina = $event.pagina; porPagina = $event.porPagina" />
     </section>
   `,
 })
@@ -142,6 +146,9 @@ export class MaquinariaPage implements OnInit {
   tipoId: number | null = null;
   area = '';
   departamento = '';
+  pagina = 1;
+  porPagina = POR_PAGINA[1];
+  readonly LT = LIMITES.tipo;
   error = '';
   cargando = true;
   creando = false;
@@ -157,6 +164,10 @@ export class MaquinariaPage implements OnInit {
 
   get departamentos() {
     return [...new Set(this.items.map((m) => m.departamento).filter((d): d is string => !!d))].sort();
+  }
+
+  get paginadas() {
+    return paginar(this.filtradas, this.pagina, this.porPagina);
   }
 
   get filtradas() {

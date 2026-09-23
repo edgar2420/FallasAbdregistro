@@ -62,6 +62,20 @@ export class Api {
     return this.peticion(this.http.delete<T>(this.base + path, this.opciones()));
   }
 
+  /** Lista paginada: el servidor devuelve la página y el total en la cabecera X-Total-Count. */
+  async lista<T>(path: string) {
+    const r = await this.peticion(this.http.get<T[]>(this.base + path, { ...this.opciones(), observe: 'response' }));
+    const items = r.body ?? [];
+    // X-Conteo: "todas=22;con=17;sin=5" (fallas con y sin solución con los mismos filtros)
+    const conteo = Object.fromEntries(
+      (r.headers.get('X-Conteo') ?? '').split(';').filter(Boolean).map((p) => {
+        const [k, v] = p.split('=');
+        return [k, Number(v)];
+      }),
+    ) as Record<string, number>;
+    return { items, total: Number(r.headers.get('X-Total-Count') ?? items.length), conteo };
+  }
+
   /** Archivos protegidos (fotos, PDF, CSV): se piden con el token y se muestran como blob. */
   blob(path: string) {
     return this.peticion(this.http.get(this.base + path, { ...this.opciones(), responseType: 'blob' }));

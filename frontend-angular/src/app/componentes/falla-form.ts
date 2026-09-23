@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { Api } from '../api';
 import { Catalogos, Falla, Maquina } from '../modelos';
 import { aInputFecha } from '../util';
+import { LIMITES } from '../limites';
+import { Contador } from './contador';
 
 /**
  * Alta o edición de una falla (sólo administradores). Se muestra dentro de <app-modal>.
@@ -10,7 +12,7 @@ import { aInputFecha } from '../util';
  */
 @Component({
   selector: 'app-falla-form',
-  imports: [FormsModule],
+  imports: [FormsModule, Contador],
   template: `
     <form class="modal-form" (submit)="$event.preventDefault(); guardar()">
       @if (error) {
@@ -29,7 +31,7 @@ import { aInputFecha } from '../util';
         </label>
         <label>Fecha<input name="fecha" type="datetime-local" [(ngModel)]="d.fecha_deteccion"></label>
         <label class="dos">Falla / error *
-          <input name="titulo" required placeholder="Ej.: Baja presión en bomba de alta" [(ngModel)]="d.titulo">
+          <input name="titulo" [maxlength]="L.falla.titulo" required placeholder="Ej.: Baja presión en bomba de alta" [(ngModel)]="d.titulo">
         </label>
         <label>Categoría
           <select name="categoria" [(ngModel)]="d.categoria">
@@ -38,8 +40,8 @@ import { aInputFecha } from '../util';
             }
           </select>
         </label>
-        <label class="wide">Descripción<textarea name="descripcion" [(ngModel)]="d.descripcion"></textarea></label>
-        <label class="wide">Causa<textarea name="causa" [(ngModel)]="d.causa_raiz"></textarea></label>
+        <label class="wide">Descripción<textarea name="descripcion" [maxlength]="L.falla.descripcion" [(ngModel)]="d.descripcion"></textarea></label>
+        <label class="wide">Causa<textarea name="causa" [maxlength]="L.falla.causa_raiz" [(ngModel)]="d.causa_raiz"></textarea></label>
       </div>
 
       @if (!falla()) {
@@ -47,14 +49,14 @@ import { aInputFecha } from '../util';
         <p class="ayuda">Si ya se solucionó, regístralo aquí. Si todavía no, déjalo vacío y agrégalo después desde la falla.</p>
         <div class="crud-grid tres">
           <label class="wide">Qué se hizo (pasos)
-            <textarea name="sol_descripcion" placeholder="1) Parada y bloqueo. 2) Cambio de … 3) Prueba …"
+            <textarea name="sol_descripcion" [maxlength]="L.solucion.descripcion" placeholder="1) Parada y bloqueo. 2) Cambio de … 3) Prueba …"
                       [(ngModel)]="s.descripcion"></textarea>
           </label>
-          <label>Repuestos<input name="sol_repuestos" [(ngModel)]="s.repuestos"></label>
-          <label>Técnico<input name="sol_tecnico" [(ngModel)]="s.tecnico"></label>
+          <label>Repuestos<input name="sol_repuestos" [maxlength]="L.solucion.repuestos" [(ngModel)]="s.repuestos"></label>
+          <label>Técnico<input name="sol_tecnico" [maxlength]="L.solucion.tecnico" [(ngModel)]="s.tecnico"></label>
           <label>Tiempo (min)<input name="sol_tiempo" type="number" min="0" [(ngModel)]="s.tiempo_minutos"></label>
           <label class="wide">Acción preventiva recomendada
-            <textarea name="sol_preventivo" [(ngModel)]="s.preventivo"></textarea>
+            <textarea name="sol_preventivo" [maxlength]="L.solucion.preventivo" [(ngModel)]="s.preventivo"></textarea>
           </label>
         </div>
       }
@@ -75,6 +77,7 @@ export class FallaForm implements OnInit {
   readonly guardado = output<Falla>();
   readonly cancelar = output<void>();
 
+  readonly L = LIMITES;
   cat?: Catalogos;
   maquinas: Maquina[] = [];
   error = '';

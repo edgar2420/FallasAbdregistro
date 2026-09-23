@@ -6,6 +6,7 @@ import { admin } from '../auth.js';
 import { ABIERTAS_SQL, CATEGORIAS, SEVERIDADES, ESTADOS_FALLA, TURNOS } from '../catalogos.js';
 import { sincronizarMaquina, siguienteCodigoFalla } from '../estado.js';
 import { normalizarSolucion } from './soluciones.js';
+import { LIMITES, limitar } from '../limites.js';
 import { archivosDe, borrarArchivos, listarAdjuntos } from './adjuntos.js';
 
 export const fallasRouter = Router();
@@ -39,13 +40,30 @@ fallasRouter.get('/', wrap((req, res) => {
   if (tipo_id) { cond.push('m.tipo_id = ?'); args.push(Number(tipo_id) || 0); }
   if (categoria) { cond.push('f.categoria = ?'); args.push(String(categoria)); }
   if (severidad) { cond.push('f.severidad = ?'); args.push(String(severidad)); }
-  if (estado === 'abiertas') cond.push(`f.estado IN ${ABIERTAS_SQL}`);
-  else if (estado) { cond.push('f.estado = ?'); args.push(String(estado)); }
   if (desde) { cond.push('date(f.fecha_deteccion) >= date(?)'); args.push(fecha(desde, 'desde')); }
   if (hasta) { cond.push('date(f.fecha_deteccion) <= date(?)'); args.push(fecha(hasta, 'hasta')); }
-  const sql = `${SELECT_FALLAS} ${cond.length ? `WHERE ${cond.join(' AND ')}` : ''}
-               ORDER BY datetime(f.fecha_deteccion) DESC, f.id DESC`;
-  res.json(rows(db.prepare(sql), ...args));
+  // Filtros sin el de estado: sirven para contar cuántas fallas tienen y no tienen solución.
+  const whereBase = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
+  const argsBase = [...args];
+  if (estado === 'abiertas') cond.push(`f.estado IN ${ABIERTAS_SQL}`);
+  else if (estado) { cond.push('f.estado = ?'); args.push(String(estado)); }
+  const where = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
+  const limite = entero(req.query.limite, 'limite', { min: 1, max: 200 });
+  if (!limite) {
+    return res.json(rows(db.prepare(`${SELECT_FALLAS} ${where} ORDER BY datetime(f.fecha_deteccion) DESC, f.id DESC`), ...args));
+  }
+  const pagina = entero(req.query.pagina, 'pagina', { min: 1 }) ?? 1;
+  const { total } = row(db.prepare(`
+    SELECT COUNT(*) AS total FROM fallas f JOIN maquinas m ON m.id = f.maquina_id ${where}`), ...args);
+  const conteo = row(db.prepare(`
+    SELECT IFNULL(SUM(CASE WHEN f.estado = 'Resuelta' THEN 1 ELSE 0 END), 0) AS con,
+           IFNULL(SUM(CASE WHEN f.estado IN ${ABIERTAS_SQL} THEN 1 ELSE 0 END), 0) AS sin,
+           COUNT(*) AS todas
+    FROM fallas f JOIN maquinas m ON m.id = f.maquina_id ${whereBase}`), ...argsBase);
+  res.setHeader('X-Total-Count', String(total));
+  res.setHeader('X-Conteo', `todas=${conteo.todas};con=${conteo.con};sin=${conteo.sin}`);
+  res.json(rows(db.prepare(`${SELECT_FALLAS} ${where}
+    ORDER BY datetime(f.fecha_deteccion) DESC, f.id DESC LIMIT ? OFFSET ?`), ...args, limite, (pagina - 1) * limite));
 }));
 
 fallasRouter.get('/:id', wrap((req, res) => {
@@ -77,6 +95,7 @@ const normalizar = (v) => {
     paro_minutos: entero(v.paro_minutos, 'paro_minutos', { max: 525600 }) ?? 0,
   };
   if (!d.titulo) throw new HttpError(400, 'El campo "titulo" es obligatorio');
+  limitar(d, LIMITES.falla);
   if (!d.maquina_id) throw new HttpError(400, 'El campo "maquina_id" es obligatorio');
   if (!row(db.prepare('SELECT id FROM maquinas WHERE id = ?'), d.maquina_id)) {
     throw new HttpError(400, 'La máquina indicada no existe');
@@ -107,7 +126,7 @@ fallasRouter.post('/', admin, wrap((req, res) => {
     datos.estado = 'En proceso';
   }
   const id = transaccion(() => {
-    const codigo = texto(req.body.codigo) || siguienteCodigoFalla();
+    const codigo = limitar({ codigo: texto(req.body.codigo) }, LIMITES.falla).codigo || siguienteCodigoFalla();
     const { lastInsertRowid } = db.prepare(
       `INSERT INTO fallas (codigo, ${CAMPOS.join(',')}) VALUES (${Array(CAMPOS.length + 1).fill('?').join(',')})`,
     ).run(codigo, ...CAMPOS.map((c) => p(datos[c])));

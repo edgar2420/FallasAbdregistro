@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { db, rows } from './db.js';
 import { HttpError, wrap } from './errors.js';
 import { catalogos } from './catalogos.js';
+import { LIMITES } from './limites.js';
 import { tiposRouter } from './routes/tipos.js';
 import { maquinasRouter } from './routes/maquinas.js';
 import { fallasRouter } from './routes/fallas.js';
@@ -19,10 +20,59 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const app = express();
 
 app.disable('x-powered-by');
+
+// Detrás de un proxy (Caddy/Nginx) la IP real llega en X-Forwarded-For: TRUST_PROXY=1 indica un salto.
+if (process.env.TRUST_PROXY) {
+  const v = process.env.TRUST_PROXY;
+  app.set('trust proxy', /^\d+$/.test(v) ? Number(v) : v);
+}
+
+/** Política de contenido: sólo se ejecuta y carga lo que sirve esta misma aplicación. */
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' blob: data:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "frame-src 'self' blob:",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join('; ');
+
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'same-origin');
+  res.setHeader('Content-Security-Policy', CSP);
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  if (req.secure) res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
+
+/* Límite general de peticiones por IP: frena abusos y scripts desbocados sin afectar el uso normal. */
+const VENTANA_MS = 60_000;
+const MAX_POR_MINUTO = Number(process.env.LIMITE_PETICIONES) || 600;
+const peticiones = new Map();
+setInterval(() => {
+  const ahora = Date.now();
+  for (const [ip, c] of peticiones) if (ahora - c.desde > VENTANA_MS) peticiones.delete(ip);
+}, VENTANA_MS).unref();
+app.use('/api', (req, res, next) => {
+  const ahora = Date.now();
+  let c = peticiones.get(req.ip);
+  if (!c || ahora - c.desde > VENTANA_MS) {
+    c = { n: 0, desde: ahora };
+    peticiones.set(req.ip, c);
+  }
+  c.n += 1;
+  if (c.n > MAX_POR_MINUTO) {
+    res.setHeader('Retry-After', String(Math.ceil((c.desde + VENTANA_MS - ahora) / 1000)));
+    return res.status(429).json({ error: 'Demasiadas peticiones seguidas. Espera un momento y vuelve a intentar.' });
+  }
   next();
 });
 
@@ -31,9 +81,17 @@ app.use((req, res, next) => {
 const jsonChico = express.json({ limit: '200kb' });
 app.use((req, res, next) => (req.path.startsWith('/api/adjuntos') ? next() : jsonChico(req, res, next)));
 
-app.get('/api/salud', (req, res) => res.json({ ok: true, servicio: 'control-fallas' }));
+// Chequeo de salud para Docker/monitoreo: también verifica que la base responda.
+app.get('/api/salud', (req, res) => {
+  try {
+    db.prepare('SELECT 1').get();
+    res.json({ ok: true, servicio: 'control-fallas' });
+  } catch {
+    res.status(503).json({ ok: false, error: 'La base de datos no responde' });
+  }
+});
 app.use('/api/auth', authRouter);
-app.get('/api/catalogos', (req, res) => res.json(catalogos));
+app.get('/api/catalogos', (req, res) => res.json({ ...catalogos, limites: LIMITES }));
 
 app.use('/api/tipos', auth, tiposRouter);
 app.use('/api/maquinas', auth, maquinasRouter);
@@ -74,8 +132,17 @@ app.use('/api', (req, res) => res.status(404).json({ error: 'Ruta no encontrada'
 const dist = process.env.FRONTEND_DIST
   || path.join(__dirname, '..', '..', 'frontend-angular', 'dist', 'frontend-angular', 'browser');
 if (fs.existsSync(path.join(dist, 'index.html'))) {
-  app.use(express.static(dist));
-  app.get('*', (req, res) => res.sendFile(path.join(dist, 'index.html')));
+  app.use(express.static(dist, {
+    index: false,
+    setHeaders: (res, archivo) => {
+      const conHash = /-[A-Z0-9]{8}\.(js|css)$/.test(archivo) || archivo.includes(`${path.sep}media${path.sep}`);
+      res.setHeader('Cache-Control', conHash ? 'public, max-age=31536000, immutable' : 'no-cache');
+    },
+  }));
+  app.get('*', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(path.join(dist, 'index.html'));
+  });
 }
 
 app.use((req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));

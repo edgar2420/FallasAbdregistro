@@ -30,6 +30,9 @@
               }
             ],
             "styles": [
+              "@fontsource-variable/plus-jakarta-sans/wght.css",
+              "@fontsource/ibm-plex-mono/500.css",
+              "@fontsource/ibm-plex-mono/600.css",
               "src/styles.scss"
             ]
           },
@@ -47,7 +50,15 @@
                   "maximumError": "10kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": false
+              }
             },
             "development": {
               "optimization": false,

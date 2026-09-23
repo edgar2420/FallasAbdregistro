@@ -1,22 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../api';
-import { Actividad, Usuario } from '../modelos';
+import { Usuario } from '../modelos';
+import { LIMITES } from '../limites';
 import { fechaCorta } from '../util';
 import { VerClave } from '../componentes/ver-clave';
 import { Modal } from '../componentes/modal';
-
-const ACCIONES: Record<string, string> = {
-  inicio_sesion: 'Inicio de sesión',
-  cierre_sesion: 'Cierre de sesión',
-  acceso_fallido: 'Acceso fallido',
-  cambio_password: 'Cambió su contraseña',
-  consulta: 'Consulta',
-  exportar_csv: 'Exportó CSV',
-  crear_usuario: 'Creó usuario',
-  actualizar_usuario: 'Actualizó usuario',
-  restablecer_password: 'Restableció contraseña',
-};
 
 @Component({
   selector: 'app-usuarios-page',
@@ -25,7 +14,7 @@ const ACCIONES: Record<string, string> = {
     <div class="module-title">
       <div>
         <span class="eyebrow">Administración / Accesos</span>
-        <h1>Usuarios y actividad</h1>
+        <h1>Usuarios</h1>
         <p>Los administradores registran y editan. Los operadores sólo consultan máquinas, fallas y soluciones.</p>
       </div>
       <button class="primary" type="button" (click)="creando = true">
@@ -47,8 +36,8 @@ const ACCIONES: Record<string, string> = {
           <p class="form-error" role="alert">{{ errorModal }}</p>
         }
         <div class="crud-grid">
-          <label>Nombre completo<input name="nombre" [(ngModel)]="draft.nombre"></label>
-          <label>Usuario (para ingresar)<input name="usuario" autocomplete="off" autocapitalize="none" [(ngModel)]="draft.email"></label>
+          <label>Nombre completo<input name="nombre" [maxlength]="L.nombre" [(ngModel)]="draft.nombre"></label>
+          <label>Usuario (para ingresar)<input name="usuario" [maxlength]="L.usuario" autocomplete="off" autocapitalize="none" [(ngModel)]="draft.email"></label>
           <label>
             Contraseña inicial
             <input type="password" name="password" autocomplete="new-password" [(ngModel)]="draft.password">
@@ -120,43 +109,11 @@ const ACCIONES: Record<string, string> = {
       }
     </section>
 
-    <section class="module-card tabla-card">
-      <div class="tabla-titulo">
-        <h2>Actividad reciente</h2>
-        <select aria-label="Filtrar actividad por usuario" [(ngModel)]="filtroUsuario" (ngModelChange)="cargarActividad()">
-          <option [ngValue]="null">Todos los usuarios</option>
-          @for (u of users; track u.id) {
-            <option [ngValue]="u.id">{{ u.nombre }}</option>
-          }
-        </select>
-      </div>
-      <div class="tabla-scroll">
-        <table class="data-table">
-          <thead>
-            <tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Ruta</th><th>Detalle</th></tr>
-          </thead>
-          <tbody>
-            @for (a of activity; track a.id) {
-              <tr>
-                <td class="fecha">{{ fecha(a.creado_en) }}</td>
-                <td>{{ a.nombre || 'Cuenta eliminada' }}</td>
-                <td>{{ accion(a.accion) }}</td>
-                <td class="ruta">{{ a.ruta }}</td>
-                <td>{{ a.detalle || '' }}</td>
-              </tr>
-            } @empty {
-              <tr><td colspan="5" class="muted">Sin actividad registrada</td></tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </section>
   `,
 })
 export class UsuariosPage implements OnInit {
   private api = inject(Api);
   users: Usuario[] = [];
-  activity: Actividad[] = [];
   error = '';
   aviso = '';
   cargando = true;
@@ -165,14 +122,10 @@ export class UsuariosPage implements OnInit {
   claveDe: Usuario | null = null;
   errorModal = '';
   nuevaClave = '';
-  filtroUsuario: number | null = null;
+  readonly L = LIMITES.usuario;
   draft = this.nuevoUsuario();
 
   readonly fecha = fechaCorta;
-
-  accion(a: string) {
-    return ACCIONES[a] ?? a.replace(/_/g, ' ');
-  }
 
   esYo(u: Usuario) {
     return u.id === this.api.usuario()?.id;
@@ -186,17 +139,11 @@ export class UsuariosPage implements OnInit {
     this.cargando = true;
     try {
       this.users = await this.api.get<Usuario[]>('/auth/usuarios');
-      await this.cargarActividad();
     } catch (e: unknown) {
       this.error = Api.mensaje(e, 'No se pudieron cargar los usuarios');
     } finally {
       this.cargando = false;
     }
-  }
-
-  async cargarActividad() {
-    const filtro = this.filtroUsuario ? `?usuario_id=${this.filtroUsuario}` : '';
-    this.activity = await this.api.get<Actividad[]>(`/auth/actividad${filtro}`);
   }
 
   private async ejecutar(accion: () => Promise<unknown>, exito: string, fallo: string) {

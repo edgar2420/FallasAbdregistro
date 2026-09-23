@@ -1,10 +1,11 @@
 import { Component, HostListener, OnChanges, OnDestroy, SimpleChanges, inject, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../api';
+import { LIMITES } from '../limites';
 import { Adjunto } from '../modelos';
 import { fechaCorta, tamano } from '../util';
 
-const MAX_BYTES = 8 * 1024 * 1024;
+const MAX_BYTES = LIMITES.adjunto.mb * 1024 * 1024;
 const LADO_MAX = 2000;
 const CATEGORIAS = ['Eléctrica', 'Electrónica', 'Mecánica', 'Ficha técnica', 'Otra'];
 const ETIQUETAS: Record<string, string> = {
@@ -27,7 +28,7 @@ function leer(archivo: Blob): Promise<string> {
 /** Las fotos del celular se reducen a 2000 px en JPEG antes de subirlas. */
 async function prepararArchivo(archivo: File): Promise<string> {
   if (archivo.type === 'application/pdf') {
-    if (archivo.size > MAX_BYTES) throw new Error(`${archivo.name} supera el máximo de 8 MB`);
+    if (archivo.size > MAX_BYTES) throw new Error(`${archivo.name} supera el máximo de ${LIMITES.adjunto.mb} MB`);
     return leer(archivo);
   }
   if (!archivo.type.startsWith('image/')) throw new Error(`${archivo.name}: sólo se aceptan fotos o PDF`);
@@ -50,95 +51,94 @@ async function prepararArchivo(archivo: File): Promise<string> {
   return lienzo.toDataURL('image/jpeg', 0.85);
 }
 
+/**
+ * Galería minimalista: miniaturas pequeñas sin tarjetas, filtro por categoría en texto y un cuadro "+"
+ * para agregar. Las fotos nuevas se guardan en la categoría seleccionada.
+ */
 @Component({
   selector: 'app-galeria',
   imports: [FormsModule],
   template: `
-    @if (conPestanas()) {
-      <div class="tabs" role="tablist" aria-label="Categorías de fotos">
-        @for (c of pestanas; track c) {
-          <button type="button" role="tab" [class.active]="pestana === c"
-                  [attr.aria-selected]="pestana === c" (click)="pestana = c">
-            {{ etiqueta(c) }} <span class="count">{{ cuenta(c) }}</span>
-          </button>
-        }
-      </div>
-    }
+    <div class="galeria-barra">
+      @if (conPestanas()) {
+        <div class="filtro-texto" role="tablist" aria-label="Categorías">
+          @for (c of pestanasVisibles; track c) {
+            <button type="button" role="tab" [class.activa]="pestana === c" [attr.aria-selected]="pestana === c"
+                    (click)="pestana = c">
+              {{ etiqueta(c) }}@if (cuenta(c)) {<span>{{ cuenta(c) }}</span>}
+            </button>
+          }
+        </div>
+      }
+      <span class="galeria-cupo" [class.lleno]="lleno" [title]="'Máximo ' + maximo() + ' archivos'">
+        {{ adjuntos().length }} / {{ maximo() }}
+      </span>
+    </div>
 
     @if (error) {
       <p class="form-error" role="alert">{{ error }}</p>
     }
 
-    <div class="galeria-grid">
+    <div class="miniaturas">
       @for (a of visibles; track a.id) {
-        <figure class="foto">
-          <button type="button" class="foto-btn" (click)="abrir(a)"
-                  [attr.aria-label]="'Ver ' + (a.descripcion || a.nombre_original || 'archivo')">
+        <div class="mini">
+          <button type="button" class="mini-btn" [title]="titulo(a)" [attr.aria-label]="'Ver ' + titulo(a)" (click)="abrir(a)">
             @if (a.mime === 'application/pdf') {
-              <span class="foto-pdf">PDF</span>
+              <span class="mini-pdf">PDF</span>
             } @else if (urls.get(a.id); as url) {
-              <img [src]="url" [alt]="a.descripcion || a.categoria" loading="lazy">
+              <img [src]="url" [alt]="titulo(a)" loading="lazy">
             } @else {
-              <span class="foto-pdf">…</span>
+              <span class="mini-pdf">…</span>
             }
           </button>
           @if (api.esAdmin()) {
-            <button type="button" class="foto-quitar" title="Quitar"
-                    [attr.aria-label]="'Quitar ' + (a.descripcion || a.nombre_original || 'archivo')" (click)="borrar(a)">
-              <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>
+            <button type="button" class="mini-quitar" title="Quitar" [attr.aria-label]="'Quitar ' + titulo(a)"
+                    (click)="borrar(a)">
+              <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
             </button>
           }
-          <figcaption>
-            <span class="tag">{{ etiqueta(a.categoria) }}</span>
-            @if (a.falla_codigo && !fallaId()) {
-              <span class="tag">{{ a.falla_codigo }}</span>
-            }
-            <small>{{ a.descripcion || a.nombre_original || fecha(a.creado_en) }}</small>
-          </figcaption>
-        </figure>
-      } @empty {
-        <p class="muted">Sin fotos ni documentos{{ pestana === 'Todas' ? '' : ' en ' + etiqueta(pestana) }}</p>
+        </div>
+      }
+      @if (api.esAdmin()) {
+        <label class="mini mini-agregar" [class.deshabilitado]="subiendo || lleno"
+               [title]="lleno ? 'Se alcanzó el máximo de ' + maximo() + ' archivos' : 'Agregar a ' + etiqueta(destino)">
+          @if (subiendo) {
+            <span>Subiendo…</span>
+          } @else {
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+            <span>{{ lleno ? 'Lleno' : etiqueta(destino) }}</span>
+          }
+          <input type="file" hidden multiple [disabled]="subiendo || lleno"
+                 accept="image/jpeg,image/png,image/webp,application/pdf" (change)="subir($event)">
+        </label>
+      } @else if (!visibles.length) {
+        <p class="sin-fotos">Sin fotos ni documentos{{ pestana === 'Todas' ? '' : ' en ' + etiqueta(pestana) }}.</p>
       }
     </div>
 
-    @if (api.esAdmin()) {
-      <div class="subida">
-        <select aria-label="Categoría del archivo" [(ngModel)]="nueva.categoria">
-          @for (c of categorias; track c) {
-            <option [value]="c">{{ etiqueta(c) }}</option>
-          }
-        </select>
-        <input aria-label="Descripción del archivo" placeholder="Descripción (opcional)"
-               [(ngModel)]="nueva.descripcion">
-        <label class="primary file-btn" [class.disabled]="subiendo">
-          {{ subiendo ? 'Subiendo…' : 'Subir fotos o PDF' }}
-          <input type="file" hidden multiple [disabled]="subiendo"
-                 accept="image/jpeg,image/png,image/webp,application/pdf" (change)="subir($event)">
-        </label>
-      </div>
-    }
-
     @if (abierta; as a) {
-      <div class="lightbox" role="dialog" aria-modal="true" [attr.aria-label]="a.descripcion || 'Foto'"
-           (click)="abierta = null">
+      <div class="lightbox" role="dialog" aria-modal="true" [attr.aria-label]="titulo(a)" (click)="abierta = null">
         <div class="lightbox-body" (click)="$event.stopPropagation()">
-          <img [src]="urls.get(a.id)" [alt]="a.descripcion || a.categoria">
+          <img [src]="urls.get(a.id)" [alt]="titulo(a)">
           <div class="lightbox-info">
-            <div>
+            @if (api.esAdmin()) {
+              <input class="lightbox-desc" aria-label="Descripción" placeholder="Agregar descripción…"
+                     [maxlength]="L.descripcion" [ngModel]="a.descripcion" (change)="describir(a, $any($event.target).value)">
+            } @else {
               <strong>{{ a.descripcion || a.nombre_original || 'Sin descripción' }}</strong>
-              <small class="subline">
-                {{ etiqueta(a.categoria) }}{{ a.falla_codigo ? ' · ' + a.falla_codigo : '' }} ·
-                {{ fecha(a.creado_en) }} · {{ peso(a.bytes) }}{{ a.subido_por_nombre ? ' · ' + a.subido_por_nombre : '' }}
-              </small>
-            </div>
+            }
+            <small class="subline">
+              {{ etiqueta(a.categoria) }}{{ a.falla_codigo ? ' · ' + a.falla_codigo : '' }} ·
+              {{ fecha(a.creado_en) }} · {{ peso(a.bytes) }}
+            </small>
             <div class="row-actions">
               @if (api.esAdmin()) {
-                <select aria-label="Cambiar categoría" [ngModel]="a.categoria" (ngModelChange)="recategorizar(a, $event)">
+                <select aria-label="Categoría" [ngModel]="a.categoria" (ngModelChange)="recategorizar(a, $event)">
                   @for (c of categorias; track c) {
                     <option [value]="c">{{ etiqueta(c) }}</option>
                   }
                 </select>
-                <button type="button" class="danger" (click)="borrar(a)">Quitar foto</button>
+                <button type="button" class="danger" (click)="borrar(a)">Quitar</button>
               }
               <button type="button" (click)="abierta = null">Cerrar</button>
             </div>
@@ -156,27 +156,45 @@ export class Galeria implements OnChanges, OnDestroy {
   readonly fallaId = input<number | null>(null);
   readonly categoriaInicial = input('Otra');
   readonly conPestanas = input(true);
+  readonly maximo = input<number>(LIMITES.adjunto.por_maquina);
   readonly cambio = output<void>();
 
+  readonly L = LIMITES.adjunto;
   readonly categorias = CATEGORIAS;
-  readonly pestanas = ['Todas', ...CATEGORIAS];
   readonly urls = new Map<number, string>();
   pestana = 'Todas';
   abierta: Adjunto | null = null;
   subiendo = false;
   error = '';
-  nueva = { categoria: 'Otra', descripcion: '' };
 
   readonly fecha = fechaCorta;
   readonly peso = tamano;
+
+  /** El administrador ve todas las categorías (para elegir dónde guardar); el operador sólo las que tienen algo. */
+  get pestanasVisibles() {
+    return ['Todas', ...CATEGORIAS.filter((c) => this.api.esAdmin() || this.cuenta(c))];
+  }
 
   get visibles() {
     const todos = this.adjuntos();
     return this.pestana === 'Todas' ? todos : todos.filter((a) => a.categoria === this.pestana);
   }
 
+  /** Categoría donde se guardan las fotos nuevas: la pestaña elegida o la sugerida. */
+  get destino() {
+    return this.pestana === 'Todas' ? this.categoriaInicial() : this.pestana;
+  }
+
+  get lleno() {
+    return this.adjuntos().length >= this.maximo();
+  }
+
   etiqueta(c: string) {
     return ETIQUETAS[c] ?? c;
+  }
+
+  titulo(a: Adjunto) {
+    return a.descripcion || a.nombre_original || `${this.etiqueta(a.categoria)} · ${fechaCorta(a.creado_en)}`;
   }
 
   cuenta(c: string) {
@@ -184,7 +202,6 @@ export class Galeria implements OnChanges, OnDestroy {
   }
 
   ngOnChanges(cambios: SimpleChanges) {
-    if (cambios['categoriaInicial']) this.nueva.categoria = this.categoriaInicial();
     if (cambios['adjuntos']) void this.cargarMiniaturas();
   }
 
@@ -238,26 +255,38 @@ export class Galeria implements OnChanges, OnDestroy {
     const archivos = Array.from(campo.files ?? []);
     campo.value = '';
     if (!archivos.length) return;
+    const libres = this.maximo() - this.adjuntos().length;
+    if (archivos.length > libres) {
+      this.error = `Sólo puedes agregar ${libres} archivo${libres === 1 ? '' : 's'} más (máximo ${this.maximo()}).`;
+      return;
+    }
     this.subiendo = true;
     this.error = '';
+    const categoria = this.destino;
     try {
       for (const archivo of archivos) {
         await this.api.post('/adjuntos', {
           maquina_id: this.maquinaId(),
           falla_id: this.fallaId(),
-          categoria: this.nueva.categoria,
-          descripcion: this.nueva.descripcion,
+          categoria,
           nombre: archivo.name,
           datos: await prepararArchivo(archivo),
         });
       }
-      this.nueva.descripcion = '';
-      if (this.conPestanas()) this.pestana = this.nueva.categoria;
     } catch (e: unknown) {
       this.error = Api.mensaje(e, 'No se pudo subir el archivo');
     } finally {
       this.subiendo = false;
       this.cambio.emit();
+    }
+  }
+
+  async describir(a: Adjunto, descripcion: string) {
+    try {
+      await this.api.patch(`/adjuntos/${a.id}`, { descripcion });
+      a.descripcion = descripcion.trim() || null;
+    } catch (e: unknown) {
+      this.error = Api.mensaje(e, 'No se pudo guardar la descripción');
     }
   }
 

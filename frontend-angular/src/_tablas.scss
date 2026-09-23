@@ -135,10 +135,10 @@
 .data-table .codigo,
 a.codigo {
   color: var(--text);
-  font-family: var(--display);
-  font-size: 15px;
+  font-family: var(--mono);
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   white-space: nowrap;
   text-decoration: none;
 }
@@ -218,7 +218,10 @@ a.tag {
 
 .codigo-grande {
   color: var(--accent-text);
-  margin-right: 6px;
+  margin-right: 8px;
+  font-family: var(--mono);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .module-card h4,
@@ -412,7 +415,7 @@ a.tag {
 
 .foto-pdf {
   color: var(--accent-text);
-  font-family: var(--display);
+  font-family: var(--mono);
   font-size: 26px;
   font-weight: 700;
 }
@@ -547,8 +550,8 @@ a.tag {
 }
 
 .resultado .codigo {
-  font-family: var(--display);
-  font-size: 16px;
+  font-family: var(--mono);
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -931,10 +934,9 @@ body.con-modal {
 
 .placa-codigo {
   color: var(--accent-text);
-  font-family: var(--display);
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-family: var(--mono);
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .placa-alerta {
@@ -1059,4 +1061,617 @@ a.primary {
   margin: -4px 0 0;
   color: var(--muted);
   font-size: 12px;
+}
+
+/* ------------------------------------------------ galería minimalista */
+
+.galeria-barra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 0 12px;
+}
+
+.filtro-texto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+}
+
+.filtro-texto button {
+  display: inline-flex;
+  gap: 5px;
+  align-items: baseline;
+  padding: 3px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.filtro-texto button:hover {
+  color: var(--text);
+}
+
+.filtro-texto button.activa {
+  border-bottom-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.filtro-texto span {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.galeria-cupo {
+  color: var(--faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.galeria-cupo.lleno {
+  color: var(--crit-text);
+  font-weight: 700;
+}
+
+.miniaturas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.mini {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  flex: none;
+}
+
+.mini-btn {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  transition: border-color var(--step), transform var(--step);
+}
+
+.mini-btn:hover,
+.mini-btn:focus-visible {
+  border-color: var(--accent);
+}
+
+.mini-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mini-pdf {
+  color: var(--accent-text);
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.mini-quitar {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11px;
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+  transition: opacity var(--step), color var(--step), border-color var(--step);
+}
+
+.mini:hover .mini-quitar,
+.mini-quitar:focus-visible {
+  opacity: 1;
+}
+
+.mini-quitar:hover {
+  border-color: var(--crit);
+  color: var(--crit-text);
+}
+
+/* En pantallas táctiles no hay "hover": el botón se ve siempre. */
+@media (hover: none) {
+  .mini-quitar {
+    opacity: 1;
+  }
+}
+
+.mini-agregar {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 2px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-sm);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--step), color var(--step), background var(--step);
+}
+
+.mini-agregar .icon {
+  font-size: 18px;
+}
+
+.mini-agregar:hover {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+}
+
+.mini-agregar.deshabilitado {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.sin-fotos {
+  margin: 0;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.lightbox-desc {
+  flex: 1 1 260px;
+}
+
+/* ------------------------------------------------------------ paginación */
+
+.paginador {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 22px 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.placas + app-paginador .paginador {
+  padding: 18px 0 0;
+}
+
+.pag-info {
+  margin-right: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.pag-tam {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pag-tam select {
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.pag-botones {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.pag-botones button {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pag-botones button:hover:not(:disabled) {
+  border-color: var(--line-strong);
+  background: var(--surface-2);
+}
+
+.pag-botones button.activa {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.pag-botones button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pag-salto {
+  padding: 0 2px;
+  color: var(--faint);
+}
+
+/* ------------------------------------------------ contador de caracteres */
+
+.contador-car {
+  justify-self: end;
+  margin-top: -3px;
+  color: var(--faint);
+  font-size: 10px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.contador-car[data-casi='true'] {
+  color: var(--warn-text);
+  font-weight: 700;
+}
+
+/* ======================================== fallas y soluciones con color */
+
+/* Panel de filtros en dos filas, todos los controles del mismo alto */
+.panel-filtros {
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+.filtros-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.filtros-fila > select {
+  flex: 1 1 170px;
+  min-width: 0;
+  height: 40px;
+}
+
+.filtros-tabla {
+  padding: 0 22px 14px;
+}
+
+.buscador-icono {
+  position: relative;
+  display: flex;
+  flex: 1 1 320px;
+  align-items: center;
+  min-width: 0;
+}
+
+.buscador-icono .icon {
+  position: absolute;
+  left: 12px;
+  color: var(--faint);
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.buscador-icono input {
+  width: 100%;
+  height: 40px;
+  padding-left: 38px;
+}
+
+/* Control segmentado: Todas · Con solución · Sin solución */
+.segmento {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.segmento button {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background var(--step), color var(--step);
+}
+
+.segmento button:hover {
+  color: var(--text);
+}
+
+.segmento-n {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.segmento button.activo {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.segmento button[data-tipo='con'].activo,
+.segmento button[data-tipo='con'] .segmento-n {
+  color: var(--ok-text);
+}
+
+.segmento button[data-tipo='con'] .segmento-n {
+  background: var(--ok-tint);
+}
+
+.segmento button[data-tipo='sin'].activo,
+.segmento button[data-tipo='sin'] .segmento-n {
+  color: var(--crit-text);
+}
+
+.segmento button[data-tipo='sin'] .segmento-n {
+  background: var(--crit-tint);
+}
+
+/* Período de fechas: un solo bloque del mismo alto que los demás filtros */
+.rango-fechas {
+  display: inline-flex;
+  flex: 1 1 220px;
+  gap: 8px;
+  align-items: center;
+  height: 40px;
+  padding: 0 4px 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.rango-fechas .icon {
+  flex: none;
+  font-size: 15px;
+}
+
+.rango-fechas select,
+.rango-fechas input {
+  height: 30px;
+  padding: 0 6px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.rango-fechas select {
+  flex: 1;
+  min-width: 120px;
+}
+
+.rango-fechas input {
+  width: 128px;
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+/* Tabla: la franja izquierda indica el estado de la falla */
+.tabla-fallas tbody tr[data-estado] > td:first-child {
+  box-shadow: inset 3px 0 0 var(--franja);
+}
+
+.tabla-fallas tr[data-estado='resuelta'] {
+  --franja: var(--ok);
+}
+
+.tabla-fallas tr[data-estado='intento'] {
+  --franja: var(--warn);
+}
+
+.tabla-fallas tr[data-estado='pendiente'] {
+  --franja: var(--crit);
+}
+
+.tabla-fallas tr.abierta > td:first-child {
+  box-shadow: inset 5px 0 0 var(--franja);
+}
+
+.th-falla {
+  color: var(--falla-text) !important;
+}
+
+.th-solucion {
+  color: var(--ok-text) !important;
+}
+
+.celda-falla {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+}
+
+.celda-falla > .icon {
+  flex: none;
+  margin-top: 1px;
+  padding: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--falla-tint);
+  color: var(--falla);
+}
+
+.sol-caja {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.sol-caja .icon {
+  flex: none;
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.sol-ok {
+  background: var(--ok-tint);
+  color: var(--ok-text);
+}
+
+.sol-intento {
+  background: var(--warn-tint);
+  color: var(--warn-text);
+}
+
+.sol-pendiente {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: var(--r-pill);
+  background: var(--crit-tint);
+  color: var(--crit-text);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Categoría: punto de color por familia */
+.cat {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.cat::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--cat, var(--faint));
+}
+
+.cat[data-cat='mecanica'] { --cat: #64748b; }
+.cat[data-cat='electrica'] { --cat: #eab308; }
+.cat[data-cat='neumatica'] { --cat: #06b6d4; }
+.cat[data-cat='hidraulica'] { --cat: #2563eb; }
+.cat[data-cat='electronica'] { --cat: #8b5cf6; }
+.cat[data-cat='software'] { --cat: #d946ef; }
+.cat[data-cat='operativa'] { --cat: #f97316; }
+.cat[data-cat='calidad'] { --cat: #10b981; }
+.cat[data-cat='servicios'] { --cat: #0ea5e9; }
+
+/* Detalle de la falla */
+.estado-banda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.estado-banda .primary {
+  margin-left: auto;
+  padding: 7px 12px;
+  font-size: 12px;
+}
+
+.estado-banda[data-estado='resuelta'] {
+  background: var(--ok-tint);
+  color: var(--ok-text);
+}
+
+.estado-banda[data-estado='intento'] {
+  background: var(--warn-tint);
+  color: var(--warn-text);
+}
+
+.estado-banda[data-estado='pendiente'] {
+  background: var(--crit-tint);
+  color: var(--crit-text);
+}
+
+.titulo-falla {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.titulo-falla .icon {
+  flex: none;
+  color: var(--falla);
+}
+
+.titulo-solucion {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--ok-text) !important;
+}
+
+@media (max-width: 760px) {
+  .segmento {
+    width: 100%;
+  }
+
+  .segmento button {
+    flex: 1;
+    justify-content: center;
+    padding: 0 6px;
+  }
+
+  .rango-fechas {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 4px 8px;
+  }
+
+  .filtros-tabla {
+    padding: 0 14px 12px;
+  }
+}
+
+/* Mismo tamaño de letra en todos los controles de filtro */
+.filtros-fila > select,
+.rango-fechas select,
+.rango-fechas input,
+.buscador-icono input {
+  font-size: 13px;
 }

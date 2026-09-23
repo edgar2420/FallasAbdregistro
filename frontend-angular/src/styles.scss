@@ -2,7 +2,6 @@
 @use './crud';
 @use './tablas';
 
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 *,
 *::before,
@@ -726,5 +725,175 @@ h3 {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+}
+
+/* ============================================= menú lateral plegable + pie fijo */
+
+.sidebar {
+  overflow: hidden;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), padding 0.22s;
+}
+
+.sidebar .nav-texto {
+  white-space: nowrap;
+}
+
+.sidebar nav a {
+  white-space: nowrap;
+}
+
+.menu-plegar {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--side-line);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--side-muted);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background var(--step), color var(--step);
+}
+
+.menu-plegar:hover {
+  background: var(--side-hover);
+  color: var(--side-text);
+}
+
+.menu-plegar .icon {
+  font-size: 17px;
+  transition: transform 0.22s;
+}
+
+.sidebar-bottom {
+  padding: 10px 0 0;
+}
+
+:root[data-menu='cerrado'] {
+  --sidebar-w: 76px;
+}
+
+:root[data-menu='cerrado'] .sidebar {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+:root[data-menu='cerrado'] .sidebar .nav-texto {
+  display: none;
+}
+
+:root[data-menu='cerrado'] .brand {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+:root[data-menu='cerrado'] .sidebar nav a,
+:root[data-menu='cerrado'] .menu-plegar {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+:root[data-menu='cerrado'] .menu-plegar .icon {
+  transform: rotate(180deg);
+}
+
+.topbar-izq {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.menu-movil,
+.menu-fondo {
+  display: none;
+}
+
+/* Pie siempre visible al fondo de la pantalla */
+.app-shell .pie {
+  position: sticky;
+  bottom: 0;
+  z-index: 8;
+  margin-top: auto;
+  padding: 10px 0;
+  background: var(--bg);
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+  }
+
+  /* En celular el menú es un cajón que se abre con el botón ☰ */
+  .sidebar,
+  :root[data-menu='cerrado'] .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 60;
+    width: min(270px, 82vw);
+    height: 100dvh;
+    padding: 22px 14px;
+    border-right: 1px solid var(--side-line);
+    border-bottom: 0;
+    transform: translateX(-100%);
+    transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .menu-abierto .sidebar,
+  :root[data-menu='cerrado'] .menu-abierto .sidebar {
+    transform: none;
+    box-shadow: var(--shadow-lg);
+  }
+
+  :root[data-menu='cerrado'] .sidebar .nav-texto {
+    display: block;
+  }
+
+  :root[data-menu='cerrado'] .brand {
+    justify-content: flex-start;
+  }
+
+  :root[data-menu='cerrado'] .sidebar nav a {
+    justify-content: flex-start;
+    padding: 11px 12px;
+  }
+
+  .sidebar nav {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-bottom {
+    display: none;
+  }
+
+  .menu-movil {
+    display: grid;
+  }
+
+  .menu-fondo {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    display: block;
+    background: rgb(15 23 32 / 45%);
+  }
+
+  .perfil-texto,
+  .topbar .eyebrow {
+    display: none;
+  }
+
+  .app-shell .pie {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+    padding: 8px 0;
+    font-size: 10px;
   }
 }

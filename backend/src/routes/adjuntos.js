@@ -7,10 +7,11 @@ import { HttpError, wrap, requerido } from '../errors.js';
 import { texto, unoDe, entero } from '../utils.js';
 import { admin } from '../auth.js';
 import { CATEGORIAS_ADJUNTO } from '../catalogos.js';
+import { LIMITES, limitar } from '../limites.js';
 
 export const adjuntosRouter = Router();
 
-export const MAX_BYTES = 8 * 1024 * 1024;
+export const MAX_BYTES = LIMITES.adjunto.mb * 1024 * 1024;
 
 /** El tipo se decide por la firma del archivo, no por lo que declare el navegador. */
 const FORMATOS = [
@@ -72,11 +73,19 @@ adjuntosRouter.post('/', admin, wrap((req, res) => {
   if (!maquinaId || !row(db.prepare('SELECT id FROM maquinas WHERE id = ?'), maquinaId)) {
     throw new HttpError(400, 'La máquina indicada no existe');
   }
+  limitar({ descripcion: texto(req.body.descripcion) }, LIMITES.adjunto);
+  const cuenta = (campo, id) => row(db.prepare(`SELECT COUNT(*) AS n FROM adjuntos WHERE ${campo} = ?`), id).n;
+  if (fallaId && cuenta('falla_id', fallaId) >= LIMITES.adjunto.por_falla) {
+    throw new HttpError(409, `Cada falla admite como máximo ${LIMITES.adjunto.por_falla} fotos o documentos. Quita alguno para subir otro.`);
+  }
+  if (cuenta('maquina_id', maquinaId) >= LIMITES.adjunto.por_maquina) {
+    throw new HttpError(409, `Cada máquina admite como máximo ${LIMITES.adjunto.por_maquina} fotos o documentos (incluidas las de sus fallas). Quita alguno para subir otro.`);
+  }
 
   const base64 = requerido(req.body.datos, 'datos').replace(/^data:[^,]*,/, '');
   const buffer = Buffer.from(base64, 'base64');
   if (!buffer.length) throw new HttpError(400, 'El archivo está vacío');
-  if (buffer.length > MAX_BYTES) throw new HttpError(413, 'El archivo supera el máximo de 8 MB');
+  if (buffer.length > MAX_BYTES) throw new HttpError(413, `El archivo supera el máximo de ${LIMITES.adjunto.mb} MB`);
   const formato = FORMATOS.find((f) => f.es(buffer));
   if (!formato) throw new HttpError(415, 'Sólo se aceptan fotos JPG, PNG o WEBP y documentos PDF');
 
@@ -101,6 +110,7 @@ adjuntosRouter.patch('/:id', admin, wrap((req, res) => {
   if (!a) throw new HttpError(404, 'Archivo no encontrado');
   const categoria = unoDe(req.body.categoria ?? a.categoria, CATEGORIAS_ADJUNTO, 'categoria');
   const descripcion = req.body.descripcion === undefined ? a.descripcion : texto(req.body.descripcion);
+  limitar({ descripcion }, LIMITES.adjunto);
   db.prepare('UPDATE adjuntos SET categoria = ?, descripcion = ? WHERE id = ?').run(categoria, descripcion, a.id);
   res.json(row(db.prepare(`${SELECT} WHERE a.id = ?`), a.id));
 }));

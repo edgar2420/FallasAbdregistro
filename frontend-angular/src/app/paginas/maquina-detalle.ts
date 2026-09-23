@@ -8,11 +8,13 @@ import { FallaForm } from '../componentes/falla-form';
 import { Galeria } from '../componentes/galeria';
 import { MaquinaForm } from '../componentes/maquina-form';
 import { Modal } from '../componentes/modal';
-import { contiene, fechaCorta } from '../util';
+import { Paginador, paginar } from '../componentes/paginador';
+import { POR_PAGINA } from '../limites';
+import { contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../util';
 
 @Component({
   selector: 'app-maquina-detalle-page',
-  imports: [FormsModule, RouterLink, FallaDetalle, FallaForm, Galeria, MaquinaForm, Modal],
+  imports: [FormsModule, RouterLink, FallaDetalle, FallaForm, Galeria, MaquinaForm, Modal, Paginador],
   template: `
     <a class="volver" routerLink="/maquinaria">← Volver a maquinaria</a>
 
@@ -87,49 +89,77 @@ import { contiene, fechaCorta } from '../util';
       <section class="module-card tabla-card">
         <div class="tabla-titulo">
           <h2>Fallas y soluciones</h2>
-          <div class="filtros compactos">
-            <input type="search" class="buscador" placeholder="Buscar por código, falla o solución"
-                   aria-label="Buscar en las fallas de esta máquina" [(ngModel)]="q">
-            <select aria-label="Filtrar por categoría" [(ngModel)]="categoria">
-              <option value="">Todas las categorías</option>
-              @for (c of categorias; track c) {
-                <option>{{ c }}</option>
-              }
-            </select>
-            <select aria-label="Filtrar por solución" [(ngModel)]="estado">
-              <option value="">Con y sin solución</option>
-              <option value="sin">Sin solución</option>
-              <option value="con">Con solución</option>
-            </select>
+          <div class="segmento" role="radiogroup" aria-label="Filtrar por solución">
+            @for (s of segmentos; track s.valor) {
+              <button type="button" role="radio" [attr.aria-checked]="estado === s.valor" [class.activo]="estado === s.valor"
+                      [attr.data-tipo]="s.clave" (click)="estado = s.valor; pagina = 1">
+                {{ s.texto }} <span class="segmento-n">{{ conteo[s.clave] }}</span>
+              </button>
+            }
           </div>
         </div>
+        <div class="filtros-fila filtros-tabla">
+          <label class="buscador-icono">
+            <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+            <input type="search" placeholder="Buscar por código, falla o solución"
+                   aria-label="Buscar en las fallas de esta máquina" [(ngModel)]="q" (ngModelChange)="pagina = 1">
+          </label>
+          <select aria-label="Filtrar por categoría" [(ngModel)]="categoria" (ngModelChange)="pagina = 1">
+            <option value="">Todas las categorías</option>
+            @for (c of categorias; track c) {
+              <option>{{ c }}</option>
+            }
+          </select>
+        </div>
         <div class="tabla-scroll">
-          <table class="data-table">
+          <table class="data-table tabla-fallas">
             <thead>
               <tr>
                 <th>Código</th>
                 <th class="opcional">Fecha</th>
-                <th>Falla / error</th>
+                <th class="th-falla">Falla / error</th>
                 <th class="opcional">Categoría</th>
-                <th>Solución aplicada</th>
+                <th class="th-solucion">Solución aplicada</th>
               </tr>
             </thead>
             <tbody>
-              @for (f of fallas; track f.id) {
-                <tr class="clicable" tabindex="0" [class.abierta]="abiertaId === f.id"
+              @for (f of fallasPagina; track f.id) {
+                <tr class="clicable" tabindex="0" [attr.data-estado]="estadoFila(f)" [class.abierta]="abiertaId === f.id"
                     [attr.aria-expanded]="abiertaId === f.id" (click)="alternar(f)" (keydown.enter)="alternar(f)">
                   <td class="codigo">{{ f.codigo }}</td>
-                  <td class="fecha opcional">{{ fecha(f.fecha_deteccion, false) }}</td>
-                  <td>
-                    <strong>{{ f.titulo }}</strong>
-                    @if (f.descripcion) { <small class="subline recorte">{{ f.descripcion }}</small> }
+                  <td class="fecha opcional">
+                    {{ larga(f.fecha_deteccion) }}
+                    <small class="subline">{{ hace(f.fecha_deteccion) }}</small>
                   </td>
-                  <td class="opcional">{{ f.categoria }}</td>
+                  <td>
+                    <div class="celda-falla">
+                      <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>
+                      <div>
+                        <strong>{{ f.titulo }}</strong>
+                        @if (f.descripcion) { <small class="subline recorte">{{ f.descripcion }}</small> }
+                      </div>
+                    </div>
+                  </td>
+                  <td class="opcional"><span class="cat" [attr.data-cat]="slug(f.categoria)">{{ f.categoria }}</span></td>
                   <td class="solucion-celda">
-                    @if (f.ultima_solucion) {
-                      <span class="recorte">{{ f.ultima_solucion }}</span>
-                    } @else {
-                      <span class="pendiente">Sin solución registrada</span>
+                    @switch (estadoFila(f)) {
+                      @case ('resuelta') {
+                        <div class="sol-caja sol-ok">
+                          <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+                          <span class="recorte">{{ f.ultima_solucion }}</span>
+                        </div>
+                      }
+                      @case ('intento') {
+                        <div class="sol-caja sol-intento" title="Se intentó una solución, pero no resolvió la falla">
+                          <svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg>
+                          <span class="recorte">{{ f.ultima_solucion }}</span>
+                        </div>
+                      }
+                      @default {
+                        <span class="sol-pendiente">
+                          <svg class="icon" aria-hidden="true"><use href="#i-clock"></use></svg>Sin solución
+                        </span>
+                      }
                     }
                   </td>
                 </tr>
@@ -146,6 +176,8 @@ import { contiene, fechaCorta } from '../util';
             </tbody>
           </table>
         </div>
+        <app-paginador [total]="fallas.length" [pagina]="pagina" [porPagina]="porPagina"
+                       (cambio)="pagina = $event.pagina; porPagina = $event.porPagina" />
       </section>
     } @else if (!error) {
       <p class="muted">Cargando máquina…</p>
@@ -166,14 +198,45 @@ export class MaquinaDetallePage implements OnInit {
   categoria = '';
   estado = '';
   categorias: string[] = [];
+  pagina = 1;
+  porPagina = POR_PAGINA[0];
 
   readonly fecha = fechaCorta;
+  readonly larga = fechaLarga;
+  readonly hace = haceCuanto;
+  readonly slug = slugCategoria;
+  readonly segmentos = [
+    { valor: '', texto: 'Todas', clave: 'todas' },
+    { valor: 'con', texto: 'Con solución', clave: 'con' },
+    { valor: 'sin', texto: 'Sin solución', clave: 'sin' },
+  ];
+
+  /** resuelta = solución efectiva · intento = hubo intervención sin éxito · pendiente = nada todavía. */
+  estadoFila(f: Falla) {
+    if (f.estado === 'Resuelta') return 'resuelta';
+    return f.ultima_solucion ? 'intento' : 'pendiente';
+  }
+
+  /** Cantidades para el filtro rápido (con la búsqueda y la categoría aplicadas). */
+  get conteo(): Record<string, number> {
+    const base = this.filtrar('');
+    const con = base.filter((f) => f.estado === 'Resuelta').length;
+    return { todas: base.length, con, sin: base.length - con };
+  }
+
+  get fallasPagina() {
+    return paginar(this.fallas, this.pagina, this.porPagina);
+  }
 
   get fallas(): Falla[] {
+    return this.filtrar(this.estado);
+  }
+
+  private filtrar(estado: string): Falla[] {
     return (this.m?.fallas ?? []).filter(
       (f) =>
         (!this.categoria || f.categoria === this.categoria) &&
-        (!this.estado || (this.estado === 'con') === !!f.ultima_solucion) &&
+        (!estado || (estado === 'con') === (f.estado === 'Resuelta')) &&
         contiene(`${f.codigo} ${f.titulo} ${f.descripcion ?? ''} ${f.causa_raiz ?? ''} ${f.ultima_solucion ?? ''}`, this.q),
     );
   }
@@ -190,10 +253,16 @@ export class MaquinaDetallePage implements OnInit {
   async cargar() {
     try {
       this.m = await this.api.get<Maquina>(`/maquinas/${this.route.snapshot.paramMap.get('id')}`);
+      if (this.abiertaId) this.irAPaginaDe(this.abiertaId);
       this.error = '';
     } catch (e: unknown) {
       this.error = Api.mensaje(e, 'No se pudo cargar la máquina');
     }
+  }
+
+  private irAPaginaDe(id: number) {
+    const i = this.fallas.findIndex((f) => f.id === id);
+    if (i >= 0) this.pagina = Math.floor(i / this.porPagina) + 1;
   }
 
   alternar(f: Falla) {
