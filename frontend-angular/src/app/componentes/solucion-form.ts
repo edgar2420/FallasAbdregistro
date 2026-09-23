@@ -23,11 +23,7 @@ import { Contador } from './contador';
         <label>Herramientas<input name="herramientas" [maxlength]="L.herramientas" [(ngModel)]="d.herramientas"></label>
         <label>Técnico<input name="tecnico" [maxlength]="L.tecnico" [(ngModel)]="d.tecnico"></label>
         <label>Fecha<input name="fecha" type="datetime-local" [(ngModel)]="d.fecha"></label>
-        <label>Tiempo (min)<input name="tiempo" type="number" min="0" [(ngModel)]="d.tiempo_minutos"></label>
         <label>Costo<input name="costo" type="number" min="0" step="0.01" [(ngModel)]="d.costo"></label>
-        <label class="wide">Acción preventiva recomendada
-          <textarea name="preventivo" [maxlength]="L.preventivo" [(ngModel)]="d.preventivo"></textarea>
-        </label>
         <label class="check-label">
           <input name="efectiva" type="checkbox" [(ngModel)]="d.efectiva">
           Solución efectiva (cierra la falla)
@@ -56,9 +52,7 @@ export class SolucionForm implements OnInit {
     herramientas: '',
     tecnico: '',
     fecha: '',
-    tiempo_minutos: 0 as number | null,
     costo: 0 as number | null,
-    preventivo: '',
     efectiva: true,
   };
   error = '';
@@ -73,9 +67,7 @@ export class SolucionForm implements OnInit {
           herramientas: s.herramientas ?? '',
           tecnico: s.tecnico ?? '',
           fecha: aInputFecha(s.fecha),
-          tiempo_minutos: s.tiempo_minutos,
           costo: s.costo,
-          preventivo: s.preventivo ?? '',
           efectiva: !!s.efectiva,
         }
       : { ...this.d, tecnico: this.api.usuario()?.nombre ?? '' };

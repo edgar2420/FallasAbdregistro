@@ -100,31 +100,7 @@ app.use('/api/soluciones', auth, solucionesRouter);
 app.use('/api/stats', auth, statsRouter);
 app.use('/api/adjuntos', auth, express.json({ limit: '12mb' }), adjuntosRouter);
 
-/** Excel ejecuta como fórmula las celdas que empiezan por = + - @; se neutralizan con un apóstrofo. */
-const celdaCsv = (v) => {
-  let s = String(v ?? '');
-  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
-  return `"${s.replace(/"/g, '""')}"`;
-};
 
-app.get('/api/export/fallas.csv', auth, wrap((req, res) => {
-  const datos = rows(db.prepare(`
-    SELECT f.codigo, m.codigo AS maquina, m.nombre AS maquina_nombre, t.nombre AS tipo, m.departamento, m.area, m.capacidad, m.poe,
-           f.titulo, f.sintomas, f.categoria, f.severidad, f.estado, f.causa_raiz,
-           f.fecha_deteccion, f.fecha_resolucion, f.paro_minutos, f.responsable,
-           (SELECT GROUP_CONCAT(s.descripcion, ' | ') FROM soluciones s WHERE s.falla_id = f.id) AS soluciones
-    FROM fallas f
-    JOIN maquinas m ON m.id = f.maquina_id
-    LEFT JOIN tipos_maquina t ON t.id = m.tipo_id
-    ORDER BY datetime(f.fecha_deteccion) DESC
-  `));
-  const cabecera = datos.length ? Object.keys(datos[0]) : ['codigo'];
-  const csv = [cabecera.join(';'), ...datos.map((d) => cabecera.map((c) => celdaCsv(d[c])).join(';'))].join('\r\n');
-  registrar(req.usuario.id, 'exportar_csv', '/api/export/fallas.csv');
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', 'attachment; filename="fallas.csv"');
-  res.send(`﻿${csv}`);
-}));
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
 

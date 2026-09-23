@@ -29,7 +29,6 @@ import { Contador } from './contador';
             }
           </select>
         </label>
-        <label>Fecha<input name="fecha" type="datetime-local" [(ngModel)]="d.fecha_deteccion"></label>
         <label>Código *
           <input name="codigo" [maxlength]="L.falla.codigo" required placeholder="Ej.: FAL-0007"
                  [(ngModel)]="d.codigo">
@@ -44,8 +43,6 @@ import { Contador } from './contador';
             }
           </select>
         </label>
-        <label class="wide">Descripción<textarea name="descripcion" [maxlength]="L.falla.descripcion" [(ngModel)]="d.descripcion"></textarea></label>
-        <label class="wide">Causa<textarea name="causa" [maxlength]="L.falla.causa_raiz" [(ngModel)]="d.causa_raiz"></textarea></label>
       </div>
 
       @if (!falla()) {
@@ -58,10 +55,6 @@ import { Contador } from './contador';
           </label>
           <label>Repuestos<input name="sol_repuestos" [maxlength]="L.solucion.repuestos" [(ngModel)]="s.repuestos"></label>
           <label>Técnico<input name="sol_tecnico" [maxlength]="L.solucion.tecnico" [(ngModel)]="s.tecnico"></label>
-          <label>Tiempo (min)<input name="sol_tiempo" type="number" min="0" [(ngModel)]="s.tiempo_minutos"></label>
-          <label class="wide">Acción preventiva recomendada
-            <textarea name="sol_preventivo" [maxlength]="L.solucion.preventivo" [(ngModel)]="s.preventivo"></textarea>
-          </label>
         </div>
       }
 
@@ -91,16 +84,11 @@ export class FallaForm implements OnInit {
     codigo: '',
     titulo: '',
     categoria: 'Mecánica',
-    fecha_deteccion: '',
-    descripcion: '',
-    causa_raiz: '',
   };
   s = {
     descripcion: '',
     repuestos: '',
     tecnico: '',
-    tiempo_minutos: null as number | null,
-    preventivo: '',
   };
 
   async ngOnInit() {
@@ -111,9 +99,6 @@ export class FallaForm implements OnInit {
         codigo: f.codigo,
         titulo: f.titulo,
         categoria: f.categoria,
-        fecha_deteccion: aInputFecha(f.fecha_deteccion),
-        descripcion: f.descripcion ?? '',
-        causa_raiz: f.causa_raiz ?? '',
       };
     } else {
       this.d.maquina_id = this.maquinaId();
@@ -142,7 +127,7 @@ export class FallaForm implements OnInit {
         ? await this.api.put<Falla>(`/fallas/${f.id}`, this.d)
         : await this.api.post<Falla>('/fallas', {
             ...this.d,
-            solucion: this.s.descripcion.trim() ? { ...this.s, fecha: this.d.fecha_deteccion } : null,
+            solucion: this.s.descripcion.trim() ? { ...this.s } : null,
           });
       this.guardado.emit(r);
     } catch (e: unknown) {

@@ -76,18 +76,9 @@ export class Api {
     return { items, total: Number(r.headers.get('X-Total-Count') ?? items.length), conteo };
   }
 
-  /** Archivos protegidos (fotos, PDF, CSV): se piden con el token y se muestran como blob. */
+  /** Archivos protegidos (fotos, PDF): se piden con el token y se muestran como blob. */
   blob(path: string) {
     return this.peticion(this.http.get(this.base + path, { ...this.opciones(), responseType: 'blob' }));
-  }
-
-  async descargar(path: string, nombre: string) {
-    const url = URL.createObjectURL(await this.blob(path));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = nombre;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   catalogos() {

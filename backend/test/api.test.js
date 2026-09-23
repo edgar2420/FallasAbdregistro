@@ -74,18 +74,12 @@ test('el administrador inicial debe cambiar su contraseña antes de usar la API'
   assert.equal((await api('GET', '/api/auth/me', { token: t })).status, 200);
 });
 
-test('la exportación CSV exige sesión y neutraliza fórmulas', async () => {
-  assert.equal((await api('GET', '/api/export/fallas.csv')).status, 401);
-  await api('POST', '/api/fallas', { token: adminToken, body: { maquina_id: maquina.id, titulo: '=HYPERLINK("x")' } });
-  const r = await api('GET', '/api/export/fallas.csv', { token: operadorToken });
-  assert.equal(r.status, 200);
-  assert.match(r.datos, /"'=HYPERLINK\(""x""\)"/);
-});
-
 test('el operador sólo consulta: no crea tipos, máquinas, fallas ni soluciones', async () => {
   assert.equal((await api('POST', '/api/tipos', { token: operadorToken, body: { nombre: 'X' } })).status, 403);
   assert.equal((await api('POST', '/api/maquinas', { token: operadorToken, body: { codigo: 'X', nombre: 'X' } })).status, 403);
   assert.equal((await api('POST', '/api/fallas', { token: operadorToken, body: { maquina_id: maquina.id, titulo: 'x' } })).status, 403);
+  // La falla la crea el admin: al operador se le comprueba que la puede consultar.
+  await api('POST', '/api/fallas', { token: adminToken, body: { maquina_id: maquina.id, titulo: 'Consulta del operador' } });
   const lista = await api('GET', `/api/fallas?q=${encodeURIComponent('OSM-01')}`, { token: operadorToken });
   assert.equal(lista.status, 200);
   assert.ok(lista.datos.length > 0);

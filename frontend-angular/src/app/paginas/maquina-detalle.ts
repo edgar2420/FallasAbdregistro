@@ -73,9 +73,6 @@ import { contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../
           <div><dt>Potencia</dt><dd>{{ m.potencia || '—' }}</dd></div>
           <div><dt>Presión de aire</dt><dd>{{ m.presion_aire || '—' }}</dd></div>
           <div><dt>Presión de vapor</dt><dd>{{ m.presion_vapor || '—' }}</dd></div>
-          @if (m.notas) {
-            <div class="wide"><dt>Notas</dt><dd class="texto">{{ m.notas }}</dd></div>
-          }
         </dl>
       </section>
 

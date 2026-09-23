@@ -87,12 +87,6 @@ function categoriaFoto(categoria: string) {
         <dl class="ficha">
           <div><dt>Fecha</dt><dd>{{ larga(f.fecha_deteccion) }} <small class="subline">{{ hace(f.fecha_deteccion) }}</small></dd></div>
           <div><dt>Categoría</dt><dd>{{ f.categoria }}</dd></div>
-          @if (f.descripcion) {
-            <div class="wide"><dt>Descripción</dt><dd class="texto">{{ f.descripcion }}</dd></div>
-          }
-          @if (f.causa_raiz) {
-            <div class="wide"><dt>Causa</dt><dd class="texto">{{ f.causa_raiz }}</dd></div>
-          }
         </dl>
 
         @if (api.esAdmin()) {
@@ -111,14 +105,13 @@ function categoriaFoto(categoria: string) {
             <article class="solucion" [class.no-efectiva]="!s.efectiva">
               <div class="solucion-head">
                 <span class="tag" [class.green]="s.efectiva">{{ s.efectiva ? 'Efectiva' : 'No efectiva' }}</span>
-                <small>{{ fecha(s.fecha) }} · {{ s.tecnico || 'Técnico no indicado' }} · {{ s.tiempo_minutos }} min
+                <small>{{ fecha(s.fecha) }} · {{ s.tecnico || 'Técnico no indicado' }}
                   @if (s.costo) { · Costo {{ s.costo }} }
                 </small>
               </div>
               <p class="texto">{{ s.descripcion }}</p>
               @if (s.repuestos) { <p><b>Repuestos:</b> {{ s.repuestos }}</p> }
               @if (s.herramientas) { <p><b>Herramientas:</b> {{ s.herramientas }}</p> }
-              @if (s.preventivo) { <p class="preventivo"><b>Preventivo:</b> {{ s.preventivo }}</p> }
               @if (api.esAdmin()) {
                 <div class="row-actions">
                   <button type="button" (click)="solucionEditada = s">Editar</button>

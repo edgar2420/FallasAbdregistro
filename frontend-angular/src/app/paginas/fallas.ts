@@ -39,9 +39,6 @@ const SEGMENTOS = [
         <p>Cada falla con la solución que se aplicó. Haz clic en una fila para ver el detalle completo.</p>
       </div>
       <div class="row-actions">
-        <button class="ghost" type="button" [disabled]="exportando" (click)="exportar()">
-          {{ exportando ? 'Exportando…' : 'Exportar a Excel (CSV)' }}
-        </button>
         @if (api.esAdmin()) {
           <button class="primary" type="button" (click)="creando = true">
             <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>Registrar falla
@@ -204,7 +201,6 @@ export class FallasPage implements OnInit {
   error = '';
   cargando = true;
   creando = false;
-  exportando = false;
   private pedido = 0;
 
   readonly segmentos = SEGMENTOS;
@@ -296,14 +292,4 @@ export class FallasPage implements OnInit {
     this.abiertaId = x.id;
   }
 
-  async exportar() {
-    this.exportando = true;
-    try {
-      await this.api.descargar('/export/fallas.csv', `fallas-${new Date().toISOString().slice(0, 10)}.csv`);
-    } catch (e: unknown) {
-      this.error = Api.mensaje(e, 'No se pudo exportar');
-    } finally {
-      this.exportando = false;
-    }
-  }
 }

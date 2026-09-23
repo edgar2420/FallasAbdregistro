@@ -22,7 +22,6 @@ const VACIA = {
   potencia: '',
   presion_aire: '',
   presion_vapor: '',
-  notas: '',
 };
 
 /** Ficha técnica de una máquina con los datos de su placa (alta y edición, sólo administradores). */
@@ -72,7 +71,6 @@ const VACIA = {
         <label>Potencia<input name="potencia" [maxlength]="L.potencia" placeholder="15 kW" [(ngModel)]="d.potencia"></label>
         <label>Presión de aire<input name="presion_aire" [maxlength]="L.presion_aire" placeholder="6 bar" [(ngModel)]="d.presion_aire"></label>
         <label>Presión de vapor<input name="presion_vapor" [maxlength]="L.presion_vapor" placeholder="3 bar" [(ngModel)]="d.presion_vapor"></label>
-        <label class="wide">Notas técnicas<textarea name="notas" [maxlength]="L.notas" [(ngModel)]="d.notas"></textarea></label>
       </div>
 
       <div class="form-actions">
