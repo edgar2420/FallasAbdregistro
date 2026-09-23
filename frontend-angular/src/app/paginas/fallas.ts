@@ -5,28 +5,38 @@ import { Api } from '../api';
 import { Catalogos, Falla, Maquina, Tipo } from '../modelos';
 import { FallaDetalle } from '../componentes/falla-detalle';
 import { FallaForm } from '../componentes/falla-form';
-import { claseEstadoFalla, claseSeveridad, conPausa, consulta, fechaCorta } from '../util';
+import { Modal } from '../componentes/modal';
+import { Paginador } from '../componentes/paginador';
+import { POR_PAGINA } from '../limites';
+import { PERIODOS, conPausa, consulta, fechaLarga, haceCuanto, rangoPeriodo, slugCategoria } from '../util';
 
 const FILTROS_VACIOS = {
   q: '',
   maquina_id: '',
   tipo_id: '',
   categoria: '',
-  severidad: '',
   estado: '',
+  periodo: '',
   desde: '',
   hasta: '',
 };
 
+/** Filtro rápido por solución: el valor es el parámetro "estado" que entiende la API. */
+const SEGMENTOS = [
+  { valor: '', texto: 'Todas', clave: 'todas' },
+  { valor: 'Resuelta', texto: 'Con solución', clave: 'con' },
+  { valor: 'abiertas', texto: 'Sin solución', clave: 'sin' },
+];
+
 @Component({
   selector: 'app-fallas-page',
-  imports: [FormsModule, RouterLink, FallaDetalle, FallaForm],
+  imports: [FormsModule, RouterLink, FallaDetalle, FallaForm, Modal, Paginador],
   template: `
     <div class="module-title">
       <div>
         <span class="eyebrow">Operaciones / Mantenimiento</span>
         <h1>Fallas técnicas</h1>
-        <p>Busca por código de falla o de máquina, síntoma o solución, y filtra por categoría, severidad y fechas.</p>
+        <p>Cada falla con la solución que se aplicó. Haz clic en una fila para ver el detalle completo.</p>
       </div>
       <div class="row-actions">
         <button class="ghost" type="button" [disabled]="exportando" (click)="exportar()">
@@ -45,99 +55,134 @@ const FILTROS_VACIOS = {
     }
 
     @if (creando) {
-      <app-falla-form (guardado)="creada($event)" (cancelar)="creando = false" />
+      <app-modal titulo="Registrar falla" subtitulo="Nueva falla técnica" (cerrar)="creando = false">
+        <app-falla-form (guardado)="creada($event)" (cancelar)="creando = false" />
+      </app-modal>
     }
 
-    <section class="module-card filtros">
-      <input type="search" class="buscador" placeholder="Código (FAL-0001, BP-460), síntoma, solución…"
-             aria-label="Buscar fallas" [(ngModel)]="f.q" (ngModelChange)="buscarConPausa()">
-      <select aria-label="Máquina" [(ngModel)]="f.maquina_id" (ngModelChange)="buscar()">
-        <option value="">Todas las máquinas</option>
-        @for (m of maquinas; track m.id) {
-          <option [value]="m.id">{{ m.codigo }} · {{ m.nombre }}</option>
+    <section class="module-card panel-filtros">
+      <div class="filtros-fila">
+        <label class="buscador-icono">
+          <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+          <input type="search" placeholder="Buscar por código (FAL-0001, AM-015-01), falla o solución…"
+                 aria-label="Buscar fallas" [(ngModel)]="f.q" (ngModelChange)="buscarConPausa()">
+        </label>
+        <div class="segmento" role="radiogroup" aria-label="Filtrar por solución">
+          @for (s of segmentos; track s.valor) {
+            <button type="button" role="radio" [attr.aria-checked]="f.estado === s.valor"
+                    [class.activo]="f.estado === s.valor" [attr.data-tipo]="s.clave" (click)="f.estado = s.valor; buscar()">
+              {{ s.texto }} <span class="segmento-n">{{ conteo[s.clave] ?? '·' }}</span>
+            </button>
+          }
+        </div>
+      </div>
+      <div class="filtros-fila">
+        <select aria-label="Máquina" [(ngModel)]="f.maquina_id" (ngModelChange)="buscar()">
+          <option value="">Todas las máquinas</option>
+          @for (m of maquinas; track m.id) {
+            <option [value]="m.id">{{ m.codigo }} · {{ m.nombre }}</option>
+          }
+        </select>
+        <select aria-label="Tipo de máquina" [(ngModel)]="f.tipo_id" (ngModelChange)="buscar()">
+          <option value="">Todos los tipos</option>
+          @for (t of tipos; track t.id) {
+            <option [value]="t.id">{{ t.nombre }}</option>
+          }
+        </select>
+        <select aria-label="Categoría" [(ngModel)]="f.categoria" (ngModelChange)="buscar()">
+          <option value="">Todas las categorías</option>
+          @for (c of cat?.categorias ?? []; track c) {
+            <option>{{ c }}</option>
+          }
+        </select>
+        <div class="rango-fechas">
+          <svg class="icon" aria-hidden="true"><use href="#i-calendar"></use></svg>
+          <select aria-label="Período" [(ngModel)]="f.periodo" (ngModelChange)="elegirPeriodo($event)">
+            @for (p of periodos; track p.id) {
+              <option [value]="p.id">{{ p.texto }}</option>
+            }
+          </select>
+          @if (f.periodo === 'personalizado') {
+            <input type="date" aria-label="Desde" [attr.max]="f.hasta || null" [(ngModel)]="f.desde" (ngModelChange)="buscar()">
+            <span aria-hidden="true">a</span>
+            <input type="date" aria-label="Hasta" [attr.min]="f.desde || null" [(ngModel)]="f.hasta" (ngModelChange)="buscar()">
+          }
+        </div>
+        @if (hayFiltros) {
+          <button class="quiet" type="button" (click)="limpiar()">Limpiar filtros</button>
         }
-      </select>
-      <select aria-label="Tipo de máquina" [(ngModel)]="f.tipo_id" (ngModelChange)="buscar()">
-        <option value="">Todos los tipos</option>
-        @for (t of tipos; track t.id) {
-          <option [value]="t.id">{{ t.nombre }}</option>
-        }
-      </select>
-      <select aria-label="Categoría" [(ngModel)]="f.categoria" (ngModelChange)="buscar()">
-        <option value="">Todas las categorías</option>
-        @for (c of cat?.categorias ?? []; track c) {
-          <option>{{ c }}</option>
-        }
-      </select>
-      <select aria-label="Severidad" [(ngModel)]="f.severidad" (ngModelChange)="buscar()">
-        <option value="">Toda severidad</option>
-        @for (s of cat?.severidades ?? []; track s) {
-          <option>{{ s }}</option>
-        }
-      </select>
-      <select aria-label="Estado" [(ngModel)]="f.estado" (ngModelChange)="buscar()">
-        <option value="">Todos los estados</option>
-        <option value="abiertas">Sólo abiertas</option>
-        @for (s of cat?.estados_falla ?? []; track s) {
-          <option>{{ s }}</option>
-        }
-      </select>
-      <label class="rango">Desde<input type="date" [(ngModel)]="f.desde" (ngModelChange)="buscar()"></label>
-      <label class="rango">Hasta<input type="date" [(ngModel)]="f.hasta" (ngModelChange)="buscar()"></label>
-      <button class="quiet" type="button" (click)="limpiar()">Limpiar filtros</button>
-      <span class="contador">{{ items.length }} fallas</span>
+      </div>
     </section>
 
     <section class="module-card tabla-card">
       <div class="tabla-scroll">
-        <table class="data-table">
+        <table class="data-table tabla-fallas">
           <thead>
             <tr>
               <th>Código</th>
               <th class="opcional">Fecha</th>
               <th>Máquina</th>
-              <th>Falla / error</th>
+              <th class="th-falla">Falla / error</th>
               <th class="opcional">Categoría</th>
-              <th class="opcional">Severidad</th>
-              <th>Estado</th>
-              <th>Solución aplicada</th>
+              <th class="th-solucion">Solución aplicada</th>
             </tr>
           </thead>
           <tbody>
             @for (x of items; track x.id) {
-              <tr class="clicable" tabindex="0" [class.abierta]="abiertaId === x.id"
+              <tr class="clicable" tabindex="0" [attr.data-estado]="estadoFila(x)" [class.abierta]="abiertaId === x.id"
                   [attr.aria-expanded]="abiertaId === x.id" (click)="alternar(x)" (keydown.enter)="alternar(x)">
                 <td class="codigo">{{ x.codigo }}</td>
-                <td class="fecha opcional">{{ fecha(x.fecha_deteccion, false) }}</td>
+                <td class="fecha opcional">
+                  {{ larga(x.fecha_deteccion) }}
+                  <small class="subline">{{ hace(x.fecha_deteccion) }}</small>
+                </td>
                 <td>
                   <a class="codigo" [routerLink]="['/maquinaria', x.maquina_id]" (click)="$event.stopPropagation()">
                     {{ x.maquina_codigo }}
                   </a>
                   <small class="subline">{{ x.maquina_nombre }}</small>
                 </td>
-                <td><strong>{{ x.titulo }}</strong></td>
-                <td class="opcional">{{ x.categoria }}</td>
-                <td class="opcional"><span class="priority" [class]="'priority ' + sev(x.severidad)">{{ x.severidad }}</span></td>
-                <td><span class="tag" [class]="'tag ' + est(x.estado)">{{ x.estado }}</span></td>
+                <td>
+                  <div class="celda-falla">
+                    <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>
+                    <strong>{{ x.titulo }}</strong>
+                  </div>
+                </td>
+                <td class="opcional"><span class="cat" [attr.data-cat]="slug(x.categoria)">{{ x.categoria }}</span></td>
                 <td class="solucion-celda">
-                  @if (x.ultima_solucion) {
-                    <span class="recorte">{{ x.ultima_solucion }}</span>
-                  } @else {
-                    <span class="pendiente">Sin solución registrada</span>
+                  @switch (estadoFila(x)) {
+                    @case ('resuelta') {
+                      <div class="sol-caja sol-ok">
+                        <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+                        <span class="recorte">{{ x.ultima_solucion }}</span>
+                      </div>
+                    }
+                    @case ('intento') {
+                      <div class="sol-caja sol-intento" title="Se intentó una solución, pero no resolvió la falla">
+                        <svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg>
+                        <span class="recorte">{{ x.ultima_solucion }}</span>
+                      </div>
+                    }
+                    @default {
+                      <span class="sol-pendiente">
+                        <svg class="icon" aria-hidden="true"><use href="#i-clock"></use></svg>Sin solución
+                      </span>
+                    }
                   }
                 </td>
               </tr>
               @if (abiertaId === x.id) {
                 <tr class="fila-detalle">
-                  <td colspan="8"><app-falla-detalle [fallaId]="x.id" (cambio)="cargar()" /></td>
+                  <td colspan="6"><app-falla-detalle [fallaId]="x.id" (cambio)="cargar()" /></td>
                 </tr>
               }
             } @empty {
-              <tr><td colspan="8" class="muted">{{ cargando ? 'Buscando…' : 'No hay fallas con esos filtros' }}</td></tr>
+              <tr><td colspan="6" class="muted">{{ cargando ? 'Buscando…' : 'No hay fallas con esos filtros' }}</td></tr>
             }
           </tbody>
         </table>
       </div>
+      <app-paginador [total]="total" [pagina]="pagina" [porPagina]="porPagina" (cambio)="cambiarPagina($event.pagina, $event.porPagina)" />
     </section>
   `,
 })
@@ -148,6 +193,10 @@ export class FallasPage implements OnInit {
 
   f = { ...FILTROS_VACIOS };
   items: Falla[] = [];
+  total = 0;
+  conteo: Record<string, number> = {};
+  pagina = 1;
+  porPagina = POR_PAGINA[1];
   maquinas: Maquina[] = [];
   tipos: Tipo[] = [];
   cat?: Catalogos;
@@ -158,16 +207,29 @@ export class FallasPage implements OnInit {
   exportando = false;
   private pedido = 0;
 
-  readonly fecha = fechaCorta;
-  readonly sev = claseSeveridad;
-  readonly est = claseEstadoFalla;
+  readonly segmentos = SEGMENTOS;
+  readonly periodos = PERIODOS;
+  readonly larga = fechaLarga;
+  readonly hace = haceCuanto;
+  readonly slug = slugCategoria;
   readonly buscarConPausa = conPausa(() => this.buscar());
+
+  get hayFiltros() {
+    return Object.values(this.f).some((v) => v);
+  }
+
+  /** resuelta = solución efectiva · intento = hubo intervención sin éxito · pendiente = nada todavía. */
+  estadoFila(x: Falla) {
+    if (x.estado === 'Resuelta') return 'resuelta';
+    return x.ultima_solucion ? 'intento' : 'pendiente';
+  }
 
   async ngOnInit() {
     const qp = this.route.snapshot.queryParamMap;
     for (const k of Object.keys(FILTROS_VACIOS) as (keyof typeof FILTROS_VACIOS)[]) {
       this.f[k] = qp.get(k) ?? '';
     }
+    if ((this.f.desde || this.f.hasta) && !this.f.periodo) this.f.periodo = 'personalizado';
     this.abiertaId = Number(qp.get('falla')) || null;
     void this.cargar();
     try {
@@ -181,7 +243,20 @@ export class FallasPage implements OnInit {
     }
   }
 
+  elegirPeriodo(id: string) {
+    const rango = rangoPeriodo(id);
+    if (rango) Object.assign(this.f, rango);
+    this.buscar();
+  }
+
+  cambiarPagina(pagina: number, porPagina: number) {
+    this.pagina = pagina;
+    this.porPagina = porPagina;
+    void this.cargar();
+  }
+
   buscar() {
+    this.pagina = 1;
     const queryParams = Object.fromEntries(Object.entries(this.f).filter(([, v]) => v));
     void this.router.navigate([], { queryParams, replaceUrl: true });
     void this.cargar();
@@ -196,9 +271,12 @@ export class FallasPage implements OnInit {
     const pedido = ++this.pedido;
     this.cargando = true;
     try {
-      const r = await this.api.get<Falla[]>(`/fallas${consulta(this.f)}`);
+      const { periodo: _periodo, ...filtros } = this.f;
+      const r = await this.api.lista<Falla>(`/fallas${consulta({ ...filtros, limite: this.porPagina, pagina: this.pagina })}`);
       if (pedido === this.pedido) {
-        this.items = r;
+        this.items = r.items;
+        this.total = r.total;
+        this.conteo = r.conteo;
         this.error = '';
       }
     } catch (e: unknown) {

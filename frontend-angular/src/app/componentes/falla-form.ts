@@ -3,19 +3,25 @@ import { FormsModule } from '@angular/forms';
 import { Api } from '../api';
 import { Catalogos, Falla, Maquina } from '../modelos';
 import { aInputFecha } from '../util';
+import { LIMITES } from '../limites';
+import { Contador } from './contador';
 
-/** Alta o edición de una falla (sólo administradores). */
+/**
+ * Alta o edición de una falla (sólo administradores). Se muestra dentro de <app-modal>.
+ * Al registrar una falla nueva se puede cargar en el mismo formulario la solución aplicada.
+ */
 @Component({
   selector: 'app-falla-form',
-  imports: [FormsModule],
+  imports: [FormsModule, Contador],
   template: `
-    <form class="module-card inline-form" (submit)="$event.preventDefault(); guardar()">
-      <h3>{{ falla() ? 'Editar falla ' + falla()!.codigo : 'Registrar falla' }}</h3>
+    <form class="modal-form" (submit)="$event.preventDefault(); guardar()">
       @if (error) {
         <p class="form-error" role="alert">{{ error }}</p>
       }
-      <div class="crud-grid">
-        <label>Máquina afectada *
+
+      <h4>Falla</h4>
+      <div class="crud-grid tres">
+        <label class="dos">Máquina *
           <select name="maquina" required [(ngModel)]="d.maquina_id">
             <option [ngValue]="null">Selecciona una máquina</option>
             @for (m of maquinas; track m.id) {
@@ -23,7 +29,10 @@ import { aInputFecha } from '../util';
             }
           </select>
         </label>
-        <label>Título *<input name="titulo" required [(ngModel)]="d.titulo"></label>
+        <label>Fecha<input name="fecha" type="datetime-local" [(ngModel)]="d.fecha_deteccion"></label>
+        <label class="dos">Falla / error *
+          <input name="titulo" [maxlength]="L.falla.titulo" required placeholder="Ej.: Baja presión en bomba de alta" [(ngModel)]="d.titulo">
+        </label>
         <label>Categoría
           <select name="categoria" [(ngModel)]="d.categoria">
             @for (c of cat?.categorias ?? []; track c) {
@@ -31,43 +40,31 @@ import { aInputFecha } from '../util';
             }
           </select>
         </label>
-        <label>Severidad
-          <select name="severidad" [(ngModel)]="d.severidad">
-            @for (s of cat?.severidades ?? []; track s) {
-              <option>{{ s }}</option>
-            }
-          </select>
-        </label>
-        <label>Estado
-          <select name="estado" [(ngModel)]="d.estado">
-            @for (s of cat?.estados_falla ?? []; track s) {
-              <option>{{ s }}</option>
-            }
-          </select>
-        </label>
-        <label>Turno
-          <select name="turno" [(ngModel)]="d.turno">
-            <option value="">—</option>
-            @for (t of cat?.turnos ?? []; track t) {
-              <option>{{ t }}</option>
-            }
-          </select>
-        </label>
-        <label>Detectada<input name="deteccion" type="datetime-local" [(ngModel)]="d.fecha_deteccion"></label>
-        @if (d.estado === 'Resuelta') {
-          <label>Resuelta<input name="resolucion" type="datetime-local" [(ngModel)]="d.fecha_resolucion"></label>
-        }
-        <label>Minutos de paro<input name="paro" type="number" min="0" [(ngModel)]="d.paro_minutos"></label>
-        <label>Reportado por<input name="reportado" [(ngModel)]="d.reportado_por"></label>
-        <label>Responsable<input name="responsable" [(ngModel)]="d.responsable"></label>
-        <label class="wide">Síntomas<textarea name="sintomas" [(ngModel)]="d.sintomas"></textarea></label>
-        <label class="wide">Descripción<textarea name="descripcion" [(ngModel)]="d.descripcion"></textarea></label>
-        <label class="wide">Causa raíz<textarea name="causa" [(ngModel)]="d.causa_raiz"></textarea></label>
+        <label class="wide">Descripción<textarea name="descripcion" [maxlength]="L.falla.descripcion" [(ngModel)]="d.descripcion"></textarea></label>
+        <label class="wide">Causa<textarea name="causa" [maxlength]="L.falla.causa_raiz" [(ngModel)]="d.causa_raiz"></textarea></label>
       </div>
+
+      @if (!falla()) {
+        <h4>Solución aplicada</h4>
+        <p class="ayuda">Si ya se solucionó, regístralo aquí. Si todavía no, déjalo vacío y agrégalo después desde la falla.</p>
+        <div class="crud-grid tres">
+          <label class="wide">Qué se hizo (pasos)
+            <textarea name="sol_descripcion" [maxlength]="L.solucion.descripcion" placeholder="1) Parada y bloqueo. 2) Cambio de … 3) Prueba …"
+                      [(ngModel)]="s.descripcion"></textarea>
+          </label>
+          <label>Repuestos<input name="sol_repuestos" [maxlength]="L.solucion.repuestos" [(ngModel)]="s.repuestos"></label>
+          <label>Técnico<input name="sol_tecnico" [maxlength]="L.solucion.tecnico" [(ngModel)]="s.tecnico"></label>
+          <label>Tiempo (min)<input name="sol_tiempo" type="number" min="0" [(ngModel)]="s.tiempo_minutos"></label>
+          <label class="wide">Acción preventiva recomendada
+            <textarea name="sol_preventivo" [maxlength]="L.solucion.preventivo" [(ngModel)]="s.preventivo"></textarea>
+          </label>
+        </div>
+      }
+
       <div class="form-actions">
         <button class="ghost" type="button" (click)="cancelar.emit()">Cancelar</button>
         <button class="primary" type="submit" [disabled]="guardando">
-          {{ guardando ? 'Guardando…' : 'Guardar falla' }}
+          {{ guardando ? 'Guardando…' : (falla() ? 'Guardar cambios' : 'Registrar falla') }}
         </button>
       </div>
     </form>
@@ -80,6 +77,7 @@ export class FallaForm implements OnInit {
   readonly guardado = output<Falla>();
   readonly cancelar = output<void>();
 
+  readonly L = LIMITES;
   cat?: Catalogos;
   maquinas: Maquina[] = [];
   error = '';
@@ -88,17 +86,16 @@ export class FallaForm implements OnInit {
     maquina_id: null as number | null,
     titulo: '',
     categoria: 'Mecánica',
-    severidad: 'Media',
-    estado: 'Abierta',
-    turno: '',
     fecha_deteccion: '',
-    fecha_resolucion: '',
-    paro_minutos: 0 as number | null,
-    reportado_por: '',
-    responsable: '',
-    sintomas: '',
     descripcion: '',
     causa_raiz: '',
+  };
+  s = {
+    descripcion: '',
+    repuestos: '',
+    tecnico: '',
+    tiempo_minutos: null as number | null,
+    preventivo: '',
   };
 
   async ngOnInit() {
@@ -108,21 +105,13 @@ export class FallaForm implements OnInit {
         maquina_id: f.maquina_id,
         titulo: f.titulo,
         categoria: f.categoria,
-        severidad: f.severidad,
-        estado: f.estado,
-        turno: f.turno ?? '',
         fecha_deteccion: aInputFecha(f.fecha_deteccion),
-        fecha_resolucion: aInputFecha(f.fecha_resolucion),
-        paro_minutos: f.paro_minutos,
-        reportado_por: f.reportado_por ?? '',
-        responsable: f.responsable ?? '',
-        sintomas: f.sintomas ?? '',
         descripcion: f.descripcion ?? '',
         causa_raiz: f.causa_raiz ?? '',
       };
     } else {
       this.d.maquina_id = this.maquinaId();
-      this.d.reportado_por = this.api.usuario()?.nombre ?? '';
+      this.s.tecnico = this.api.usuario()?.nombre ?? '';
     }
     try {
       [this.cat, this.maquinas] = await Promise.all([
@@ -136,7 +125,7 @@ export class FallaForm implements OnInit {
 
   async guardar() {
     if (!this.d.maquina_id || !this.d.titulo.trim()) {
-      this.error = 'Selecciona la máquina y escribe el título de la falla';
+      this.error = 'Selecciona la máquina y escribe la falla';
       return;
     }
     this.error = '';
@@ -145,7 +134,10 @@ export class FallaForm implements OnInit {
       const f = this.falla();
       const r = f
         ? await this.api.put<Falla>(`/fallas/${f.id}`, this.d)
-        : await this.api.post<Falla>('/fallas', this.d);
+        : await this.api.post<Falla>('/fallas', {
+            ...this.d,
+            solucion: this.s.descripcion.trim() ? { ...this.s, fecha: this.d.fecha_deteccion } : null,
+          });
       this.guardado.emit(r);
     } catch (e: unknown) {
       this.error = Api.mensaje(e, 'No se pudo guardar la falla');

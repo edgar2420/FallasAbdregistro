@@ -7,6 +7,7 @@
     "start": "node --no-warnings src/server.js",
     "dev": "node --no-warnings --watch src/server.js",
     "seed": "node --no-warnings src/seed.js",
+    "respaldo": "node --no-warnings src/respaldo.js",
     "test": "node --no-warnings --test test/*.test.js"
   },
   "dependencies": {

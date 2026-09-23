@@ -13,7 +13,8 @@ export const adjuntosDir = path.join(dataDir, 'adjuntos');
 fs.mkdirSync(adjuntosDir, { recursive: true });
 
 export const db = new DatabaseSync(path.join(dataDir, 'fallas.db'));
-db.exec('PRAGMA foreign_keys = ON;');
+// WAL: lecturas y escrituras simultáneas sin bloquearse; busy_timeout espera en vez de fallar si la base está ocupada.
+db.exec('PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000; PRAGMA synchronous = NORMAL; PRAGMA foreign_keys = ON;');
 db.exec(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'));
 
 /** node:sqlite devuelve objetos con prototipo null; los normalizamos para JSON. */
@@ -48,6 +49,8 @@ const agregarColumnas = (tabla, columnas) => {
 
 agregarColumnas('usuarios', { debe_cambiar: 'INTEGER NOT NULL DEFAULT 0 CHECK (debe_cambiar IN (0,1))' });
 agregarColumnas('maquinas', {
+  departamento: 'TEXT',
+  capacidad: 'TEXT',
   poe: 'TEXT',
   tension: 'TEXT',
   corriente: 'TEXT',

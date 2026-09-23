@@ -51,11 +51,11 @@
     </section>
   </main>
 } @else {
-  <div class="app-shell">
-    <aside class="sidebar">
+  <div class="app-shell" [class.menu-abierto]="menuMovil()">
+    <aside class="sidebar" id="menu-lateral">
       <div class="brand">
         <div class="brand-mark small">CF</div>
-        <div>
+        <div class="nav-texto">
           <strong>Control de Fallas</strong>
           <span>Dragon Operations</span>
         </div>
@@ -63,37 +63,51 @@
 
       <nav aria-label="Secciones">
         <a routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page"
-           [routerLinkActiveOptions]="{ exact: true }">
-          <svg class="icon" aria-hidden="true"><use href="#i-board"></use></svg>Tablero
+           [routerLinkActiveOptions]="{ exact: true }"
+           [attr.title]="menuCerrado() ? 'Tablero' : null" (click)="menuMovil.set(false)">
+          <svg class="icon" aria-hidden="true"><use href="#i-board"></use></svg><span class="nav-texto">Tablero</span>
         </a>
-        <a routerLink="/fallas" routerLinkActive="active" ariaCurrentWhenActive="page">
-          <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>Fallas
+        <a routerLink="/fallas" routerLinkActive="active" ariaCurrentWhenActive="page"
+           [attr.title]="menuCerrado() ? 'Fallas' : null" (click)="menuMovil.set(false)">
+          <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg><span class="nav-texto">Fallas</span>
         </a>
-        <a routerLink="/maquinaria" routerLinkActive="active" ariaCurrentWhenActive="page">
-          <svg class="icon" aria-hidden="true"><use href="#i-machine"></use></svg>Maquinaria
-        </a>
-        <a routerLink="/soluciones" routerLinkActive="active" ariaCurrentWhenActive="page">
-          <svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg>Soluciones
+        <a routerLink="/maquinaria" routerLinkActive="active" ariaCurrentWhenActive="page"
+           [attr.title]="menuCerrado() ? 'Maquinaria' : null" (click)="menuMovil.set(false)">
+          <svg class="icon" aria-hidden="true"><use href="#i-machine"></use></svg><span class="nav-texto">Maquinaria</span>
         </a>
         @if (api.esAdmin()) {
-          <a routerLink="/usuarios" routerLinkActive="active" ariaCurrentWhenActive="page">
-            <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg>Usuarios
+          <a routerLink="/usuarios" routerLinkActive="active" ariaCurrentWhenActive="page"
+             [attr.title]="menuCerrado() ? 'Usuarios' : null" (click)="menuMovil.set(false)">
+            <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg><span class="nav-texto">Usuarios</span>
           </a>
         }
       </nav>
 
       <div class="sidebar-bottom">
-        <span class="online-dot"></span>Sesión activa
+        <button type="button" class="menu-plegar" aria-controls="menu-lateral" [attr.aria-expanded]="!menuCerrado()"
+                [title]="menuCerrado() ? 'Expandir menú' : 'Contraer menú'" (click)="alternarMenu()">
+          <svg class="icon" aria-hidden="true"><use href="#i-chevron"></use></svg>
+          <span class="nav-texto">Contraer menú</span>
+        </button>
       </div>
     </aside>
+    @if (menuMovil()) {
+      <div class="menu-fondo" aria-hidden="true" (click)="menuMovil.set(false)"></div>
+    }
 
     <main class="workspace">
       <header class="topbar">
-        <span class="eyebrow">Control de fallas / Planta</span>
+        <div class="topbar-izq">
+          <button class="icon-button menu-movil" type="button" aria-label="Abrir menú" aria-controls="menu-lateral"
+                  [attr.aria-expanded]="menuMovil()" (click)="menuMovil.set(true)">
+            <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
+          </button>
+          <span class="eyebrow">Control de fallas / Planta</span>
+        </div>
         <div class="profile">
           <a class="profile-link" routerLink="/cuenta" title="Mi cuenta">
             <div class="avatar" aria-hidden="true">{{ iniciales() }}</div>
-            <div>
+            <div class="perfil-texto">
               <strong>{{ api.usuario()?.nombre }}</strong>
               <span>{{ api.esAdmin() ? 'Administrador' : 'Operador · consulta' }}</span>
             </div>
@@ -114,7 +128,7 @@
         <router-outlet />
       </section>
 
-      <footer>
+      <footer class="pie">
         <span>Desarrollo de sistema <strong>Ing. Edgar Rojas Apaza</strong></span>
         <span>Recolección de datos <strong>Ing. Airton Junior Gonzales Ramos</strong></span>
       </footer>

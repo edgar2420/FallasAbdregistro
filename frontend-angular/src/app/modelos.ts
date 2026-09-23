@@ -110,7 +110,9 @@ export interface Maquina {
   marca: string | null;
   modelo: string | null;
   num_serie: string | null;
+  departamento: string | null;
   area: string | null;
+  capacidad: string | null;
   anio: number | null;
   estado: string;
   poe: string | null;

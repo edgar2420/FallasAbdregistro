@@ -6,6 +6,7 @@ import { admin } from '../auth.js';
 import { ABIERTAS_SQL, CATEGORIAS, SEVERIDADES, ESTADOS_FALLA, TURNOS } from '../catalogos.js';
 import { sincronizarMaquina, siguienteCodigoFalla } from '../estado.js';
 import { normalizarSolucion } from './soluciones.js';
+import { LIMITES, limitar } from '../limites.js';
 import { archivosDe, borrarArchivos, listarAdjuntos } from './adjuntos.js';
 
 export const fallasRouter = Router();
@@ -39,13 +40,30 @@ fallasRouter.get('/', wrap((req, res) => {
   if (tipo_id) { cond.push('m.tipo_id = ?'); args.push(Number(tipo_id) || 0); }
   if (categoria) { cond.push('f.categoria = ?'); args.push(String(categoria)); }
   if (severidad) { cond.push('f.severidad = ?'); args.push(String(severidad)); }
-  if (estado === 'abiertas') cond.push(`f.estado IN ${ABIERTAS_SQL}`);
-  else if (estado) { cond.push('f.estado = ?'); args.push(String(estado)); }
   if (desde) { cond.push('date(f.fecha_deteccion) >= date(?)'); args.push(fecha(desde, 'desde')); }
   if (hasta) { cond.push('date(f.fecha_deteccion) <= date(?)'); args.push(fecha(hasta, 'hasta')); }
-  const sql = `${SELECT_FALLAS} ${cond.length ? `WHERE ${cond.join(' AND ')}` : ''}
-               ORDER BY datetime(f.fecha_deteccion) DESC, f.id DESC`;
-  res.json(rows(db.prepare(sql), ...args));
+  // Filtros sin el de estado: sirven para contar cuántas fallas tienen y no tienen solución.
+  const whereBase = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
+  const argsBase = [...args];
+  if (estado === 'abiertas') cond.push(`f.estado IN ${ABIERTAS_SQL}`);
+  else if (estado) { cond.push('f.estado = ?'); args.push(String(estado)); }
+  const where = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
+  const limite = entero(req.query.limite, 'limite', { min: 1, max: 200 });
+  if (!limite) {
+    return res.json(rows(db.prepare(`${SELECT_FALLAS} ${where} ORDER BY datetime(f.fecha_deteccion) DESC, f.id DESC`), ...args));
+  }
+  const pagina = entero(req.query.pagina, 'pagina', { min: 1 }) ?? 1;
+  const { total } = row(db.prepare(`
+    SELECT COUNT(*) AS total FROM fallas f JOIN maquinas m ON m.id = f.maquina_id ${where}`), ...args);
+  const conteo = row(db.prepare(`
+    SELECT IFNULL(SUM(CASE WHEN f.estado = 'Resuelta' THEN 1 ELSE 0 END), 0) AS con,
+           IFNULL(SUM(CASE WHEN f.estado IN ${ABIERTAS_SQL} THEN 1 ELSE 0 END), 0) AS sin,
+           COUNT(*) AS todas
+    FROM fallas f JOIN maquinas m ON m.id = f.maquina_id ${whereBase}`), ...argsBase);
+  res.setHeader('X-Total-Count', String(total));
+  res.setHeader('X-Conteo', `todas=${conteo.todas};con=${conteo.con};sin=${conteo.sin}`);
+  res.json(rows(db.prepare(`${SELECT_FALLAS} ${where}
+    ORDER BY datetime(f.fecha_deteccion) DESC, f.id DESC LIMIT ? OFFSET ?`), ...args, limite, (pagina - 1) * limite));
 }));
 
 fallasRouter.get('/:id', wrap((req, res) => {
@@ -77,6 +95,7 @@ const normalizar = (v) => {
     paro_minutos: entero(v.paro_minutos, 'paro_minutos', { max: 525600 }) ?? 0,
   };
   if (!d.titulo) throw new HttpError(400, 'El campo "titulo" es obligatorio');
+  limitar(d, LIMITES.falla);
   if (!d.maquina_id) throw new HttpError(400, 'El campo "maquina_id" es obligatorio');
   if (!row(db.prepare('SELECT id FROM maquinas WHERE id = ?'), d.maquina_id)) {
     throw new HttpError(400, 'La máquina indicada no existe');
@@ -89,13 +108,29 @@ const normalizar = (v) => {
   return d;
 };
 
+const insertarSolucion = (fallaId, s) => db.prepare(`
+  INSERT INTO soluciones (falla_id, descripcion, repuestos, herramientas, tiempo_minutos, costo,
+                          tecnico, efectiva, preventivo, fecha)
+  VALUES (?,?,?,?,?,?,?,?,?,?)
+`).run(fallaId, s.descripcion, p(s.repuestos), p(s.herramientas), s.tiempo_minutos, s.costo,
+  p(s.tecnico), s.efectiva, p(s.preventivo), s.fecha);
+
+/** Alta de falla; si trae `solucion` con descripción, se registra en el mismo paso y la falla queda resuelta. */
 fallasRouter.post('/', admin, wrap((req, res) => {
-  const datos = normalizar(req.body);
+  const conSolucion = texto(req.body.solucion?.descripcion);
+  const solucion = conSolucion ? normalizarSolucion(req.body.solucion) : null;
+  const datos = normalizar(solucion?.efectiva ? { ...req.body, estado: 'Resuelta' } : req.body);
+  if (solucion?.efectiva) {
+    datos.fecha_resolucion = solucion.fecha > datos.fecha_deteccion ? solucion.fecha : datos.fecha_deteccion;
+  } else if (solucion && datos.estado === 'Abierta') {
+    datos.estado = 'En proceso';
+  }
   const id = transaccion(() => {
-    const codigo = texto(req.body.codigo) || siguienteCodigoFalla();
+    const codigo = limitar({ codigo: texto(req.body.codigo) }, LIMITES.falla).codigo || siguienteCodigoFalla();
     const { lastInsertRowid } = db.prepare(
       `INSERT INTO fallas (codigo, ${CAMPOS.join(',')}) VALUES (${Array(CAMPOS.length + 1).fill('?').join(',')})`,
     ).run(codigo, ...CAMPOS.map((c) => p(datos[c])));
+    if (solucion) insertarSolucion(lastInsertRowid, solucion);
     sincronizarMaquina(datos.maquina_id);
     return lastInsertRowid;
   });
@@ -141,12 +176,7 @@ fallasRouter.post('/:id/soluciones', admin, wrap((req, res) => {
   if (!falla) throw new HttpError(404, 'Falla no encontrada');
   const s = normalizarSolucion(req.body);
   const id = transaccion(() => {
-    const { lastInsertRowid } = db.prepare(`
-      INSERT INTO soluciones (falla_id, descripcion, repuestos, herramientas, tiempo_minutos, costo,
-                              tecnico, efectiva, preventivo, fecha)
-      VALUES (?,?,?,?,?,?,?,?,?,?)
-    `).run(falla.id, s.descripcion, p(s.repuestos), p(s.herramientas), s.tiempo_minutos, s.costo,
-      p(s.tecnico), s.efectiva, p(s.preventivo), s.fecha);
+    const { lastInsertRowid } = insertarSolucion(falla.id, s);
 
     // Una solución efectiva cierra la falla; una fallida la deja "En proceso".
     if (s.efectiva && !['Resuelta', 'Anulada'].includes(falla.estado)) {

@@ -5,6 +5,7 @@ import { p, texto, unoDe, entero, busqueda } from '../utils.js';
 import { admin } from '../auth.js';
 import { ABIERTAS_SQL, ESTADOS_MAQUINA } from '../catalogos.js';
 import { sincronizarMaquina } from '../estado.js';
+import { LIMITES, limitar } from '../limites.js';
 import { archivosDe, borrarArchivos, listarAdjuntos } from './adjuntos.js';
 
 export const maquinasRouter = Router();
@@ -20,17 +21,18 @@ const SELECT_BASE = `
 const obtener = db.prepare(`${SELECT_BASE} WHERE m.id = ?`);
 
 maquinasRouter.get('/', wrap((req, res) => {
-  const { q, tipo_id, estado, area } = req.query;
+  const { q, tipo_id, estado, area, departamento } = req.query;
   const cond = [];
   const args = [];
   if (q) {
-    const b = busqueda(['m.codigo', 'm.nombre', 'm.marca', 'm.modelo', 'm.area', 'm.poe', 'm.num_serie'], q);
+    const b = busqueda(['m.codigo', 'm.nombre', 'm.departamento', 'm.marca', 'm.modelo', 'm.area', 'm.poe', 'm.num_serie'], q);
     cond.push(b.sql);
     args.push(...b.args);
   }
   if (tipo_id) { cond.push('m.tipo_id = ?'); args.push(Number(tipo_id) || 0); }
   if (estado) { cond.push('m.estado = ?'); args.push(String(estado)); }
   if (area) { cond.push('m.area = ?'); args.push(String(area)); }
+  if (departamento) { cond.push('m.departamento = ?'); args.push(String(departamento)); }
   const sql = `${SELECT_BASE} ${cond.length ? `WHERE ${cond.join(' AND ')}` : ''} ORDER BY m.codigo`;
   res.json(rows(db.prepare(sql), ...args));
 }));
@@ -51,7 +53,7 @@ maquinasRouter.get('/:id', wrap((req, res) => {
 }));
 
 /** Ficha técnica: datos de texto libre para admitir valores como "380 V trifásico" o "6-8 bar". */
-const TEXTOS = ['codigo', 'nombre', 'marca', 'modelo', 'num_serie', 'area', 'poe', 'tension', 'corriente',
+const TEXTOS = ['codigo', 'nombre', 'departamento', 'marca', 'modelo', 'num_serie', 'capacidad', 'area', 'poe', 'tension', 'corriente',
   'potencia', 'presion_aire', 'consumo_aire', 'presion_vapor', 'consumo_vapor', 'notas'];
 const CAMPOS = [...TEXTOS, 'tipo_id', 'anio', 'estado'];
 
@@ -59,6 +61,7 @@ const normalizar = (v) => {
   const d = Object.fromEntries(TEXTOS.map((c) => [c, texto(v[c])]));
   if (!d.codigo) throw new HttpError(400, 'El campo "codigo" es obligatorio');
   if (!d.nombre) throw new HttpError(400, 'El campo "nombre" es obligatorio');
+  limitar(d, LIMITES.maquina);
   d.codigo = d.codigo.toUpperCase();
   d.tipo_id = entero(v.tipo_id, 'tipo_id', { min: 1 });
   if (d.tipo_id && !row(db.prepare('SELECT id FROM tipos_maquina WHERE id = ?'), d.tipo_id)) {

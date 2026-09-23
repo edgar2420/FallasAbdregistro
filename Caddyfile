@@ -1,0 +1,20 @@
+# Con un dominio real (DOMINIO=fallas.tuempresa.com) Caddy obtiene y renueva el certificado HTTPS solo.
+# En una red local sin dominio usa DOMINIO=:80 (HTTP dentro de la planta).
+{$DOMINIO} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+
+	# Fotos de hasta 8 MB viajan en base64 (~11 MB)
+	request_body {
+		max_size 13MB
+	}
+
+	reverse_proxy app:4010 {
+		health_uri /api/salud
+		health_interval 30s
+	}
+}

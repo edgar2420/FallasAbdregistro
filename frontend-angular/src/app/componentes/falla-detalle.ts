@@ -1,10 +1,12 @@
 import { Component, OnChanges, inject, input, output } from '@angular/core';
 import { Api } from '../api';
 import { Falla, Solucion } from '../modelos';
-import { claseEstadoFalla, claseSeveridad, fechaCorta } from '../util';
+import { fechaCorta, fechaLarga, haceCuanto } from '../util';
 import { FallaForm } from './falla-form';
+import { Modal } from './modal';
 import { Galeria } from './galeria';
 import { SolucionForm } from './solucion-form';
+import { LIMITES } from '../limites';
 
 /** Categoría de foto sugerida según el tipo de falla. */
 function categoriaFoto(categoria: string) {
@@ -17,66 +19,95 @@ function categoriaFoto(categoria: string) {
 /** Ficha completa de una falla: datos, soluciones aplicadas y fotos. */
 @Component({
   selector: 'app-falla-detalle',
-  imports: [FallaForm, SolucionForm, Galeria],
+  imports: [FallaForm, SolucionForm, Galeria, Modal],
   template: `
     @if (error) {
       <p class="form-error" role="alert">{{ error }}</p>
     }
     @if (!f) {
       <p class="muted">Cargando detalle…</p>
-    } @else if (editando) {
-      <app-falla-form [falla]="f" (guardado)="editando = false; recargar()" (cancelar)="editando = false" />
     } @else {
+      @if (editando) {
+        <app-modal [titulo]="'Editar falla ' + f.codigo" [subtitulo]="f.maquina_codigo + ' · ' + f.maquina_nombre"
+                   (cerrar)="editando = false">
+          <app-falla-form [falla]="f" (guardado)="editando = false; recargar()" (cancelar)="editando = false" />
+        </app-modal>
+      }
+      @if (nuevaSolucion) {
+        <app-modal titulo="Registrar solución" [subtitulo]="f.codigo + ' · ' + f.titulo" tamano="mediano"
+                   (cerrar)="nuevaSolucion = false">
+          <app-solucion-form [fallaId]="f.id" (guardado)="nuevaSolucion = false; recargar()"
+                             (cancelar)="nuevaSolucion = false" />
+        </app-modal>
+      }
+      @if (solucionEditada; as s) {
+        <app-modal titulo="Editar solución" [subtitulo]="f.codigo + ' · ' + f.titulo" tamano="mediano"
+                   (cerrar)="solucionEditada = null">
+          <app-solucion-form [fallaId]="f.id" [solucion]="s" (guardado)="solucionEditada = null; recargar()"
+                             (cancelar)="solucionEditada = null" />
+        </app-modal>
+      }
       <div class="detalle">
+        @switch (estado(f)) {
+          @case ('resuelta') {
+            <p class="estado-banda" data-estado="resuelta">
+              <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+              Solucionada{{ f.fecha_resolucion ? ' el ' + larga(f.fecha_resolucion) : '' }}
+            </p>
+          }
+          @case ('intento') {
+            <p class="estado-banda" data-estado="intento">
+              <svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg>
+              Se intentó una solución, pero la falla sigue sin resolverse
+            </p>
+          }
+          @default {
+            <p class="estado-banda" data-estado="pendiente">
+              <svg class="icon" aria-hidden="true"><use href="#i-clock"></use></svg>
+              Todavía no tiene solución registrada
+              @if (api.esAdmin()) {
+                <button type="button" class="primary" (click)="nuevaSolucion = true">Registrar solución</button>
+              }
+            </p>
+          }
+        }
         <div class="detalle-head">
           <div>
             <span class="issue-id">{{ f.codigo }}</span>
-            <h3>{{ f.titulo }}</h3>
+            <h3 class="titulo-falla">
+              <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>{{ f.titulo }}
+            </h3>
             <small class="subline">{{ f.maquina_codigo }} · {{ f.maquina_nombre }}</small>
           </div>
           <div class="chips">
-            <span class="priority" [class]="'priority ' + sev(f.severidad)">{{ f.severidad }}</span>
-            <span class="tag" [class]="'tag ' + est(f.estado)">{{ f.estado }}</span>
             <span class="tag">{{ f.categoria }}</span>
           </div>
         </div>
 
         <dl class="ficha">
-          <div><dt>Detectada</dt><dd>{{ fecha(f.fecha_deteccion) }}</dd></div>
-          <div><dt>Resuelta</dt><dd>{{ fecha(f.fecha_resolucion) }}</dd></div>
-          <div><dt>Turno</dt><dd>{{ f.turno || '—' }}</dd></div>
-          <div><dt>Minutos de paro</dt><dd>{{ f.paro_minutos }}</dd></div>
-          <div><dt>Reportado por</dt><dd>{{ f.reportado_por || '—' }}</dd></div>
-          <div><dt>Responsable</dt><dd>{{ f.responsable || '—' }}</dd></div>
-          @if (f.sintomas) {
-            <div class="wide"><dt>Síntomas</dt><dd class="texto">{{ f.sintomas }}</dd></div>
-          }
+          <div><dt>Fecha</dt><dd>{{ larga(f.fecha_deteccion) }} <small class="subline">{{ hace(f.fecha_deteccion) }}</small></dd></div>
+          <div><dt>Categoría</dt><dd>{{ f.categoria }}</dd></div>
           @if (f.descripcion) {
             <div class="wide"><dt>Descripción</dt><dd class="texto">{{ f.descripcion }}</dd></div>
           }
           @if (f.causa_raiz) {
-            <div class="wide"><dt>Causa raíz</dt><dd class="texto">{{ f.causa_raiz }}</dd></div>
+            <div class="wide"><dt>Causa</dt><dd class="texto">{{ f.causa_raiz }}</dd></div>
           }
         </dl>
 
         @if (api.esAdmin()) {
           <div class="row-actions">
             <button type="button" (click)="editando = true">Editar falla</button>
-            <button type="button" (click)="nuevaSolucion = true; editandoSolucion = null">Registrar solución</button>
+            <button type="button" (click)="nuevaSolucion = true">Registrar solución</button>
             <button type="button" class="danger" (click)="borrar()">Borrar falla</button>
           </div>
         }
 
-        <h4>Soluciones aplicadas ({{ f.soluciones_lista?.length ?? 0 }})</h4>
-        @if (nuevaSolucion) {
-          <app-solucion-form [fallaId]="f.id" (guardado)="nuevaSolucion = false; recargar()"
-                             (cancelar)="nuevaSolucion = false" />
-        }
+        <h4 class="titulo-solucion">
+          <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+          Soluciones aplicadas ({{ f.soluciones_lista?.length ?? 0 }})
+        </h4>
         @for (s of f.soluciones_lista ?? []; track s.id) {
-          @if (editandoSolucion === s.id) {
-            <app-solucion-form [fallaId]="f.id" [solucion]="s" (guardado)="editandoSolucion = null; recargar()"
-                               (cancelar)="editandoSolucion = null" />
-          } @else {
             <article class="solucion" [class.no-efectiva]="!s.efectiva">
               <div class="solucion-head">
                 <span class="tag" [class.green]="s.efectiva">{{ s.efectiva ? 'Efectiva' : 'No efectiva' }}</span>
@@ -90,19 +121,18 @@ function categoriaFoto(categoria: string) {
               @if (s.preventivo) { <p class="preventivo"><b>Preventivo:</b> {{ s.preventivo }}</p> }
               @if (api.esAdmin()) {
                 <div class="row-actions">
-                  <button type="button" (click)="editandoSolucion = s.id; nuevaSolucion = false">Editar</button>
+                  <button type="button" (click)="solucionEditada = s">Editar</button>
                   <button type="button" class="danger" (click)="borrarSolucion(s)">Borrar</button>
                 </div>
               }
             </article>
-          }
         } @empty {
           <p class="muted">Todavía no se registró ninguna solución.</p>
         }
 
         <h4>Fotos de la falla ({{ f.adjuntos_lista?.length ?? 0 }})</h4>
         <app-galeria [adjuntos]="f.adjuntos_lista ?? []" [fallaId]="f.id" [maquinaId]="f.maquina_id"
-                     [categoriaInicial]="catFoto(f.categoria)" [conPestanas]="false" (cambio)="recargar()" />
+                     [categoriaInicial]="catFoto(f.categoria)" [conPestanas]="false" [maximo]="maxFotos" (cambio)="recargar()" />
       </div>
     }
   `,
@@ -116,12 +146,18 @@ export class FallaDetalle implements OnChanges {
   error = '';
   editando = false;
   nuevaSolucion = false;
-  editandoSolucion: number | null = null;
+  solucionEditada: Solucion | null = null;
 
   readonly fecha = fechaCorta;
-  readonly sev = claseSeveridad;
-  readonly est = claseEstadoFalla;
+  readonly larga = fechaLarga;
+  readonly hace = haceCuanto;
+
+  estado(f: Falla) {
+    if (f.estado === 'Resuelta') return 'resuelta';
+    return f.soluciones_lista?.length ? 'intento' : 'pendiente';
+  }
   readonly catFoto = categoriaFoto;
+  readonly maxFotos = LIMITES.adjunto.por_falla;
 
   ngOnChanges() {
     void this.cargar();

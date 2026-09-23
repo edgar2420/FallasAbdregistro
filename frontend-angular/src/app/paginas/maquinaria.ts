@@ -4,21 +4,24 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Api } from '../api';
 import { Maquina, Tipo } from '../modelos';
 import { MaquinaForm } from '../componentes/maquina-form';
-import { claseEstadoMaquina, contiene } from '../util';
+import { Modal } from '../componentes/modal';
+import { Paginador, paginar } from '../componentes/paginador';
+import { LIMITES, POR_PAGINA } from '../limites';
+import { contiene } from '../util';
 
 @Component({
   selector: 'app-maquinaria-page',
-  imports: [FormsModule, RouterLink, MaquinaForm],
+  imports: [FormsModule, RouterLink, MaquinaForm, Modal, Paginador],
   template: `
     <div class="module-title">
       <div>
         <span class="eyebrow">Activos / Planta</span>
         <h1>Maquinaria</h1>
-        <p>Selecciona una máquina para ver su ficha técnica, fotos y la tabla de fallas con su solución.</p>
+        <p>Haz clic en una máquina para ver su ficha técnica, sus fotos y la tabla de fallas con su solución.</p>
       </div>
       @if (api.esAdmin()) {
         <div class="row-actions">
-          <button class="ghost" type="button" (click)="verTipos = !verTipos">Tipos de máquina</button>
+          <button class="ghost" type="button" (click)="verTipos = true">Tipos de máquina</button>
           <button class="primary" type="button" (click)="creando = true">
             <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>Nueva máquina
           </button>
@@ -31,18 +34,19 @@ import { claseEstadoMaquina, contiene } from '../util';
     }
 
     @if (creando) {
-      <app-maquina-form (guardado)="creada($event)" (cancelar)="creando = false" />
+      <app-modal titulo="Nueva máquina" subtitulo="Datos de la placa y ficha técnica" (cerrar)="creando = false">
+        <app-maquina-form (guardado)="creada($event)" (cancelar)="creando = false" />
+      </app-modal>
     }
 
     @if (verTipos && api.esAdmin()) {
-      <section class="module-card">
-        <h2>Tipos de máquina</h2>
+      <app-modal titulo="Tipos de máquina" subtitulo="Agrupan equipos similares" tamano="mediano" (cerrar)="verTipos = false">
         <div class="tipos-lista">
           @for (t of tipos; track t.id) {
             <div class="user-row">
               @if (editandoTipo === t.id) {
-                <input aria-label="Nombre del tipo" [(ngModel)]="tipoDraft.nombre">
-                <input aria-label="Descripción del tipo" [(ngModel)]="tipoDraft.descripcion" placeholder="Descripción">
+                <input aria-label="Nombre del tipo" [maxlength]="LT.nombre" [(ngModel)]="tipoDraft.nombre">
+                <input aria-label="Descripción del tipo" [maxlength]="LT.descripcion" [(ngModel)]="tipoDraft.descripcion" placeholder="Descripción">
                 <button type="button" (click)="guardarTipo(t)">Guardar</button>
                 <button type="button" (click)="editandoTipo = null">Cancelar</button>
               } @else {
@@ -57,34 +61,33 @@ import { claseEstadoMaquina, contiene } from '../util';
           }
         </div>
         <form class="filter-row nuevo-tipo" (submit)="$event.preventDefault(); crearTipo()">
-          <input aria-label="Nuevo tipo" placeholder="Nuevo tipo (ej. Ósmosis inversa)" name="nt" [(ngModel)]="nuevoTipo.nombre">
-          <input aria-label="Descripción" placeholder="Descripción" name="nd" [(ngModel)]="nuevoTipo.descripcion">
+          <input aria-label="Nuevo tipo" placeholder="Nuevo tipo (ej. Ósmosis inversa)" name="nt" [maxlength]="LT.nombre" [(ngModel)]="nuevoTipo.nombre">
+          <input aria-label="Descripción" placeholder="Descripción" name="nd" [maxlength]="LT.descripcion" [(ngModel)]="nuevoTipo.descripcion">
           <button class="primary" type="submit">Agregar tipo</button>
         </form>
-      </section>
+      </app-modal>
     }
 
     <section class="module-card filtros">
-      <input type="search" class="buscador" placeholder="Buscar por código o nombre de máquina"
-             aria-label="Buscar máquina por código o nombre" [(ngModel)]="q">
-      <select aria-label="Filtrar por tipo" [(ngModel)]="tipoId">
+      <input type="search" class="buscador" placeholder="Buscar por código, equipo, área o Ref. POE"
+             aria-label="Buscar máquina por código o nombre" [(ngModel)]="q" (ngModelChange)="pagina = 1">
+      <select aria-label="Filtrar por departamento" [(ngModel)]="departamento" (ngModelChange)="pagina = 1">
+        <option value="">Todos los departamentos</option>
+        @for (d of departamentos; track d) {
+          <option>{{ d }}</option>
+        }
+      </select>
+      <select aria-label="Filtrar por tipo" [(ngModel)]="tipoId" (ngModelChange)="pagina = 1">
         <option [ngValue]="null">Todos los tipos</option>
         @for (t of tipos; track t.id) {
           <option [ngValue]="t.id">{{ t.nombre }}</option>
         }
       </select>
-      <select aria-label="Filtrar por área" [(ngModel)]="area">
+      <select aria-label="Filtrar por área" [(ngModel)]="area" (ngModelChange)="pagina = 1">
         <option value="">Todas las áreas</option>
         @for (a of areas; track a) {
           <option>{{ a }}</option>
         }
-      </select>
-      <select aria-label="Filtrar por estado" [(ngModel)]="estado">
-        <option value="">Todos los estados</option>
-        <option>Operativa</option>
-        <option>En falla</option>
-        <option>Mantenimiento</option>
-        <option>Fuera de servicio</option>
       </select>
       <span class="contador">{{ filtradas.length }} de {{ items.length }}</span>
     </section>
@@ -95,29 +98,27 @@ import { claseEstadoMaquina, contiene } from '../util';
           <thead>
             <tr>
               <th>Código</th>
-              <th>Máquina</th>
-              <th>Tipo</th>
+              <th>Equipo</th>
+              <th class="opcional">Departamento</th>
               <th>Área</th>
-              <th>POE</th>
-              <th>Estado</th>
-              <th class="num">Fallas abiertas / total</th>
+              <th class="opcional">Capacidad</th>
+              <th class="opcional">Ref. (POE)</th>
+              <th class="num">Fallas</th>
             </tr>
           </thead>
           <tbody>
-            @for (m of filtradas; track m.id) {
+            @for (m of paginadas; track m.id) {
               <tr class="clicable" tabindex="0" (click)="abrir(m)" (keydown.enter)="abrir(m)">
                 <td><a class="codigo" [routerLink]="['/maquinaria', m.id]" (click)="$event.stopPropagation()">{{ m.codigo }}</a></td>
                 <td>
                   <strong>{{ m.nombre }}</strong>
-                  <small class="subline">{{ m.marca || '' }} {{ m.modelo || '' }}</small>
+                  <small class="subline">Modelo {{ m.modelo || '—' }} · Marca {{ m.marca || '—' }}</small>
                 </td>
-                <td>{{ m.tipo || '—' }}</td>
+                <td class="opcional">{{ m.departamento || '—' }}</td>
                 <td>{{ m.area || '—' }}</td>
-                <td class="poe">{{ m.poe || '—' }}</td>
-                <td><span class="tag" [class]="'tag ' + claseEstado(m.estado)">{{ m.estado }}</span></td>
-                <td class="num">
-                  <b [class.alerta]="m.fallas_abiertas">{{ m.fallas_abiertas }}</b> / {{ m.total_fallas }}
-                </td>
+                <td class="opcional">{{ m.capacidad || '—' }}</td>
+                <td class="poe opcional">{{ m.poe || '—' }}</td>
+                <td class="num">{{ m.total_fallas }}</td>
               </tr>
             } @empty {
               <tr>
@@ -129,6 +130,8 @@ import { claseEstadoMaquina, contiene } from '../util';
           </tbody>
         </table>
       </div>
+      <app-paginador [total]="filtradas.length" [pagina]="pagina" [porPagina]="porPagina"
+                     (cambio)="pagina = $event.pagina; porPagina = $event.porPagina" />
     </section>
   `,
 })
@@ -142,7 +145,10 @@ export class MaquinariaPage implements OnInit {
   q = '';
   tipoId: number | null = null;
   area = '';
-  estado = '';
+  departamento = '';
+  pagina = 1;
+  porPagina = POR_PAGINA[1];
+  readonly LT = LIMITES.tipo;
   error = '';
   cargando = true;
   creando = false;
@@ -151,10 +157,17 @@ export class MaquinariaPage implements OnInit {
   tipoDraft = { nombre: '', descripcion: '' };
   nuevoTipo = { nombre: '', descripcion: '' };
 
-  readonly claseEstado = claseEstadoMaquina;
 
   get areas() {
     return [...new Set(this.items.map((m) => m.area).filter((a): a is string => !!a))].sort();
+  }
+
+  get departamentos() {
+    return [...new Set(this.items.map((m) => m.departamento).filter((d): d is string => !!d))].sort();
+  }
+
+  get paginadas() {
+    return paginar(this.filtradas, this.pagina, this.porPagina);
   }
 
   get filtradas() {
@@ -162,8 +175,8 @@ export class MaquinariaPage implements OnInit {
       (m) =>
         (!this.tipoId || m.tipo_id === this.tipoId) &&
         (!this.area || m.area === this.area) &&
-        (!this.estado || m.estado === this.estado) &&
-        contiene(`${m.codigo} ${m.nombre} ${m.poe ?? ''} ${m.marca ?? ''} ${m.modelo ?? ''} ${m.area ?? ''}`, this.q),
+        (!this.departamento || m.departamento === this.departamento) &&
+        contiene(`${m.codigo} ${m.nombre} ${m.poe ?? ''} ${m.marca ?? ''} ${m.modelo ?? ''} ${m.area ?? ''} ${m.departamento ?? ''}`, this.q),
     );
   }
 

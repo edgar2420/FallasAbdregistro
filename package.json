@@ -7,6 +7,7 @@
     "instalar": "npm --prefix backend install && npm --prefix frontend-angular install",
     "seed": "npm --prefix backend run seed",
     "seed:reset": "npm --prefix backend run seed -- --reset",
+    "respaldo": "npm --prefix backend run respaldo",
     "dev": "node dev.mjs",
     "build": "npm --prefix frontend-angular run build",
     "start": "npm --prefix backend start",

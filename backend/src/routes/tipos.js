@@ -3,6 +3,7 @@ import { db, rows, row } from '../db.js';
 import { HttpError, wrap, requerido } from '../errors.js';
 import { p, texto } from '../utils.js';
 import { admin } from '../auth.js';
+import { LIMITES, limitar } from '../limites.js';
 
 export const tiposRouter = Router();
 
@@ -21,6 +22,7 @@ tiposRouter.get('/', wrap((req, res) => res.json(rows(listar))));
 
 tiposRouter.post('/', admin, wrap((req, res) => {
   const nombre = requerido(req.body.nombre, 'nombre');
+  limitar({ nombre, descripcion: texto(req.body.descripcion) }, LIMITES.tipo);
   if (duplicado(nombre)) throw new HttpError(409, `Ya existe el tipo de maquinaria "${nombre}"`);
   const { lastInsertRowid } = crear.run(nombre, p(texto(req.body.descripcion)));
   res.status(201).json(row(obtener, lastInsertRowid));
@@ -30,6 +32,7 @@ tiposRouter.put('/:id', admin, wrap((req, res) => {
   const actual = row(obtener, Number(req.params.id));
   if (!actual) throw new HttpError(404, 'Tipo de maquinaria no encontrado');
   const nombre = requerido(req.body.nombre ?? actual.nombre, 'nombre');
+  limitar({ nombre, descripcion: texto(req.body.descripcion) }, LIMITES.tipo);
   if (duplicado(nombre, actual.id)) throw new HttpError(409, `Ya existe el tipo de maquinaria "${nombre}"`);
   actualizar.run(nombre, p(texto(req.body.descripcion === undefined ? actual.descripcion : req.body.descripcion)), actual.id);
   res.json(row(obtener, actual.id));
