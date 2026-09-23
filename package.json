@@ -10,6 +10,7 @@
     "dev": "node dev.mjs",
     "build": "npm --prefix frontend-angular run build",
     "start": "npm --prefix backend start",
-    "test": "npm --prefix frontend-angular test"
+    "test": "npm --prefix backend test && npm --prefix frontend-angular test -- --watch=false --browsers=ChromeHeadless",
+    "test:api": "npm --prefix backend test"
   }
 }

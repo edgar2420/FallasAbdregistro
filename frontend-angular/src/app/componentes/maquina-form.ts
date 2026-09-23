@@ -1,0 +1,135 @@
+import { Component, OnInit, inject, input, output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Api } from '../api';
+import { Catalogos, Maquina, Tipo } from '../modelos';
+
+const VACIA = {
+  codigo: '',
+  nombre: '',
+  tipo_id: null as number | null,
+  area: '',
+  poe: '',
+  marca: '',
+  modelo: '',
+  num_serie: '',
+  anio: null as number | null,
+  estado: 'Operativa',
+  tension: '',
+  corriente: '',
+  potencia: '',
+  presion_aire: '',
+  consumo_aire: '',
+  presion_vapor: '',
+  consumo_vapor: '',
+  notas: '',
+};
+
+/** Ficha técnica de una máquina (alta y edición, sólo administradores). */
+@Component({
+  selector: 'app-maquina-form',
+  imports: [FormsModule],
+  template: `
+    <form class="module-card inline-form" (submit)="$event.preventDefault(); guardar()">
+      <h3>{{ maquina() ? 'Editar ' + maquina()!.codigo : 'Nueva máquina' }}</h3>
+      @if (error) {
+        <p class="form-error" role="alert">{{ error }}</p>
+      }
+
+      <h4>Identificación</h4>
+      <div class="crud-grid tres">
+        <label>Código (Garantía de Calidad) *
+          <input name="codigo" required autocapitalize="characters" [(ngModel)]="d.codigo">
+        </label>
+        <label class="dos">Nombre *<input name="nombre" required [(ngModel)]="d.nombre"></label>
+        <label>POE de referencia
+          <input name="poe" placeholder="POE-MAN-011; POE-PRO-021" [(ngModel)]="d.poe">
+        </label>
+        <label>Área<input name="area" placeholder="Ósmosis, Estériles…" [(ngModel)]="d.area"></label>
+        <label>Tipo
+          <select name="tipo" [(ngModel)]="d.tipo_id">
+            <option [ngValue]="null">Sin tipo</option>
+            @for (t of tipos; track t.id) {
+              <option [ngValue]="t.id">{{ t.nombre }}</option>
+            }
+          </select>
+        </label>
+        <label>Marca<input name="marca" [(ngModel)]="d.marca"></label>
+        <label>Modelo<input name="modelo" [(ngModel)]="d.modelo"></label>
+        <label>N° de serie<input name="serie" [(ngModel)]="d.num_serie"></label>
+        <label>Año<input name="anio" type="number" min="1900" [(ngModel)]="d.anio"></label>
+        <label>Estado
+          <select name="estado" [(ngModel)]="d.estado">
+            @for (e of cat?.estados_maquina ?? []; track e) {
+              <option>{{ e }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <h4>Datos eléctricos y de servicios</h4>
+      <div class="crud-grid tres">
+        <label>Tensión<input name="tension" placeholder="380 V trifásico 60 Hz" [(ngModel)]="d.tension"></label>
+        <label>Corriente<input name="corriente" placeholder="32 A" [(ngModel)]="d.corriente"></label>
+        <label>Potencia<input name="potencia" placeholder="15 kW" [(ngModel)]="d.potencia"></label>
+        <label>Presión de aire<input name="presion_aire" placeholder="6 bar" [(ngModel)]="d.presion_aire"></label>
+        <label>Consumo de aire<input name="consumo_aire" placeholder="300 L/min" [(ngModel)]="d.consumo_aire"></label>
+        <label>Presión de vapor<input name="presion_vapor" placeholder="3 bar" [(ngModel)]="d.presion_vapor"></label>
+        <label>Consumo de vapor<input name="consumo_vapor" placeholder="60 kg/h" [(ngModel)]="d.consumo_vapor"></label>
+        <label class="wide">Notas técnicas<textarea name="notas" [(ngModel)]="d.notas"></textarea></label>
+      </div>
+
+      <div class="form-actions">
+        <button class="ghost" type="button" (click)="cancelar.emit()">Cancelar</button>
+        <button class="primary" type="submit" [disabled]="guardando">
+          {{ guardando ? 'Guardando…' : 'Guardar máquina' }}
+        </button>
+      </div>
+    </form>
+  `,
+})
+export class MaquinaForm implements OnInit {
+  private api = inject(Api);
+  readonly maquina = input<Maquina | null>(null);
+  readonly guardado = output<Maquina>();
+  readonly cancelar = output<void>();
+
+  d = { ...VACIA };
+  tipos: Tipo[] = [];
+  cat?: Catalogos;
+  error = '';
+  guardando = false;
+
+  async ngOnInit() {
+    const m = this.maquina();
+    if (m) {
+      this.d = Object.fromEntries(
+        Object.keys(VACIA).map((k) => [k, (m as unknown as Record<string, unknown>)[k] ?? (VACIA as Record<string, unknown>)[k]]),
+      ) as typeof VACIA;
+    }
+    try {
+      [this.tipos, this.cat] = await Promise.all([this.api.get<Tipo[]>('/tipos'), this.api.catalogos()]);
+    } catch (e: unknown) {
+      this.error = Api.mensaje(e, 'No se pudieron cargar los tipos de máquina');
+    }
+  }
+
+  async guardar() {
+    if (!this.d.codigo.trim() || !this.d.nombre.trim()) {
+      this.error = 'El código y el nombre de la máquina son obligatorios';
+      return;
+    }
+    this.error = '';
+    this.guardando = true;
+    try {
+      const m = this.maquina();
+      const r = m
+        ? await this.api.put<Maquina>(`/maquinas/${m.id}`, this.d)
+        : await this.api.post<Maquina>('/maquinas', this.d);
+      this.guardado.emit(r);
+    } catch (e: unknown) {
+      this.error = Api.mensaje(e, 'No se pudo guardar la máquina');
+    } finally {
+      this.guardando = false;
+    }
+  }
+}

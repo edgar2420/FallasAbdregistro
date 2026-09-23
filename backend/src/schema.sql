@@ -7,10 +7,12 @@ CREATE TABLE IF NOT EXISTS usuarios (
   password_hash TEXT NOT NULL,
   rol TEXT NOT NULL DEFAULT 'operador' CHECK (rol IN ('admin','operador')),
   activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1)),
+  debe_cambiar INTEGER NOT NULL DEFAULT 0 CHECK (debe_cambiar IN (0,1)),
   ultimo_acceso TEXT,
   creado_en TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );
 
+-- token = SHA-256 del token entregado al cliente (nunca se guarda en claro)
 CREATE TABLE IF NOT EXISTS sesiones (
   token TEXT PRIMARY KEY,
   usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -35,7 +37,8 @@ CREATE TABLE IF NOT EXISTS tipos_maquina (
   creado_en   TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );
 
--- Máquinas del parque industrial
+-- Máquinas del parque industrial. El código lo asigna Garantía de Calidad (equipo validado)
+-- y referencia los POE; los datos eléctricos y de servicios forman la ficha técnica.
 CREATE TABLE IF NOT EXISTS maquinas (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
   codigo       TEXT NOT NULL UNIQUE,
@@ -46,6 +49,14 @@ CREATE TABLE IF NOT EXISTS maquinas (
   num_serie    TEXT,
   area         TEXT,
   anio         INTEGER,
+  poe          TEXT,
+  tension      TEXT,
+  corriente    TEXT,
+  potencia     TEXT,
+  presion_aire TEXT,
+  consumo_aire TEXT,
+  presion_vapor TEXT,
+  consumo_vapor TEXT,
   estado       TEXT NOT NULL DEFAULT 'Operativa'
                CHECK (estado IN ('Operativa','En falla','Mantenimiento','Fuera de servicio')),
   notas        TEXT,
@@ -101,3 +112,23 @@ CREATE TABLE IF NOT EXISTS soluciones (
 );
 
 CREATE INDEX IF NOT EXISTS idx_soluciones_falla ON soluciones(falla_id);
+
+-- Fotos y documentos de cada máquina (opcionalmente ligados a una falla).
+CREATE TABLE IF NOT EXISTS adjuntos (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  maquina_id      INTEGER NOT NULL REFERENCES maquinas(id) ON DELETE CASCADE,
+  falla_id        INTEGER REFERENCES fallas(id) ON DELETE CASCADE,
+  categoria       TEXT NOT NULL DEFAULT 'Otra'
+                  CHECK (categoria IN ('Eléctrica','Electrónica','Mecánica','Ficha técnica','Otra')),
+  descripcion     TEXT,
+  archivo         TEXT NOT NULL UNIQUE,
+  mime            TEXT NOT NULL,
+  nombre_original TEXT,
+  bytes           INTEGER NOT NULL,
+  subido_por      INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+  creado_en       TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_adjuntos_maquina ON adjuntos(maquina_id);
+CREATE INDEX IF NOT EXISTS idx_adjuntos_falla   ON adjuntos(falla_id);
+CREATE INDEX IF NOT EXISTS idx_sesiones_usuario ON sesiones(usuario_id);

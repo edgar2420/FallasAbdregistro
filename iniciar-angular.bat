@@ -35,8 +35,8 @@ echo Sistema iniciado.
 echo Web: http://localhost:4200
 echo API: http://localhost:4010
 echo.
-echo Usuarios locales:
-echo   Administrador: admin / Admin1234!
-echo   Operador:      operador / Operador1234!
+echo Usuarios iniciales (solo la primera vez):
+echo   Administrador: admin    / Admin1234!    (se pide cambiarla al ingresar)
+echo   Operador:      operador / Operador1234! (se pide cambiarla al ingresar)
 echo.
 pause

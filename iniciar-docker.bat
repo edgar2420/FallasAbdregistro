@@ -3,7 +3,7 @@ setlocal
 title Control de Fallas - Docker
 cd /d "%~dp0"
 
-echo Levantando PostgreSQL y backend con Docker...
+echo Construyendo y levantando Control de Fallas en Docker (http://localhost:4010)...
 docker compose up --build
 
 pause

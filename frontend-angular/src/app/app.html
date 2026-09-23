@@ -39,6 +39,17 @@
       <small>Acceso administrado por el responsable del sistema</small>
     </section>
   </main>
+} @else if (api.debeCambiar()) {
+  <main class="login-shell">
+    <section class="login-card">
+      <div class="brand-mark">CF</div>
+      <span class="eyebrow">Primer ingreso</span>
+      <h1>Cambia tu contraseña</h1>
+      <p>Hola {{ api.usuario()?.nombre }}. Elige una contraseña personal para continuar.</p>
+      <app-cambiar-password [obligatorio]="true" />
+      <button class="quiet" type="button" (click)="salir()">Salir</button>
+    </section>
+  </main>
 } @else {
   <div class="app-shell">
     <aside class="sidebar">
@@ -64,7 +75,7 @@
         <a routerLink="/soluciones" routerLinkActive="active" ariaCurrentWhenActive="page">
           <svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg>Soluciones
         </a>
-        @if (api.usuario()?.rol === 'admin') {
+        @if (api.esAdmin()) {
           <a routerLink="/usuarios" routerLinkActive="active" ariaCurrentWhenActive="page">
             <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg>Usuarios
           </a>
@@ -80,11 +91,13 @@
       <header class="topbar">
         <span class="eyebrow">Control de fallas / Planta</span>
         <div class="profile">
-          <div class="avatar" aria-hidden="true">{{ iniciales() }}</div>
-          <div>
-            <strong>{{ api.usuario()?.nombre }}</strong>
-            <span>{{ api.usuario()?.rol === 'admin' ? 'Administrador' : 'Operador' }}</span>
-          </div>
+          <a class="profile-link" routerLink="/cuenta" title="Mi cuenta">
+            <div class="avatar" aria-hidden="true">{{ iniciales() }}</div>
+            <div>
+              <strong>{{ api.usuario()?.nombre }}</strong>
+              <span>{{ api.esAdmin() ? 'Administrador' : 'Operador · consulta' }}</span>
+            </div>
+          </a>
           <button class="icon-button" type="button" title="Cerrar sesión" aria-label="Cerrar sesión"
                   (click)="salir()">
             <svg class="icon" aria-hidden="true"><use href="#i-logout"></use></svg>
