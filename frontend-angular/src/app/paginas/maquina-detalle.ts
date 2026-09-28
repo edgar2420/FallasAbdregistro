@@ -56,33 +56,41 @@ type Pestana = 'registro' | 'tecnico' | 'documentacion' | 'mantenimiento';
       }
 
       <section class="module-card ficha-equipo">
-        <div class="ficha-equipo-fotos">
-          <app-galeria [adjuntos]="fotosEquipo" [maquinaId]="m.id" [maximo]="2" [conPestanas]="false"
-                       categoriaInicial="Ficha técnica" (cambio)="cargar()" />
-        </div>
         <h2>Información de la máquina</h2>
-        <h4>Datos de la placa y ficha técnica</h4>
-        <dl class="ficha">
-          <div><dt>Departamento</dt><dd>{{ m.departamento || '—' }}</dd></div>
-          <div><dt>Área</dt><dd>{{ m.area || '—' }}</dd></div>
-          <div><dt>Código</dt><dd><b>{{ m.codigo }}</b></dd></div>
-          <div class="dos"><dt>Equipo</dt><dd>{{ m.nombre }}</dd></div>
-          <div><dt>Marca</dt><dd>{{ m.marca || '—' }}</dd></div>
-          <div><dt>Modelo</dt><dd>{{ m.modelo || '—' }}</dd></div>
-          <div><dt>Serie</dt><dd>{{ m.num_serie || '—' }}</dd></div>
-          <div><dt>Capacidad</dt><dd>{{ m.capacidad || '—' }}</dd></div>
-          <div><dt>Ref. (POE)</dt><dd>{{ m.poe || '—' }}</dd></div>
-          <div><dt>Tipo</dt><dd>{{ m.tipo || '—' }}</dd></div>
-          <div><dt>Año</dt><dd>{{ m.anio || '—' }}</dd></div>
-        </dl>
-        <h4>Datos eléctricos y de servicios</h4>
-        <dl class="ficha servicios">
-          <div><dt>Tensión</dt><dd>{{ m.tension || '—' }}</dd></div>
-          <div><dt>Corriente</dt><dd>{{ m.corriente || '—' }}</dd></div>
-          <div><dt>Potencia</dt><dd>{{ m.potencia || '—' }}</dd></div>
-          <div><dt>Presión de aire</dt><dd>{{ m.presion_aire || '—' }}</dd></div>
-          <div><dt>Presión de vapor</dt><dd>{{ m.presion_vapor || '—' }}</dd></div>
-        </dl>
+        <div class="ficha-equipo-layout">
+          <div class="ficha-equipo-fotos">
+            <app-galeria [adjuntos]="fotosEquipo" [maquinaId]="m.id" [maximo]="2" [conPestanas]="false"
+                         categoriaInicial="Ficha técnica" (cambio)="cargar()" />
+          </div>
+          <div class="ficha-equipo-datos">
+            <div class="ficha-col">
+              <h4>Datos de la placa y ficha técnica</h4>
+              <dl class="ficha">
+                <div><dt>Departamento</dt><dd>{{ m.departamento || '—' }}</dd></div>
+                <div><dt>Área</dt><dd>{{ m.area || '—' }}</dd></div>
+                <div><dt>Código</dt><dd><b>{{ m.codigo }}</b></dd></div>
+                <div class="dos"><dt>Equipo</dt><dd>{{ m.nombre }}</dd></div>
+                <div><dt>Marca</dt><dd>{{ m.marca || '—' }}</dd></div>
+                <div><dt>Modelo</dt><dd>{{ m.modelo || '—' }}</dd></div>
+                <div><dt>Serie</dt><dd>{{ m.num_serie || '—' }}</dd></div>
+                <div><dt>Capacidad</dt><dd>{{ m.capacidad || '—' }}</dd></div>
+                <div><dt>Ref. (POE)</dt><dd>{{ m.poe || '—' }}</dd></div>
+                <div><dt>Tipo</dt><dd>{{ m.tipo || '—' }}</dd></div>
+                <div><dt>Año</dt><dd>{{ m.anio || '—' }}</dd></div>
+              </dl>
+            </div>
+            <div class="ficha-col">
+              <h4>Datos eléctricos y de servicios</h4>
+              <dl class="ficha servicios">
+                <div><dt>Tensión</dt><dd>{{ m.tension || '—' }}</dd></div>
+                <div><dt>Corriente</dt><dd>{{ m.corriente || '—' }}</dd></div>
+                <div><dt>Potencia</dt><dd>{{ m.potencia || '—' }}</dd></div>
+                <div><dt>Presión de aire</dt><dd>{{ m.presion_aire || '—' }}</dd></div>
+                <div><dt>Presión de vapor</dt><dd>{{ m.presion_vapor || '—' }}</dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
       </section>
 
       <div class="tabs" role="tablist" aria-label="Secciones de la máquina">
