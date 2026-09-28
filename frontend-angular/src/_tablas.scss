@@ -113,6 +113,11 @@
   vertical-align: top;
 }
 
+.data-table td.acciones-celda,
+.data-table th.th-acciones {
+  text-align: center;
+}
+
 .data-table td.acciones-celda {
   vertical-align: middle;
 }

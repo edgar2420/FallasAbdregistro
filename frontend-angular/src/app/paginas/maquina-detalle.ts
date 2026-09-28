@@ -51,6 +51,12 @@ type Pestana = 'registro' | 'documentacion';
                            (cancelar)="editandoFalla = null" />
         </app-modal>
       }
+      @if (detalleFalla; as df) {
+        <app-modal [titulo]="'Falla ' + df.codigo" [subtitulo]="m.codigo + ' · ' + m.nombre" tamano="ancho"
+                   (cerrar)="detalleFalla = null">
+          <app-falla-detalle [fallaId]="df.id" (cambio)="cargar()" />
+        </app-modal>
+      }
 
       <section class="module-card ficha-equipo">
         <h2>Información de la máquina</h2>
@@ -145,12 +151,12 @@ type Pestana = 'registro' | 'documentacion';
                   <th class="th-solucion">Solución</th>
                   <th class="opcional">Responsable</th>
                   <th>Estado</th>
-                  <th>Acciones</th>
+                  <th class="th-acciones">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 @for (f of fallasPagina; track f.id; let i = $index) {
-                  <tr [attr.data-estado]="estadoFila(f)" [class.abierta]="abiertaId === f.id">
+                  <tr [attr.data-estado]="estadoFila(f)" [class.abierta]="detalleFalla?.id === f.id">
                     <td>{{ (pagina - 1) * porPagina + i + 1 }}</td>
                     <td class="fecha">
                       {{ larga(f.fecha_deteccion) }}
@@ -189,7 +195,7 @@ type Pestana = 'registro' | 'documentacion';
                     <td><span class="tag" [class]="claseEstado(f.estado)">{{ f.estado }}</span></td>
                     <td class="acciones-celda">
                       <div class="row-actions iconos">
-                        <button type="button" class="icon-button" title="Ver detalle" aria-label="Ver detalle" (click)="alternar(f)">
+                        <button type="button" class="icon-button" title="Ver detalle" aria-label="Ver detalle" (click)="detalleFalla = f">
                           <svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg>
                         </button>
                         @if (api.esAdmin()) {
@@ -203,11 +209,6 @@ type Pestana = 'registro' | 'documentacion';
                       </div>
                     </td>
                   </tr>
-                  @if (abiertaId === f.id) {
-                    <tr class="fila-detalle">
-                      <td colspan="10"><app-falla-detalle [fallaId]="f.id" (cambio)="cargar()" /></td>
-                    </tr>
-                  }
                 } @empty {
                   <tr><td colspan="10" class="muted">
                     {{ (m.fallas?.length ?? 0) ? 'Ninguna falla coincide con la búsqueda' : 'Esta máquina no tiene fallas registradas' }}
@@ -241,7 +242,8 @@ export class MaquinaDetallePage implements OnInit {
   error = '';
   editando = false;
   editandoFalla: Falla | null = null;
-  abiertaId: number | null = null;
+  detalleFalla: Falla | null = null;
+  private aAbrir: number | null = null;
   tab: Pestana = 'registro';
   q = '';
   categoria = '';
@@ -296,7 +298,7 @@ export class MaquinaDetallePage implements OnInit {
   ngOnInit() {
     this.route.paramMap.subscribe(() => {
       this.m = null;
-      this.abiertaId = Number(this.route.snapshot.queryParamMap.get('falla')) || null;
+      this.aAbrir = Number(this.route.snapshot.queryParamMap.get('falla')) || null;
       void this.cargar();
     });
     this.api.catalogos().then((c) => (this.categorias = c.categorias)).catch(() => undefined);
@@ -305,7 +307,12 @@ export class MaquinaDetallePage implements OnInit {
   async cargar() {
     try {
       this.m = await this.api.get<Maquina>(`/maquinas/${this.route.snapshot.paramMap.get('id')}`);
-      if (this.abiertaId) this.irAPaginaDe(this.abiertaId);
+      if (this.aAbrir) {
+        this.irAPaginaDe(this.aAbrir);
+        this.detalleFalla = this.m.fallas?.find((f) => f.id === this.aAbrir) ?? null;
+      } else if (this.detalleFalla) {
+        this.detalleFalla = this.m.fallas?.find((f) => f.id === this.detalleFalla!.id) ?? null;
+      }
       this.error = '';
     } catch (e: unknown) {
       this.error = Api.mensaje(e, 'No se pudo cargar la máquina');
@@ -317,13 +324,9 @@ export class MaquinaDetallePage implements OnInit {
     if (i >= 0) this.pagina = Math.floor(i / this.porPagina) + 1;
   }
 
-  alternar(f: Falla) {
-    this.abiertaId = this.abiertaId === f.id ? null : f.id;
-  }
-
   async fallaCreada(f: Falla) {
     await this.cargar();
-    this.abiertaId = f.id;
+    this.detalleFalla = f;
   }
 
   async borrar(m: Maquina) {
