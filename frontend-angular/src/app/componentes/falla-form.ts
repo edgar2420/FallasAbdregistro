@@ -21,34 +21,18 @@ function ahoraLocal() {
         <p class="form-error" role="alert">{{ error }}</p>
       }
 
-      <h4>Falla</h4>
-      <div class="crud-grid tres">
-        <label class="dos">Máquina *
-          <select name="maquina" required [(ngModel)]="d.maquina_id">
-            <option [ngValue]="null">Selecciona una máquina</option>
-            @for (m of maquinas; track m.id) {
-              <option [ngValue]="m.id">{{ m.codigo }} · {{ m.nombre }}</option>
-            }
-          </select>
-        </label>
-        <label>Código *
-          <input name="codigo" [maxlength]="L.falla.codigo" required placeholder="Ej.: FAL-0007"
-                 [(ngModel)]="d.codigo">
-        </label>
-        <label class="dos">Falla / error *
-          <input name="titulo" [maxlength]="L.falla.titulo" required placeholder="Ej.: Baja presión en bomba de alta" [(ngModel)]="d.titulo">
-        </label>
-        <label>Categoría
-          <select name="categoria" [(ngModel)]="d.categoria">
-            @for (c of cat?.categorias ?? []; track c) {
-              <option>{{ c }}</option>
-            }
-          </select>
-        </label>
-        <label>Fecha y hora
-          <input name="fecha" type="datetime-local" [(ngModel)]="d.fecha_deteccion">
-        </label>
-      </div>
+      @if (!maquinaId()) {
+        <div class="crud-grid tres">
+          <label class="dos">Máquina *
+            <select name="maquina" required [(ngModel)]="d.maquina_id">
+              <option [ngValue]="null">Selecciona una máquina</option>
+              @for (m of maquinas; track m.id) {
+                <option [ngValue]="m.id">{{ m.codigo }} · {{ m.nombre }}</option>
+              }
+            </select>
+          </label>
+        </div>
+      }
 
       <div class="tipo-alarma" role="radiogroup" aria-label="Tipo de falla">
         <label class="tipo-alarma-opcion" [class.activa]="conAlarma">
@@ -66,31 +50,57 @@ function ahoraLocal() {
           </div>
         </label>
       </div>
-      @if (conAlarma) {
-        <div class="crud-grid tres">
-          <label>Código de alarma (HMI)
-            <input name="codigo_alarma" [maxlength]="L.falla.codigo_alarma" placeholder="Ej.: E-101" [(ngModel)]="d.codigo_alarma">
-          </label>
-        </div>
-      }
 
       <div class="crud-grid tres">
-        <label class="wide">Causa probable
-          <textarea name="causa_raiz" [maxlength]="L.falla.causa_raiz" placeholder="Sensor sucio, sobrecarga, desajuste…"
-                    [(ngModel)]="d.causa_raiz"></textarea>
+        <label>Código de alarma (HMI)
+          <input name="codigo_alarma" [maxlength]="L.falla.codigo_alarma" [disabled]="!conAlarma"
+                 placeholder="Ej.: E-101 (opcional si no tiene código)" [(ngModel)]="d.codigo_alarma">
+        </label>
+        <label class="dos">Descripción de la falla *
+          <input name="titulo" [maxlength]="L.falla.titulo" required placeholder="Describa la falla observada…" [(ngModel)]="d.titulo">
         </label>
       </div>
 
-      @if (!falla()) {
-        <h4>Solución aplicada</h4>
-        <p class="ayuda">Si ya se solucionó, regístralo aquí. Si todavía no, déjalo vacío y agrégalo después desde la falla.</p>
+      <div class="crud-grid tres">
+        <label>Causa probable
+          <textarea name="causa_raiz" [maxlength]="L.falla.causa_raiz" placeholder="Sensor sucio, sobrecarga, desajuste…"
+                    [(ngModel)]="d.causa_raiz"></textarea>
+        </label>
+        <label>Solución / Acción correctiva {{ falla() ? '' : '*' }}
+          <textarea name="sol_descripcion" [maxlength]="L.solucion.descripcion" [required]="!falla()"
+                    placeholder="Describa la solución realizada…" [(ngModel)]="s.descripcion"></textarea>
+        </label>
+        <label>Fecha y hora *
+          <input name="fecha" type="datetime-local" required [(ngModel)]="d.fecha_deteccion">
+        </label>
+      </div>
+
+      <div class="crud-grid tres">
+        <label>Responsable {{ falla() ? '' : '*' }}
+          <input name="responsable" [maxlength]="L.falla.responsable" [required]="!falla()"
+                 placeholder="Nombre del técnico" [(ngModel)]="d.responsable">
+        </label>
+        <label>Estado
+          <select name="estado" [(ngModel)]="d.estado">
+            @for (e of cat?.estados_falla ?? []; track e) {
+              <option>{{ e }}</option>
+            }
+          </select>
+        </label>
+        <label>Categoría
+          <select name="categoria" [(ngModel)]="d.categoria">
+            @for (c of cat?.categorias ?? []; track c) {
+              <option>{{ c }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      @if (falla()) {
         <div class="crud-grid tres">
-          <label class="wide">Qué se hizo (pasos)
-            <textarea name="sol_descripcion" [maxlength]="L.solucion.descripcion" placeholder="1) Parada y bloqueo. 2) Cambio de … 3) Prueba …"
-                      [(ngModel)]="s.descripcion"></textarea>
+          <label>Código
+            <input name="codigo" [maxlength]="L.falla.codigo" [(ngModel)]="d.codigo">
           </label>
-          <label>Repuestos<input name="sol_repuestos" [maxlength]="L.solucion.repuestos" [(ngModel)]="s.repuestos"></label>
-          <label>Técnico<input name="sol_tecnico" [maxlength]="L.solucion.tecnico" [(ngModel)]="s.tecnico"></label>
         </div>
       }
 
@@ -121,6 +131,8 @@ export class FallaForm implements OnInit {
     codigo: '',
     titulo: '',
     categoria: 'Mecánica',
+    estado: 'Abierta',
+    responsable: '',
     fecha_deteccion: ahoraLocal(),
     codigo_alarma: '',
     causa_raiz: '',
@@ -139,6 +151,8 @@ export class FallaForm implements OnInit {
         codigo: f.codigo,
         titulo: f.titulo,
         categoria: f.categoria,
+        estado: f.estado,
+        responsable: f.responsable ?? '',
         fecha_deteccion: aInputFecha(f.fecha_deteccion) || ahoraLocal(),
         codigo_alarma: f.codigo_alarma ?? '',
         causa_raiz: f.causa_raiz ?? '',
@@ -146,6 +160,7 @@ export class FallaForm implements OnInit {
       this.conAlarma = !!f.codigo_alarma;
     } else {
       this.d.maquina_id = this.maquinaId();
+      this.d.responsable = this.api.usuario()?.nombre ?? '';
       this.s.tecnico = this.api.usuario()?.nombre ?? '';
     }
     try {
@@ -159,14 +174,18 @@ export class FallaForm implements OnInit {
   }
 
   async guardar() {
+    const f = this.falla();
     if (!this.d.maquina_id || !this.d.titulo.trim()) {
-      this.error = 'Selecciona la máquina y escribe la falla';
+      this.error = 'Selecciona la máquina y describe la falla';
+      return;
+    }
+    if (!f && (!this.d.responsable.trim() || !this.s.descripcion.trim())) {
+      this.error = 'Indica el responsable y la solución aplicada';
       return;
     }
     this.error = '';
     this.guardando = true;
     try {
-      const f = this.falla();
       const datos = { ...this.d, codigo_alarma: this.conAlarma ? this.d.codigo_alarma.trim() : '' };
       const r = f
         ? await this.api.put<Falla>(`/fallas/${f.id}`, datos)

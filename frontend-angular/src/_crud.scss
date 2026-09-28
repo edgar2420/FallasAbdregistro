@@ -224,14 +224,54 @@
   color: var(--ok-text);
 }
 
+.tag.red,
 .priority.red {
   background: var(--crit-tint);
   color: var(--crit-text);
 }
 
+.tag.orange,
 .priority.orange {
   background: var(--warn-tint);
   color: var(--warn-text);
+}
+
+.tag.blue {
+  background: var(--accent-tint);
+  color: var(--accent-text);
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin: 18px 0 14px;
+  padding-bottom: 0;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color var(--step), border-color var(--step);
+}
+
+.tabs button:hover {
+  color: var(--text);
+}
+
+.tabs button.activo {
+  border-bottom-color: var(--accent);
+  color: var(--accent-text);
 }
 
 input,

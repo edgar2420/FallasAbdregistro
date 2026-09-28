@@ -10,7 +10,9 @@ import { MaquinaForm } from '../componentes/maquina-form';
 import { Modal } from '../componentes/modal';
 import { Paginador, paginar } from '../componentes/paginador';
 import { POR_PAGINA } from '../limites';
-import { contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../util';
+import { claseEstadoFalla, contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../util';
+
+type Pestana = 'registro' | 'tecnico' | 'documentacion' | 'mantenimiento';
 
 @Component({
   selector: 'app-maquina-detalle-page',
@@ -29,15 +31,15 @@ import { contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../
           <h1><span class="codigo-grande">{{ m.codigo }}</span> {{ m.nombre }}</h1>
           <p>{{ m.total_fallas }} falla{{ m.total_fallas === 1 ? '' : 's' }} registrada{{ m.total_fallas === 1 ? '' : 's' }}</p>
         </div>
-        @if (api.esAdmin()) {
-          <div class="row-actions">
+        <div class="row-actions">
+          <button type="button" class="ghost" (click)="imprimir()">
+            <svg class="icon" aria-hidden="true"><use href="#i-calendar"></use></svg>Generar reporte
+          </button>
+          @if (api.esAdmin()) {
             <button type="button" (click)="editando = true">Editar ficha</button>
             <button type="button" class="danger" (click)="borrar(m)">Borrar máquina</button>
-            <button class="primary" type="button" (click)="nuevaFalla = true">
-              <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>Registrar falla
-            </button>
-          </div>
-        }
+          }
+        </div>
       </div>
 
       @if (editando) {
@@ -45,9 +47,11 @@ import { contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../
           <app-maquina-form [maquina]="m" (guardado)="editando = false; cargar()" (cancelar)="editando = false" />
         </app-modal>
       }
-      @if (nuevaFalla) {
-        <app-modal titulo="Registrar falla" [subtitulo]="m.codigo + ' · ' + m.nombre" (cerrar)="nuevaFalla = false">
-          <app-falla-form [maquinaId]="m.id" (guardado)="fallaCreada($event)" (cancelar)="nuevaFalla = false" />
+      @if (editandoFalla; as ef) {
+        <app-modal [titulo]="'Editar falla ' + ef.codigo" [subtitulo]="m.codigo + ' · ' + m.nombre"
+                   (cerrar)="editandoFalla = null">
+          <app-falla-form [falla]="ef" [maquinaId]="m.id" (guardado)="editandoFalla = null; cargar()"
+                           (cancelar)="editandoFalla = null" />
         </app-modal>
       }
 
@@ -56,7 +60,8 @@ import { contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../
           <app-galeria [adjuntos]="fotosEquipo" [maquinaId]="m.id" [maximo]="2" [conPestanas]="false"
                        categoriaInicial="Ficha técnica" (cambio)="cargar()" />
         </div>
-        <h2>Ficha técnica</h2>
+        <h2>Información de la máquina</h2>
+        <h4>Datos de la placa y ficha técnica</h4>
         <dl class="ficha">
           <div><dt>Departamento</dt><dd>{{ m.departamento || '—' }}</dd></div>
           <div><dt>Área</dt><dd>{{ m.area || '—' }}</dd></div>
@@ -80,120 +85,165 @@ import { contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../
         </dl>
       </section>
 
-      <section class="module-card tabla-card">
-        <div class="tabla-titulo">
-          <h2>Fallas y soluciones</h2>
-          <div class="segmento" role="radiogroup" aria-label="Filtrar por solución">
-            @for (s of segmentos; track s.valor) {
-              <button type="button" role="radio" [attr.aria-checked]="estado === s.valor" [class.activo]="estado === s.valor"
-                      [attr.data-tipo]="s.clave" (click)="estado = s.valor; pagina = 1">
-                {{ s.texto }} <span class="segmento-n">{{ conteo[s.clave] }}</span>
-              </button>
-            }
-          </div>
-        </div>
-        <div class="filtros-fila filtros-tabla">
-          <label class="buscador-icono">
-            <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
-            <input type="search" placeholder="Buscar por código, falla o solución"
-                   aria-label="Buscar en las fallas de esta máquina" [(ngModel)]="q" (ngModelChange)="pagina = 1">
-          </label>
-          <select aria-label="Filtrar por categoría" [(ngModel)]="categoria" (ngModelChange)="pagina = 1">
-            <option value="">Todas las categorías</option>
-            @for (c of categorias; track c) {
-              <option>{{ c }}</option>
-            }
-          </select>
-        </div>
-        <div class="tabla-scroll">
-          <table class="data-table tabla-fallas">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th class="opcional">Fecha</th>
-                <th class="th-falla">Falla / error</th>
-                <th class="opcional">Alarma</th>
-                <th class="opcional">Categoría</th>
-                <th class="th-solucion">Solución aplicada</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (f of fallasPagina; track f.id) {
-                <tr class="clicable" tabindex="0" [attr.data-estado]="estadoFila(f)" [class.abierta]="abiertaId === f.id"
-                    [attr.aria-expanded]="abiertaId === f.id" (click)="alternar(f)" (keydown.enter)="alternar(f)">
-                  <td class="codigo">{{ f.codigo }}</td>
-                  <td class="fecha opcional">
-                    {{ larga(f.fecha_deteccion) }}
-                    <small class="subline">{{ hace(f.fecha_deteccion) }}</small>
-                  </td>
-                  <td>
-                    <div class="celda-falla">
-                      <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>
-                      <div>
-                        <strong>{{ f.titulo }}</strong>
-                        @if (f.descripcion) { <small class="subline recorte">{{ f.descripcion }}</small> }
-                      </div>
-                    </div>
-                  </td>
-                  <td class="opcional">
-                    @if (f.codigo_alarma) {
-                      <span class="codigo-alarma">{{ f.codigo_alarma }}</span>
-                    } @else {
-                      <span class="sin-alarma">Sin código</span>
-                    }
-                  </td>
-                  <td class="opcional"><span class="cat" [attr.data-cat]="slug(f.categoria)">{{ f.categoria }}</span></td>
-                  <td class="solucion-celda">
-                    @switch (estadoFila(f)) {
-                      @case ('resuelta') {
-                        <div class="sol-caja sol-ok">
-                          <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
-                          <span class="recorte">{{ f.ultima_solucion }}</span>
-                        </div>
-                      }
-                      @case ('intento') {
-                        <div class="sol-caja sol-intento" title="Se intentó una solución, pero no resolvió la falla">
-                          <svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg>
-                          <span class="recorte">{{ f.ultima_solucion }}</span>
-                        </div>
-                      }
-                      @default {
-                        <span class="sol-pendiente">
-                          <svg class="icon" aria-hidden="true"><use href="#i-clock"></use></svg>Sin solución
-                        </span>
-                      }
-                    }
-                  </td>
-                </tr>
-                @if (abiertaId === f.id) {
-                  <tr class="fila-detalle">
-                    <td colspan="6"><app-falla-detalle [fallaId]="f.id" (cambio)="cargar()" /></td>
-                  </tr>
-                }
-              } @empty {
-                <tr><td colspan="6" class="muted">
-                  {{ (m.fallas?.length ?? 0) ? 'Ninguna falla coincide con la búsqueda' : 'Esta máquina no tiene fallas registradas' }}
-                </td></tr>
-              }
-            </tbody>
-          </table>
-        </div>
-        <app-paginador [total]="fallas.length" [pagina]="pagina" [porPagina]="porPagina"
-                       (cambio)="pagina = $event.pagina; porPagina = $event.porPagina" />
-      </section>
-
-      <section class="module-card">
-        <button type="button" class="plegable" [attr.aria-expanded]="verFotos" aria-controls="fotos-maquina"
-                (click)="verFotos = !verFotos">
-          <svg class="icon" aria-hidden="true"><use href="#i-chevron"></use></svg>
-          <h2>Fotos y documentos ({{ m.adjuntos?.length ?? 0 }})</h2>
+      <div class="tabs" role="tablist" aria-label="Secciones de la máquina">
+        <button type="button" role="tab" [attr.aria-selected]="tab === 'registro'" [class.activo]="tab === 'registro'"
+                (click)="tab = 'registro'">
+          <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>Registro de fallas
         </button>
-        @if (verFotos) {
-          <div id="fotos-maquina">
-            <app-galeria [adjuntos]="m.adjuntos ?? []" [maquinaId]="m.id" (cambio)="cargar()" />
-          </div>
+        <button type="button" role="tab" [attr.aria-selected]="tab === 'tecnico'" [class.activo]="tab === 'tecnico'"
+                (click)="tab = 'tecnico'">
+          <svg class="icon" aria-hidden="true"><use href="#i-machine"></use></svg>Datos técnicos
+        </button>
+        <button type="button" role="tab" [attr.aria-selected]="tab === 'documentacion'" [class.activo]="tab === 'documentacion'"
+                (click)="tab = 'documentacion'">
+          <svg class="icon" aria-hidden="true"><use href="#i-board"></use></svg>Documentación
+        </button>
+        <button type="button" role="tab" [attr.aria-selected]="tab === 'mantenimiento'" [class.activo]="tab === 'mantenimiento'"
+                (click)="tab = 'mantenimiento'">
+          <svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg>Historial de mantenimiento
+        </button>
+      </div>
+
+      @if (tab === 'registro') {
+        @if (api.esAdmin()) {
+          <section class="module-card">
+            <h2>Registrar nueva falla</h2>
+            <app-falla-form [maquinaId]="m.id" (guardado)="fallaCreada($event)" (cancelar)="null" />
+          </section>
         }
-      </section>
+
+        <section class="module-card tabla-card">
+          <div class="tabla-titulo">
+            <h2>Historial de fallas</h2>
+            <div class="segmento" role="radiogroup" aria-label="Filtrar por solución">
+              @for (s of segmentos; track s.valor) {
+                <button type="button" role="radio" [attr.aria-checked]="estado === s.valor" [class.activo]="estado === s.valor"
+                        [attr.data-tipo]="s.clave" (click)="estado = s.valor; pagina = 1">
+                  {{ s.texto }} <span class="segmento-n">{{ conteo[s.clave] }}</span>
+                </button>
+              }
+            </div>
+          </div>
+          <div class="filtros-fila filtros-tabla">
+            <label class="buscador-icono">
+              <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+              <input type="search" placeholder="Buscar por código, descripción o responsable…"
+                     aria-label="Buscar en las fallas de esta máquina" [(ngModel)]="q" (ngModelChange)="pagina = 1">
+            </label>
+            <select aria-label="Filtrar por categoría" [(ngModel)]="categoria" (ngModelChange)="pagina = 1">
+              <option value="">Todas las categorías</option>
+              @for (c of categorias; track c) {
+                <option>{{ c }}</option>
+              }
+            </select>
+          </div>
+          <div class="tabla-scroll">
+            <table class="data-table tabla-fallas">
+              <thead>
+                <tr>
+                  <th>N.°</th>
+                  <th>Fecha y hora</th>
+                  <th>Tipo</th>
+                  <th class="opcional">Código HMI</th>
+                  <th class="th-falla">Descripción</th>
+                  <th class="opcional th-solucion">Causa probable</th>
+                  <th class="th-solucion">Solución</th>
+                  <th class="opcional">Responsable</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (f of fallasPagina; track f.id; let i = $index) {
+                  <tr [attr.data-estado]="estadoFila(f)" [class.abierta]="abiertaId === f.id">
+                    <td>{{ (pagina - 1) * porPagina + i + 1 }}</td>
+                    <td class="fecha">
+                      {{ larga(f.fecha_deteccion) }}
+                      <small class="subline">{{ hace(f.fecha_deteccion) }}</small>
+                    </td>
+                    <td>
+                      @if (f.codigo_alarma) {
+                        <span class="tag red">Con código</span>
+                      } @else {
+                        <span class="tag blue">Sin código</span>
+                      }
+                    </td>
+                    <td class="opcional">
+                      @if (f.codigo_alarma) {
+                        <span class="codigo-alarma">{{ f.codigo_alarma }}</span>
+                      } @else {
+                        <span class="sin-alarma">—</span>
+                      }
+                    </td>
+                    <td>
+                      <div class="celda-falla">
+                        <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>
+                        <div>
+                          <strong>{{ f.titulo }}</strong>
+                          <small class="subline">{{ f.codigo }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="opcional solucion-celda">
+                      @if (f.causa_raiz) { <span class="recorte">{{ f.causa_raiz }}</span> } @else { <span class="muted">—</span> }
+                    </td>
+                    <td class="solucion-celda">
+                      @if (f.ultima_solucion) { <span class="recorte">{{ f.ultima_solucion }}</span> } @else { <span class="sol-pendiente"><svg class="icon" aria-hidden="true"><use href="#i-clock"></use></svg>Sin solución</span> }
+                    </td>
+                    <td class="opcional">{{ f.responsable || '—' }}</td>
+                    <td><span class="tag" [class]="claseEstado(f.estado)">{{ f.estado }}</span></td>
+                    <td>
+                      <div class="row-actions iconos">
+                        <button type="button" class="icon-button" title="Ver detalle" aria-label="Ver detalle" (click)="alternar(f)">
+                          <svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg>
+                        </button>
+                        @if (api.esAdmin()) {
+                          <button type="button" class="icon-button" title="Editar" aria-label="Editar falla" (click)="editandoFalla = f">
+                            <svg class="icon" aria-hidden="true"><use href="#i-pencil"></use></svg>
+                          </button>
+                          <button type="button" class="icon-button danger" title="Borrar" aria-label="Borrar falla" (click)="borrarFalla(f)">
+                            <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                  @if (abiertaId === f.id) {
+                    <tr class="fila-detalle">
+                      <td colspan="10"><app-falla-detalle [fallaId]="f.id" (cambio)="cargar()" /></td>
+                    </tr>
+                  }
+                } @empty {
+                  <tr><td colspan="10" class="muted">
+                    {{ (m.fallas?.length ?? 0) ? 'Ninguna falla coincide con la búsqueda' : 'Esta máquina no tiene fallas registradas' }}
+                  </td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <app-paginador [total]="fallas.length" [pagina]="pagina" [porPagina]="porPagina"
+                         (cambio)="pagina = $event.pagina; porPagina = $event.porPagina" />
+        </section>
+      }
+
+      @if (tab === 'tecnico') {
+        <section class="module-card">
+          <p class="muted">Los datos técnicos y de placa de esta máquina se muestran arriba, en «Información de la máquina».</p>
+        </section>
+      }
+
+      @if (tab === 'documentacion') {
+        <section class="module-card">
+          <h2>Fotos y documentos ({{ m.adjuntos?.length ?? 0 }})</h2>
+          <app-galeria [adjuntos]="m.adjuntos ?? []" [maquinaId]="m.id" (cambio)="cargar()" />
+        </section>
+      }
+
+      @if (tab === 'mantenimiento') {
+        <section class="module-card">
+          <p class="muted">El historial de mantenimiento preventivo estará disponible próximamente.</p>
+        </section>
+      }
     } @else if (!error) {
       <p class="muted">Cargando máquina…</p>
     }
@@ -207,9 +257,9 @@ export class MaquinaDetallePage implements OnInit {
   m: Maquina | null = null;
   error = '';
   editando = false;
-  nuevaFalla = false;
+  editandoFalla: Falla | null = null;
   abiertaId: number | null = null;
-  verFotos = false;
+  tab: Pestana = 'registro';
   q = '';
   categoria = '';
   estado = '';
@@ -221,6 +271,7 @@ export class MaquinaDetallePage implements OnInit {
   readonly larga = fechaLarga;
   readonly hace = haceCuanto;
   readonly slug = slugCategoria;
+  readonly claseEstado = claseEstadoFalla;
   readonly segmentos = [
     { valor: '', texto: 'Todas', clave: 'todas' },
     { valor: 'con', texto: 'Con solución', clave: 'con' },
@@ -255,7 +306,7 @@ export class MaquinaDetallePage implements OnInit {
       (f) =>
         (!this.categoria || f.categoria === this.categoria) &&
         (!estado || (estado === 'con') === (f.estado === 'Resuelta')) &&
-        contiene(`${f.codigo} ${f.titulo} ${f.descripcion ?? ''} ${f.causa_raiz ?? ''} ${f.ultima_solucion ?? ''}`, this.q),
+        contiene(`${f.codigo} ${f.titulo} ${f.descripcion ?? ''} ${f.causa_raiz ?? ''} ${f.ultima_solucion ?? ''} ${f.responsable ?? ''}`, this.q),
     );
   }
 
@@ -288,9 +339,12 @@ export class MaquinaDetallePage implements OnInit {
   }
 
   async fallaCreada(f: Falla) {
-    this.nuevaFalla = false;
     await this.cargar();
     this.abiertaId = f.id;
+  }
+
+  imprimir() {
+    window.print();
   }
 
   async borrar(m: Maquina) {
@@ -304,6 +358,16 @@ export class MaquinaDetallePage implements OnInit {
       await this.router.navigateByUrl('/maquinaria');
     } catch (e: unknown) {
       this.error = Api.mensaje(e, 'No se pudo borrar la máquina');
+    }
+  }
+
+  async borrarFalla(f: Falla) {
+    if (!confirm(`¿Eliminar la falla ${f.codigo}, sus soluciones y fotos?`)) return;
+    try {
+      await this.api.delete(`/fallas/${f.id}`);
+      await this.cargar();
+    } catch (e: unknown) {
+      this.error = Api.mensaje(e, 'No se pudo eliminar la falla');
     }
   }
 }

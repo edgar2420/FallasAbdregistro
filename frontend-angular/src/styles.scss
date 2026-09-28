@@ -351,6 +351,23 @@ h3 {
   color: var(--text);
 }
 
+.icon-button.danger:hover {
+  border-color: var(--crit);
+  background: var(--crit-tint);
+  color: var(--crit-text);
+}
+
+.row-actions.iconos {
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.row-actions.iconos .icon-button {
+  width: 30px;
+  height: 30px;
+  font-size: 15px;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
