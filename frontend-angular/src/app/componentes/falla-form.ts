@@ -52,13 +52,19 @@ function ahoraLocal() {
       </div>
 
       <div class="crud-grid tres">
-        <label>Código de alarma (HMI)
-          <input name="codigo_alarma" [maxlength]="L.falla.codigo_alarma" [disabled]="!conAlarma"
-                 placeholder="Ej.: E-101 (opcional si no tiene código)" [(ngModel)]="d.codigo_alarma">
-        </label>
-        <label class="dos">Descripción de la falla *
-          <input name="titulo" [maxlength]="L.falla.titulo" required placeholder="Describa la falla observada…" [(ngModel)]="d.titulo">
-        </label>
+        @if (conAlarma) {
+          <label>Código de alarma (HMI) *
+            <input name="codigo_alarma" [maxlength]="L.falla.codigo_alarma" required
+                   placeholder="Ej.: E-101" [(ngModel)]="d.codigo_alarma">
+          </label>
+          <label class="dos">Descripción de la falla *
+            <input name="titulo" [maxlength]="L.falla.titulo" required placeholder="Describa la falla observada…" [(ngModel)]="d.titulo">
+          </label>
+        } @else {
+          <label class="wide">Descripción de la falla *
+            <input name="titulo" [maxlength]="L.falla.titulo" required placeholder="Describa la falla operativa observada…" [(ngModel)]="d.titulo">
+          </label>
+        }
       </div>
 
       <div class="crud-grid tres">
@@ -177,6 +183,10 @@ export class FallaForm implements OnInit {
     const f = this.falla();
     if (!this.d.maquina_id || !this.d.titulo.trim()) {
       this.error = 'Selecciona la máquina y describe la falla';
+      return;
+    }
+    if (this.conAlarma && !this.d.codigo_alarma.trim()) {
+      this.error = 'Escribe el código de alarma o cambia a «Sin código de alarma»';
       return;
     }
     if (!f && (!this.d.responsable.trim() || !this.s.descripcion.trim())) {
