@@ -1,0 +1,27 @@
+# HTTPS dentro de la planta, sin dominio: Caddy emite su propio certificado (autofirmado)
+# para la IP del servidor. Los navegadores mostrarán una advertencia la primera vez a menos
+# que instales la raíz de Caddy en los equipos (ver DESPLIEGUE.md, opción C).
+:443 {
+	tls internal
+
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+
+	# Fotos de hasta 8 MB viajan en base64 (~11 MB)
+	request_body {
+		max_size 13MB
+	}
+
+	reverse_proxy app:4010 {
+		health_uri /api/salud
+		health_interval 30s
+	}
+}
+
+:80 {
+	redir https://{host}{uri} permanent
+}

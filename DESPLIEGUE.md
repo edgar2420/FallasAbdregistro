@@ -1,13 +1,14 @@
 # Puesta en producción
 
-Guía para dejar **Control de Fallas** funcionando de forma estable y segura. Hay dos caminos:
+Guía para dejar **Control de Fallas** funcionando de forma estable y segura. Hay tres caminos:
 
 | Opción | Cuándo conviene | Acceso |
 |--------|-----------------|--------|
 | **A. VPS en Internet** (recomendada si se necesita entrar desde fuera de la planta o desde el celular con datos) | Varios turnos, supervisores fuera de planta | `https://fallas.tuempresa.com` con HTTPS automático |
-| **B. Servidor dentro de la planta** | Sólo se usa desde la red interna | `http://IP-del-servidor` |
+| **B. Servidor dentro de la planta (HTTP)** | Sólo se usa desde la red interna, más simple de dejar andando | `http://IP-del-servidor` |
+| **C. Servidor dentro de la planta (HTTPS sin dominio)** | Red interna, pero se quiere el tráfico cifrado igual (recomendado sobre B) | `https://IP-del-servidor` |
 
-Las dos usan lo mismo: **Docker Compose** con la aplicación y **Caddy** delante (proxy con HTTPS automático).
+Las tres usan lo mismo: **Docker Compose** con la aplicación y **Caddy** delante (proxy con HTTPS).
 
 ---
 
@@ -71,16 +72,49 @@ Recomendado: da de alta `https://fallas.tuempresa.com/api/salud` en un monitor g
 
 ---
 
-## B. Servidor dentro de la planta
+## B. Servidor dentro de la planta (HTTP simple)
 
 Una PC o servidor con Ubuntu (o Windows con Docker Desktop) conectado a la red interna:
 
-1. Instala Docker (paso 3).
+1. Instala Docker (paso 3 de la opción A; en Windows, [Docker Desktop](https://www.docker.com/products/docker-desktop/)).
 2. Clona el repositorio, copia `.env.example` a `.env` y pon **`DOMINIO=:80`**.
 3. `docker compose up -d --build` (en Windows: `iniciar-docker.bat`).
 4. Desde cualquier equipo de la red: `http://IP-del-servidor`.
 
-Asigna una IP fija a ese equipo en el router. Sin dominio no hay HTTPS: úsalo sólo dentro de la red de la planta.
+Asigna una IP fija a ese equipo en el router. Sin dominio no hay HTTPS con este modo: el tráfico
+dentro de la red de la planta viaja sin cifrar (opción aceptable si la red local ya es de confianza).
+
+---
+
+## C. Servidor dentro de la planta, pero con HTTPS (sin dominio)
+
+Igual que la opción B, pero Caddy emite su propio certificado (autofirmado) para que el tráfico
+vaya cifrado aunque no haya un dominio público. El navegador mostrará una advertencia de
+"conexión no segura" la primera vez, a menos que instales la raíz de Caddy (paso 4).
+
+1. Instala Docker (igual que en la opción B).
+2. Clona el repositorio, copia `.env.example` a `.env` y define:
+   ```
+   DOMINIO=:443
+   CADDYFILE=./Caddyfile.local
+   ADMIN_PASSWORD=una-clave-fuerte
+   ```
+3. `docker compose up -d --build` (en Windows: `iniciar-docker.bat`). Asigna una IP fija al
+   servidor en el router. Desde cualquier equipo de la red: `https://IP-del-servidor`
+   (el puerto 80 redirige solo a 443).
+4. **Para quitar la advertencia del navegador** (recomendado, una vez por equipo): copia el
+   certificado raíz que generó Caddy y agrégalo como autoridad de confianza.
+   ```bash
+   docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./caddy-root.crt
+   ```
+   - **Windows**: doble clic en `caddy-root.crt` → *Instalar certificado* → *Equipo local* →
+     *Colocar todos los certificados en el siguiente almacén* → *Entidades de certificación raíz
+     de confianza*.
+   - **Chrome/Edge en el resto de PCs**: comparte `caddy-root.crt` (por ejemplo, en una carpeta de
+     red) e instálalo igual en cada equipo que use el sistema.
+
+Sin este paso, el sistema sigue funcionando y el tráfico va cifrado igual; sólo queda la
+advertencia visual del navegador, que los usuarios deben aceptar la primera vez.
 
 ---
 

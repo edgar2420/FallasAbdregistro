@@ -3,6 +3,9 @@
 #
 #   docker compose up -d --build
 #
+# Red local sin dominio pero con HTTPS (certificado propio de Caddy): en .env pon
+# DOMINIO=:443 y CADDYFILE=./Caddyfile.local, y levanta igual con "docker compose up -d --build".
+#
 # La base SQLite, las fotos y los respaldos diarios viven en el volumen "fallas_data".
 services:
   app:
@@ -47,7 +50,7 @@ services:
       - "443:443"
       - "443:443/udp"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${CADDYFILE:-./Caddyfile}:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     logging:
