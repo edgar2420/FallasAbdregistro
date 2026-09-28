@@ -6,3 +6,4 @@ backend/data/
 frontend-angular/.angular/
 *.db-journal
 .env
+.mcp.json
