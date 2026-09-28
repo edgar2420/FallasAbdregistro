@@ -12,7 +12,7 @@ import { Paginador, paginar } from '../componentes/paginador';
 import { POR_PAGINA } from '../limites';
 import { claseEstadoFalla, contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../util';
 
-type Pestana = 'registro' | 'tecnico' | 'documentacion' | 'mantenimiento';
+type Pestana = 'registro' | 'documentacion';
 
 @Component({
   selector: 'app-maquina-detalle-page',
@@ -94,17 +94,9 @@ type Pestana = 'registro' | 'tecnico' | 'documentacion' | 'mantenimiento';
                   (click)="tab = 'registro'">
             <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>Registro de fallas
           </button>
-          <button type="button" role="tab" [attr.aria-selected]="tab === 'tecnico'" [class.activo]="tab === 'tecnico'"
-                  (click)="tab = 'tecnico'">
-            <svg class="icon" aria-hidden="true"><use href="#i-machine"></use></svg>Datos técnicos
-          </button>
           <button type="button" role="tab" [attr.aria-selected]="tab === 'documentacion'" [class.activo]="tab === 'documentacion'"
                   (click)="tab = 'documentacion'">
             <svg class="icon" aria-hidden="true"><use href="#i-board"></use></svg>Documentación
-          </button>
-          <button type="button" role="tab" [attr.aria-selected]="tab === 'mantenimiento'" [class.activo]="tab === 'mantenimiento'"
-                  (click)="tab = 'mantenimiento'">
-            <svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg>Historial de mantenimiento
           </button>
         </div>
 
@@ -195,7 +187,7 @@ type Pestana = 'registro' | 'tecnico' | 'documentacion' | 'mantenimiento';
                     </td>
                     <td class="opcional">{{ f.responsable || '—' }}</td>
                     <td><span class="tag" [class]="claseEstado(f.estado)">{{ f.estado }}</span></td>
-                    <td>
+                    <td class="acciones-celda">
                       <div class="row-actions iconos">
                         <button type="button" class="icon-button" title="Ver detalle" aria-label="Ver detalle" (click)="alternar(f)">
                           <svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg>
@@ -228,19 +220,11 @@ type Pestana = 'registro' | 'tecnico' | 'documentacion' | 'mantenimiento';
                          (cambio)="pagina = $event.pagina; porPagina = $event.porPagina" />
         }
 
-        @if (tab === 'tecnico') {
-          <p class="muted tab-panel">Los datos técnicos y de placa de esta máquina se muestran arriba, en «Información de la máquina».</p>
-        }
-
         @if (tab === 'documentacion') {
           <div class="tab-panel">
             <h2>Fotos y documentos ({{ m.adjuntos?.length ?? 0 }})</h2>
             <app-galeria [adjuntos]="m.adjuntos ?? []" [maquinaId]="m.id" (cambio)="cargar()" />
           </div>
-        }
-
-        @if (tab === 'mantenimiento') {
-          <p class="muted tab-panel">El historial de mantenimiento preventivo estará disponible próximamente.</p>
         }
       </section>
     } @else if (!error) {
