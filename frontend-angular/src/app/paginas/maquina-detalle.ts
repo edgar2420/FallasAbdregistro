@@ -31,15 +31,12 @@ type Pestana = 'registro' | 'tecnico' | 'documentacion' | 'mantenimiento';
           <h1><span class="codigo-grande">{{ m.codigo }}</span> {{ m.nombre }}</h1>
           <p>{{ m.total_fallas }} falla{{ m.total_fallas === 1 ? '' : 's' }} registrada{{ m.total_fallas === 1 ? '' : 's' }}</p>
         </div>
-        <div class="row-actions">
-          <button type="button" class="ghost" (click)="imprimir()">
-            <svg class="icon" aria-hidden="true"><use href="#i-calendar"></use></svg>Generar reporte
-          </button>
-          @if (api.esAdmin()) {
+        @if (api.esAdmin()) {
+          <div class="row-actions">
             <button type="button" (click)="editando = true">Editar ficha</button>
             <button type="button" class="danger" (click)="borrar(m)">Borrar máquina</button>
-          }
-        </div>
+          </div>
+        }
       </div>
 
       @if (editando) {
@@ -113,14 +110,14 @@ type Pestana = 'registro' | 'tecnico' | 'documentacion' | 'mantenimiento';
       </div>
 
       @if (tab === 'registro') {
-        @if (api.esAdmin()) {
-          <section class="module-card">
-            <h2>Registrar nueva falla</h2>
-            <app-falla-form [maquinaId]="m.id" (guardado)="fallaCreada($event)" (cancelar)="null" />
-          </section>
-        }
-
         <section class="module-card tabla-card">
+          @if (api.esAdmin()) {
+            <div class="registro-falla">
+              <h2>Registrar nueva falla</h2>
+              <app-falla-form [maquinaId]="m.id" (guardado)="fallaCreada($event)" (cancelar)="null" />
+            </div>
+          }
+
           <div class="tabla-titulo">
             <h2>Historial de fallas</h2>
             <div class="segmento" role="radiogroup" aria-label="Filtrar por solución">
@@ -349,10 +346,6 @@ export class MaquinaDetallePage implements OnInit {
   async fallaCreada(f: Falla) {
     await this.cargar();
     this.abiertaId = f.id;
-  }
-
-  imprimir() {
-    window.print();
   }
 
   async borrar(m: Maquina) {
