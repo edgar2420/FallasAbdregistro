@@ -2,6 +2,7 @@ import { Router } from 'express';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import sharp from 'sharp';
 import { db, rows, row, adjuntosDir } from '../db.js';
 import { HttpError, wrap, requerido } from '../errors.js';
 import { texto, unoDe, entero } from '../utils.js';
@@ -12,6 +13,23 @@ import { LIMITES, limitar } from '../limites.js';
 export const adjuntosRouter = Router();
 
 export const MAX_BYTES = LIMITES.adjunto.mb * 1024 * 1024;
+
+const miniaturasDir = path.join(adjuntosDir, 'miniaturas');
+fs.mkdirSync(miniaturasDir, { recursive: true });
+const ANCHO_MINIATURA = 320;
+
+export async function rutaMiniatura(adjunto) {
+  if (!adjunto.mime.startsWith('image/')) return null;
+  const destino = path.join(miniaturasDir, `${adjunto.id}.webp`);
+  if (fs.existsSync(destino)) return destino;
+  const origen = path.join(adjuntosDir, path.basename(adjunto.archivo));
+  if (!fs.existsSync(origen)) return null;
+  await sharp(origen)
+    .resize({ width: ANCHO_MINIATURA, withoutEnlargement: true })
+    .webp({ quality: 72 })
+    .toFile(destino);
+  return destino;
+}
 
 const FORMATOS = [
   { mime: 'image/jpeg', ext: 'jpg', es: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
@@ -37,6 +55,8 @@ export const borrarArchivos = (nombres) => {
   for (const nombre of nombres) fs.rm(path.join(adjuntosDir, path.basename(nombre)), { force: true }, () => {});
 };
 
+const borrarMiniatura = (id) => fs.rm(path.join(miniaturasDir, `${id}.webp`), { force: true }, () => {});
+
 adjuntosRouter.get('/', wrap((req, res) => {
   const fallaId = entero(req.query.falla_id, 'falla_id', { min: 1 });
   const maquinaId = entero(req.query.maquina_id, 'maquina_id', { min: 1 });
@@ -55,6 +75,18 @@ adjuntosRouter.get('/:id/archivo', wrap((req, res) => {
     'Content-Type': a.mime,
     'Content-Disposition': `inline; filename*=UTF-8''${nombre}`,
     'Cache-Control': 'private, max-age=3600',
+  });
+  res.sendFile(ruta);
+}));
+
+adjuntosRouter.get('/:id/miniatura', wrap(async (req, res) => {
+  const a = row(db.prepare('SELECT * FROM adjuntos WHERE id = ?'), Number(req.params.id));
+  if (!a) throw new HttpError(404, 'Archivo no encontrado');
+  const ruta = await rutaMiniatura(a);
+  if (!ruta) throw new HttpError(404, 'Sin miniatura disponible para este archivo');
+  res.set({
+    'Content-Type': 'image/webp',
+    'Cache-Control': 'private, max-age=604800, immutable',
   });
   res.sendFile(ruta);
 }));
@@ -123,5 +155,6 @@ adjuntosRouter.delete('/:id', admin, wrap((req, res) => {
   if (!a) throw new HttpError(404, 'Archivo no encontrado');
   db.prepare('DELETE FROM adjuntos WHERE id = ?').run(a.id);
   borrarArchivos([a.archivo]);
+  borrarMiniatura(a.id);
   res.json({ ok: true });
 }));

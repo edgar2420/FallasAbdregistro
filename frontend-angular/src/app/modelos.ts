@@ -125,6 +125,7 @@ export interface Maquina {
   total_fallas?: number;
   fallas_abiertas?: number;
   total_adjuntos?: number;
+  foto_id?: number | null;
   fallas?: Falla[];
   adjuntos?: Adjunto[];
 }

@@ -14,7 +14,9 @@ const SELECT_BASE = `
   SELECT m.*, t.nombre AS tipo,
          (SELECT COUNT(*) FROM fallas f WHERE f.maquina_id = m.id) AS total_fallas,
          (SELECT COUNT(*) FROM fallas f WHERE f.maquina_id = m.id AND f.estado IN ${ABIERTAS_SQL}) AS fallas_abiertas,
-         (SELECT COUNT(*) FROM adjuntos a WHERE a.maquina_id = m.id) AS total_adjuntos
+         (SELECT COUNT(*) FROM adjuntos a WHERE a.maquina_id = m.id) AS total_adjuntos,
+         (SELECT a.id FROM adjuntos a WHERE a.maquina_id = m.id AND a.mime LIKE 'image/%'
+            ORDER BY (a.categoria = 'Ficha técnica') DESC, a.id ASC LIMIT 1) AS foto_id
   FROM maquinas m LEFT JOIN tipos_maquina t ON t.id = m.tipo_id
 `;
 

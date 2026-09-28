@@ -56,6 +56,15 @@ import { Paginador, paginar } from '../componentes/paginador';
     <section class="placas">
       @for (m of paginadas; track m.id) {
         <a class="placa" [routerLink]="['/maquinaria', m.id]" [style.--dep]="color(m.departamento)">
+          <div class="placa-foto">
+            @if (m.foto_id) {
+              <img [src]="api.urlMiniatura(m.foto_id)" [alt]="m.nombre" loading="lazy" decoding="async"
+                   (error)="sinFoto.add(m.id)" [class.oculta]="sinFoto.has(m.id)">
+            }
+            @if (!m.foto_id || sinFoto.has(m.id)) {
+              <svg class="icon" aria-hidden="true"><use href="#i-machine"></use></svg>
+            }
+          </div>
           <header class="placa-head">
             <span class="placa-codigo">{{ m.codigo }}</span>
             @if (m.fallas_abiertas) {
@@ -111,6 +120,7 @@ export class TableroPage implements OnInit {
   cargando = true;
   pagina = 1;
   porPagina = 12;
+  readonly sinFoto = new Set<number>();
 
   get areas() {
     return [...new Set(this.maquinas.map((m) => m.area).filter((a): a is string => !!a))].sort();

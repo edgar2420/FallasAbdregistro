@@ -75,6 +75,10 @@ export class Api {
     return this.peticion(this.http.get(this.base + path, { ...this.opciones(), responseType: 'blob' }));
   }
 
+  urlMiniatura(adjuntoId: number) {
+    return `${this.base}/adjuntos/${adjuntoId}/miniatura?token=${this.token}`;
+  }
+
   catalogos() {
     this.catalogosCache ??= firstValueFrom(this.http.get<Catalogos>(`${this.base}/catalogos`));
     return this.catalogosCache;

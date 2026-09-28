@@ -54,8 +54,11 @@ const auditar = (req, res, usuarioId) => {
   });
 };
 
+const tokenDeQuery = (req) =>
+  req.method === 'GET' && /^[a-f0-9]{64}$/i.test(req.query.token || '') ? req.query.token : undefined;
+
 const autenticar = (permitirCambio) => (req, res, next) => {
-  const token = /^Bearer\s+([a-f0-9]{64})$/i.exec(req.headers.authorization || '')?.[1];
+  const token = /^Bearer\s+([a-f0-9]{64})$/i.exec(req.headers.authorization || '')?.[1] || tokenDeQuery(req);
   const sesion = token && row(buscarSesion, hashToken(token.toLowerCase()));
   if (!sesion || !sesion.activo || new Date(sesion.expira_en) < new Date()) {
     return next(new HttpError(401, 'Sesión no válida o expirada'));
