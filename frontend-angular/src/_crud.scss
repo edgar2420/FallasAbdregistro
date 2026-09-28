@@ -237,7 +237,7 @@
 input,
 select,
 textarea {
-  background: var(--surface-2);
+  background: var(--surface);
   color: var(--text);
   border: 1px solid var(--line-strong);
   border-radius: var(--r-sm);
@@ -269,7 +269,7 @@ textarea::placeholder {
 .user-row > button {
   padding: 7px 11px;
   border: 1px solid var(--line-strong);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-pill);
   background: var(--surface-2);
   color: var(--text-soft);
   font-size: 11px;
