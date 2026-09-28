@@ -23,7 +23,6 @@ const VACIA = {
   presion_vapor: '',
 };
 
-/** Ficha técnica de una máquina con los datos de su placa (alta y edición, sólo administradores). */
 @Component({
   selector: 'app-maquina-form',
   imports: [FormsModule],

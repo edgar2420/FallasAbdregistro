@@ -6,7 +6,6 @@ export class HttpError extends Error {
   }
 }
 
-/** Envuelve handlers async para propagar errores al middleware de Express. */
 export const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 export const requerido = (valor, campo) => {

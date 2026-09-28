@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS usuarios (
   creado_en TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );
 
--- token = SHA-256 del token entregado al cliente (nunca se guarda en claro)
 CREATE TABLE IF NOT EXISTS sesiones (
   token TEXT PRIMARY KEY,
   usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -29,7 +28,6 @@ CREATE TABLE IF NOT EXISTS actividad_usuarios (
 );
 CREATE INDEX IF NOT EXISTS idx_actividad_usuario ON actividad_usuarios(usuario_id, creado_en);
 
--- Catálogo de tipos de maquinaria (Bottelpack, Shinva, Taponadora, ...)
 CREATE TABLE IF NOT EXISTS tipos_maquina (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   nombre      TEXT NOT NULL UNIQUE,
@@ -37,8 +35,6 @@ CREATE TABLE IF NOT EXISTS tipos_maquina (
   creado_en   TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );
 
--- Máquinas del parque industrial. El código lo asigna Garantía de Calidad (equipo validado)
--- y referencia los POE; los datos eléctricos y de servicios forman la ficha técnica.
 CREATE TABLE IF NOT EXISTS maquinas (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
   codigo       TEXT NOT NULL UNIQUE,
@@ -66,7 +62,6 @@ CREATE TABLE IF NOT EXISTS maquinas (
   actualizado_en TEXT
 );
 
--- Fallas técnicas registradas
 CREATE TABLE IF NOT EXISTS fallas (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   codigo          TEXT UNIQUE,
@@ -83,6 +78,7 @@ CREATE TABLE IF NOT EXISTS fallas (
   estado          TEXT NOT NULL DEFAULT 'Abierta'
                   CHECK (estado IN ('Abierta','En proceso','Resuelta','Recurrente','Anulada')),
   causa_raiz      TEXT,
+  codigo_alarma   TEXT,
   reportado_por   TEXT,
   responsable     TEXT,
   turno           TEXT,
@@ -97,7 +93,6 @@ CREATE INDEX IF NOT EXISTS idx_fallas_maquina  ON fallas(maquina_id);
 CREATE INDEX IF NOT EXISTS idx_fallas_estado   ON fallas(estado);
 CREATE INDEX IF NOT EXISTS idx_fallas_fecha    ON fallas(fecha_deteccion);
 
--- Soluciones aplicadas a cada falla (histórico: una falla puede tener varios intentos)
 CREATE TABLE IF NOT EXISTS soluciones (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
   falla_id       INTEGER NOT NULL REFERENCES fallas(id) ON DELETE CASCADE,
@@ -115,7 +110,6 @@ CREATE TABLE IF NOT EXISTS soluciones (
 
 CREATE INDEX IF NOT EXISTS idx_soluciones_falla ON soluciones(falla_id);
 
--- Fotos y documentos de cada máquina (opcionalmente ligados a una falla).
 CREATE TABLE IF NOT EXISTS adjuntos (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   maquina_id      INTEGER NOT NULL REFERENCES maquinas(id) ON DELETE CASCADE,

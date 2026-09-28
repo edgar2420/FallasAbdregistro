@@ -16,8 +16,6 @@ const perfil = (u) => ({
 const CAMPOS_USUARIO = 'id, nombre, email, rol, activo, debe_cambiar, ultimo_acceso, creado_en';
 const obtenerUsuario = db.prepare(`SELECT ${CAMPOS_USUARIO} FROM usuarios WHERE id = ?`);
 
-/* ---------- Límite de intentos de acceso (por IP+usuario y por IP) ---------- */
-
 const VENTANA_MS = 15 * 60 * 1000;
 const MAX_POR_USUARIO = 5;
 const MAX_POR_IP = 30;
@@ -75,7 +73,6 @@ authRouter.post('/logout', authPermitirCambio, wrap((req, res) => {
   res.json({ ok: true });
 }));
 
-/** Cambio de la propia contraseña (obligatorio en el primer ingreso). Cierra las demás sesiones. */
 authRouter.post('/cambiar-password', authPermitirCambio, wrap((req, res) => {
   const actual = requerido(req.body.actual, 'contraseña actual');
   const nueva = politica(req.body.nueva);
@@ -89,8 +86,6 @@ authRouter.post('/cambiar-password', authPermitirCambio, wrap((req, res) => {
   });
   res.json({ usuario: perfil({ ...req.usuario, debe_cambiar: 0 }) });
 }));
-
-/* ---------- Administración de cuentas ---------- */
 
 authRouter.get('/usuarios', auth, admin, wrap((_req, res) =>
   res.json(rows(db.prepare(`SELECT ${CAMPOS_USUARIO} FROM usuarios ORDER BY nombre`)))));
@@ -139,7 +134,6 @@ authRouter.patch('/usuarios/:id', auth, admin, wrap((req, res) => {
   transaccion(() => {
     db.prepare('UPDATE usuarios SET nombre = ?, rol = ?, activo = ? WHERE id = ?').run(nombre, rol, activo, id);
     if (password) {
-      // Clave asignada por el administrador: el usuario debe cambiarla al entrar.
       db.prepare('UPDATE usuarios SET password_hash = ?, debe_cambiar = 1 WHERE id = ?').run(crearHash(password), id);
     }
     if (password || !activo) cerrarSesiones(id);

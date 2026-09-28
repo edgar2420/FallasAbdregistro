@@ -24,7 +24,6 @@ statsRouter.get('/', wrap((req, res) => {
       (SELECT COUNT(*) FROM fallas WHERE date(fecha_deteccion) >= date('now', 'localtime', ?)) AS fallas_periodo
   `), desde, desde);
 
-  // MTTR: promedio de horas entre detección y resolución de las fallas cerradas.
   const mttr = row(db.prepare(`
     SELECT ROUND(AVG((julianday(fecha_resolucion) - julianday(fecha_deteccion)) * 24), 2) AS horas
     FROM fallas WHERE estado = 'Resuelta' AND fecha_resolucion IS NOT NULL

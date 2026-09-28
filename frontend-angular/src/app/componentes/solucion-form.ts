@@ -6,7 +6,6 @@ import { aInputFecha } from '../util';
 import { LIMITES } from '../limites';
 import { Contador } from './contador';
 
-/** Alta o edición de una intervención (sólo administradores). Se muestra dentro de <app-modal>. */
 @Component({
   selector: 'app-solucion-form',
   imports: [FormsModule, Contador],

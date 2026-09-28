@@ -22,11 +22,8 @@ export class App {
   );
   protected readonly login = signal({ usuario: '', password: '' });
   protected readonly oscuro = signal(document.documentElement.dataset['theme'] === 'dark');
-  /** Menú lateral contraído a sólo íconos (escritorio). Se recuerda en el navegador. */
   protected readonly menuCerrado = signal(document.documentElement.dataset['menu'] === 'cerrado');
-  /** Menú abierto como cajón (pantallas chicas). */
   protected readonly menuMovil = signal(false);
-  /** Sección visible (tablero, fallas, maquinaria, usuarios, cuenta): define el color de la página. */
   protected readonly seccion = signal('tablero');
   protected error = '';
   protected busy = false;
@@ -60,7 +57,6 @@ export class App {
     await this.router.navigateByUrl('/');
   }
 
-  /** Alterna claro/oscuro y recuerda la elección en este navegador. */
   alternarTema() {
     const oscuro = !this.oscuro();
     this.oscuro.set(oscuro);
@@ -69,7 +65,6 @@ export class App {
     try {
       localStorage.setItem('cf_tema', oscuro ? 'dark' : 'light');
     } catch {
-      /* sin almacenamiento el tema dura lo que la pestaña */
     }
   }
 
@@ -81,11 +76,9 @@ export class App {
     try {
       localStorage.setItem('cf_menu', cerrado ? 'cerrado' : 'abierto');
     } catch {
-      /* sin almacenamiento el estado dura lo que la pestaña */
     }
   }
 
-  /** Ctrl+B (o ⌘+B) contrae o expande el menú, como en otros editores. */
   @HostListener('document:keydown.control.b', ['$event'])
   @HostListener('document:keydown.meta.b', ['$event'])
   atajoMenu(evento: Event) {

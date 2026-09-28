@@ -1,8 +1,3 @@
-/* ================================================================ menú lateral
- * Expandido (256 px) o contraído a íconos (76 px, se recuerda en el navegador; Ctrl+B).
- * En pantallas chicas es un cajón que se abre con el botón ☰ de la barra superior.
- */
-
 .sidebar {
   position: sticky;
   top: 0;
@@ -28,8 +23,6 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-
-/* ---- marca ---- */
 
 .brand {
   display: flex;
@@ -61,8 +54,6 @@
   font-size: 10.5px;
   letter-spacing: 0.04em;
 }
-
-/* ---- botón circular para contraer / expandir, sobre el borde ---- */
 
 .menu-plegar {
   position: absolute;
@@ -99,8 +90,6 @@
 :root[data-menu='cerrado'] .menu-plegar .icon {
   transform: rotate(180deg);
 }
-
-/* ---- secciones y enlaces ---- */
 
 .nav-seccion {
   display: block;
@@ -159,7 +148,6 @@ nav + .nav-seccion {
   color: var(--side-text);
 }
 
-/* Cada sección tiene su color: el ícono lo muestra siempre y se llena al estar activa */
 .sidebar nav a[data-sec='tablero'] { --sec: var(--sec-tablero); }
 .sidebar nav a[data-sec='fallas'] { --sec: var(--sec-fallas); }
 .sidebar nav a[data-sec='maquinaria'] { --sec: var(--sec-maquinaria); }
@@ -202,8 +190,6 @@ nav + .nav-seccion {
   outline-offset: 2px;
 }
 
-/* ---- etiqueta flotante con el nombre (sólo con el menú contraído) ---- */
-
 .nav-tip {
   position: absolute;
   top: 50%;
@@ -245,8 +231,6 @@ nav + .nav-seccion {
   transform: translate(0, -50%);
 }
 
-/* ---- pie del menú ---- */
-
 .sidebar-bottom {
   display: flex;
   align-items: center;
@@ -266,8 +250,6 @@ nav + .nav-seccion {
   background: var(--ok);
   box-shadow: 0 0 0 3px rgb(31 157 107 / 22%);
 }
-
-/* ---- contraído: sólo íconos, centrados ---- */
 
 :root[data-menu='cerrado'] .sidebar .nav-texto,
 :root[data-menu='cerrado'] .nav-seccion {
@@ -292,9 +274,6 @@ nav + .nav-seccion {
   padding-right: 0;
 }
 
-/* ---- botón ☰ y fondo del cajón (celular) ---- */
-
-/* .topbar .menu-movil: más específico que .icon-button, que también define display */
 .topbar .menu-movil,
 .menu-fondo {
   display: none;
@@ -319,7 +298,6 @@ nav + .nav-seccion {
     box-shadow: var(--shadow-lg);
   }
 
-  /* En el cajón siempre se ve todo, aunque en escritorio esté contraído */
   :root[data-menu='cerrado'] .sidebar .nav-texto,
   :root[data-menu='cerrado'] .nav-seccion {
     display: block;
@@ -361,8 +339,6 @@ nav + .nav-seccion {
   }
 }
 
-/* ============================================ color de la sección en cada página */
-
 .workspace {
   --sec: var(--accent);
 }
@@ -373,7 +349,6 @@ nav + .nav-seccion {
 .workspace[data-seccion='usuarios'] { --sec: var(--sec-usuarios); }
 .workspace[data-seccion='cuenta'] { --sec: var(--sec-cuenta); }
 
-/* Texto del color de la sección con buen contraste en cada tema */
 .workspace {
   --sec-texto: color-mix(in srgb, var(--sec) 72%, #000);
 }
@@ -397,8 +372,6 @@ nav + .nav-seccion {
   border-radius: 4px;
   background: linear-gradient(90deg, var(--sec), color-mix(in srgb, var(--sec) 35%, transparent));
 }
-
-/* ============================================ logo (engranaje con pulso) */
 
 .brand-mark .logo {
   width: 68%;

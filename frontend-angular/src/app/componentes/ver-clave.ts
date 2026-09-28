@@ -3,10 +3,6 @@ import { AfterViewInit, Directive, ElementRef, OnDestroy, Renderer2, inject } fr
 const OJO = '<svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg>';
 const OJO_TACHADO = '<svg class="icon" aria-hidden="true"><use href="#i-eye-off"></use></svg>';
 
-/**
- * Agrega un botón de "ojo" a cada campo de contraseña para mostrar u ocultar lo escrito.
- * El campo debe estar dentro de un <label> (o contenedor) propio: el botón se ubica sobre su borde derecho.
- */
 @Directive({ selector: 'input[type=password]' })
 export class VerClave implements AfterViewInit, OnDestroy {
   private readonly el = inject<ElementRef<HTMLInputElement>>(ElementRef);
@@ -41,7 +37,6 @@ export class VerClave implements AfterViewInit, OnDestroy {
       input.focus();
     });
 
-    // El botón ocupa la altura exacta del campo, aunque la etiqueta tenga texto encima.
     const ubicar = () => {
       if (!input.offsetHeight) return;
       boton.style.top = `${input.offsetTop}px`;

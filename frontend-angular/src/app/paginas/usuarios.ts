@@ -161,7 +161,6 @@ export class UsuariosPage implements OnInit {
     }
   }
 
-  /** Igual que ejecutar(), pero el error se muestra dentro del modal abierto. */
   private async ejecutarEnModal(accion: () => Promise<unknown>, exito: string, fallo: string) {
     this.errorModal = '';
     this.aviso = '';

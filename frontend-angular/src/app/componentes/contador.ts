@@ -1,6 +1,5 @@
 import { AfterViewInit, Directive, DoCheck, ElementRef, Renderer2, inject } from '@angular/core';
 
-/** Muestra "usados / máximo" debajo de cada área de texto con límite de caracteres. */
 @Directive({ selector: 'textarea[maxlength]' })
 export class Contador implements AfterViewInit, DoCheck {
   private readonly el = inject<ElementRef<HTMLTextAreaElement>>(ElementRef);
@@ -17,7 +16,6 @@ export class Contador implements AfterViewInit, DoCheck {
     this.ngDoCheck();
   }
 
-  /** ngModel escribe el valor sin disparar eventos: se revisa en cada detección de cambios. */
   ngDoCheck() {
     const area = this.el.nativeElement;
     if (!this.marca || area.maxLength <= 0) return;

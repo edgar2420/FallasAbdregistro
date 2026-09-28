@@ -6,7 +6,6 @@ export interface CambioPagina {
   porPagina: number;
 }
 
-/** Pie de tabla: "1–10 de 45 · Mostrar [10] · ‹ 1 2 3 … 5 ›". Se oculta si todo cabe en la página más chica. */
 @Component({
   selector: 'app-paginador',
   template: `
@@ -49,7 +48,6 @@ export class Paginador {
   readonly desde = computed(() => (this.total() ? (this.actual() - 1) * this.porPagina() + 1 : 0));
   readonly hasta = computed(() => Math.min(this.total(), this.actual() * this.porPagina()));
 
-  /** Primera, última y las vecinas de la actual; 0 marca un salto "…". */
   readonly numeros = computed(() => {
     const n = this.paginas();
     const a = this.actual();
@@ -70,7 +68,6 @@ export class Paginador {
   }
 }
 
-/** Recorta una lista a la página pedida (ajusta la página si quedó fuera de rango). */
 export function paginar<T>(items: T[], pagina: number, porPagina: number): T[] {
   const paginas = Math.max(1, Math.ceil(items.length / porPagina));
   const p = Math.min(Math.max(1, pagina), paginas);

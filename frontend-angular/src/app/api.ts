@@ -16,7 +16,6 @@ export class Api {
   readonly esAdmin = computed(() => this.usuario()?.rol === 'admin');
   readonly debeCambiar = computed(() => !!this.usuario()?.debe_cambiar);
 
-  /** Relativa: el dev-server la redirige por proxy y en producción Express sirve el mismo origen. */
   private readonly base = '/api';
   private token: string | null = null;
   private catalogosCache?: Promise<Catalogos>;
@@ -26,14 +25,12 @@ export class Api {
     if (sesion) {
       this.token = sesion.token;
       this.usuario.set(sesion.usuario);
-      // Revalida la sesión guardada: rol, estado y cambio de clave pueden haber cambiado.
       this.get<{ usuario: Usuario }>('/auth/me')
         .then(({ usuario }) => this.guardarUsuario(usuario))
         .catch(() => undefined);
     }
   }
 
-  /** Extrae el mensaje que devuelve la API, con un respaldo legible. */
   static mensaje(error: unknown, respaldo = 'Ocurrió un error inesperado'): string {
     if (error instanceof HttpErrorResponse) {
       if (error.status === 0) return 'No hay conexión con el servidor';
@@ -62,11 +59,9 @@ export class Api {
     return this.peticion(this.http.delete<T>(this.base + path, this.opciones()));
   }
 
-  /** Lista paginada: el servidor devuelve la página y el total en la cabecera X-Total-Count. */
   async lista<T>(path: string) {
     const r = await this.peticion(this.http.get<T[]>(this.base + path, { ...this.opciones(), observe: 'response' }));
     const items = r.body ?? [];
-    // X-Conteo: "todas=22;con=17;sin=5" (fallas con y sin solución con los mismos filtros)
     const conteo = Object.fromEntries(
       (r.headers.get('X-Conteo') ?? '').split(';').filter(Boolean).map((p) => {
         const [k, v] = p.split('=');
@@ -76,7 +71,6 @@ export class Api {
     return { items, total: Number(r.headers.get('X-Total-Count') ?? items.length), conteo };
   }
 
-  /** Archivos protegidos (fotos, PDF): se piden con el token y se muestran como blob. */
   blob(path: string) {
     return this.peticion(this.http.get(this.base + path, { ...this.opciones(), responseType: 'blob' }));
   }
@@ -103,7 +97,6 @@ export class Api {
     try {
       if (this.token) await this.post('/auth/logout', {});
     } catch {
-      /* la sesión se cierra localmente aunque la API no responda */
     } finally {
       this.limpiarSesion();
     }
@@ -117,7 +110,6 @@ export class Api {
     };
   }
 
-  /** Una sesión vencida devuelve al login; una clave pendiente de cambio lleva a cambiarla. */
   private async peticion<T>(origen: Observable<T>): Promise<T> {
     try {
       return await firstValueFrom(origen);
@@ -139,7 +131,6 @@ export class Api {
       try {
         localStorage.setItem(CLAVE, JSON.stringify({ token: this.token, usuario }));
       } catch {
-        /* sin almacenamiento la sesión dura lo que la pestaña */
       }
     }
   }
@@ -159,7 +150,6 @@ export class Api {
     try {
       localStorage.removeItem(CLAVE);
     } catch {
-      /* nada que limpiar */
     }
     this.token = null;
     this.usuario.set(null);

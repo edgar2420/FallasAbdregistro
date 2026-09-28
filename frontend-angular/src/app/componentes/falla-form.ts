@@ -6,10 +6,12 @@ import { aInputFecha } from '../util';
 import { LIMITES } from '../limites';
 import { Contador } from './contador';
 
-/**
- * Alta o edición de una falla (sólo administradores). Se muestra dentro de <app-modal>.
- * Al registrar una falla nueva se puede cargar en el mismo formulario la solución aplicada.
- */
+function ahoraLocal() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
+
 @Component({
   selector: 'app-falla-form',
   imports: [FormsModule, Contador],
@@ -42,6 +44,40 @@ import { Contador } from './contador';
               <option>{{ c }}</option>
             }
           </select>
+        </label>
+        <label>Fecha y hora
+          <input name="fecha" type="datetime-local" [(ngModel)]="d.fecha_deteccion">
+        </label>
+      </div>
+
+      <div class="tipo-alarma" role="radiogroup" aria-label="Tipo de falla">
+        <label class="tipo-alarma-opcion" [class.activa]="conAlarma">
+          <input type="radio" name="tipo_alarma" [value]="true" [(ngModel)]="conAlarma">
+          <div>
+            <strong>Con código de alarma</strong>
+            <small>La máquina muestra un código en el HMI</small>
+          </div>
+        </label>
+        <label class="tipo-alarma-opcion" [class.activa]="!conAlarma">
+          <input type="radio" name="tipo_alarma" [value]="false" [(ngModel)]="conAlarma">
+          <div>
+            <strong>Sin código de alarma</strong>
+            <small>Falla sin alarma en el HMI (falla operativa)</small>
+          </div>
+        </label>
+      </div>
+      @if (conAlarma) {
+        <div class="crud-grid tres">
+          <label>Código de alarma (HMI)
+            <input name="codigo_alarma" [maxlength]="L.falla.codigo_alarma" placeholder="Ej.: E-101" [(ngModel)]="d.codigo_alarma">
+          </label>
+        </div>
+      }
+
+      <div class="crud-grid tres">
+        <label class="wide">Causa probable
+          <textarea name="causa_raiz" [maxlength]="L.falla.causa_raiz" placeholder="Sensor sucio, sobrecarga, desajuste…"
+                    [(ngModel)]="d.causa_raiz"></textarea>
         </label>
       </div>
 
@@ -79,11 +115,15 @@ export class FallaForm implements OnInit {
   maquinas: Maquina[] = [];
   error = '';
   guardando = false;
+  conAlarma = false;
   d = {
     maquina_id: null as number | null,
     codigo: '',
     titulo: '',
     categoria: 'Mecánica',
+    fecha_deteccion: ahoraLocal(),
+    codigo_alarma: '',
+    causa_raiz: '',
   };
   s = {
     descripcion: '',
@@ -99,7 +139,11 @@ export class FallaForm implements OnInit {
         codigo: f.codigo,
         titulo: f.titulo,
         categoria: f.categoria,
+        fecha_deteccion: aInputFecha(f.fecha_deteccion) || ahoraLocal(),
+        codigo_alarma: f.codigo_alarma ?? '',
+        causa_raiz: f.causa_raiz ?? '',
       };
+      this.conAlarma = !!f.codigo_alarma;
     } else {
       this.d.maquina_id = this.maquinaId();
       this.s.tecnico = this.api.usuario()?.nombre ?? '';
@@ -123,10 +167,11 @@ export class FallaForm implements OnInit {
     this.guardando = true;
     try {
       const f = this.falla();
+      const datos = { ...this.d, codigo_alarma: this.conAlarma ? this.d.codigo_alarma.trim() : '' };
       const r = f
-        ? await this.api.put<Falla>(`/fallas/${f.id}`, this.d)
+        ? await this.api.put<Falla>(`/fallas/${f.id}`, datos)
         : await this.api.post<Falla>('/fallas', {
-            ...this.d,
+            ...datos,
             solucion: this.s.descripcion.trim() ? { ...this.s } : null,
           });
       this.guardado.emit(r);

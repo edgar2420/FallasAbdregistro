@@ -25,7 +25,6 @@ function leer(archivo: Blob): Promise<string> {
   });
 }
 
-/** Las fotos del celular se reducen a 2000 px en JPEG antes de subirlas. */
 async function prepararArchivo(archivo: File): Promise<string> {
   if (archivo.type === 'application/pdf') {
     if (archivo.size > MAX_BYTES) throw new Error(`${archivo.name} supera el máximo de ${LIMITES.adjunto.mb} MB`);
@@ -51,10 +50,6 @@ async function prepararArchivo(archivo: File): Promise<string> {
   return lienzo.toDataURL('image/jpeg', 0.85);
 }
 
-/**
- * Galería minimalista: miniaturas pequeñas sin tarjetas, filtro por categoría en texto y un cuadro "+"
- * para agregar. Las fotos nuevas se guardan en la categoría seleccionada.
- */
 @Component({
   selector: 'app-galeria',
   imports: [FormsModule],
@@ -170,7 +165,6 @@ export class Galeria implements OnChanges, OnDestroy {
   readonly fecha = fechaCorta;
   readonly peso = tamano;
 
-  /** El administrador ve todas las categorías (para elegir dónde guardar); el operador sólo las que tienen algo. */
   get pestanasVisibles() {
     return ['Todas', ...CATEGORIAS.filter((c) => this.api.esAdmin() || this.cuenta(c))];
   }
@@ -180,7 +174,6 @@ export class Galeria implements OnChanges, OnDestroy {
     return this.pestana === 'Todas' ? todos : todos.filter((a) => a.categoria === this.pestana);
   }
 
-  /** Categoría donde se guardan las fotos nuevas: la pestaña elegida o la sugerida. */
   get destino() {
     return this.pestana === 'Todas' ? this.categoriaInicial() : this.pestana;
   }
@@ -227,7 +220,6 @@ export class Galeria implements OnChanges, OnDestroy {
       try {
         this.urls.set(a.id, URL.createObjectURL(await this.api.blob(`/adjuntos/${a.id}/archivo`)));
       } catch {
-        /* la miniatura queda como marcador */
       }
     }
   }
@@ -237,7 +229,6 @@ export class Galeria implements OnChanges, OnDestroy {
       this.abierta = a;
       return;
     }
-    // La ventana se abre antes de la descarga para que el navegador no la bloquee.
     const ventana = window.open('', '_blank');
     try {
       const url = URL.createObjectURL(await this.api.blob(`/adjuntos/${a.id}/archivo`));

@@ -1,9 +1,5 @@
 import { HttpError } from './errors.js';
 
-/**
- * Máximo de caracteres por campo y de archivos por máquina/falla.
- * El frontend usa los mismos valores (frontend-angular/src/app/limites.ts) y los recibe en /api/catalogos.
- */
 export const LIMITES = {
   maquina: {
     codigo: 30, nombre: 120, departamento: 80, area: 80, marca: 80, modelo: 80, num_serie: 80,
@@ -12,12 +8,12 @@ export const LIMITES = {
   },
   falla: {
     codigo: 30, titulo: 150, descripcion: 2000, causa_raiz: 2000, sintomas: 2000,
-    reportado_por: 100, responsable: 100,
+    codigo_alarma: 30, reportado_por: 100, responsable: 100,
   },
   solucion: { descripcion: 4000, repuestos: 500, herramientas: 500, tecnico: 100, preventivo: 2000 },
   tipo: { nombre: 80, descripcion: 300 },
   usuario: { nombre: 100 },
-  adjunto: { descripcion: 200, por_maquina: 40, por_falla: 10, mb: 8 },
+  adjunto: { descripcion: 200, equipo: 2, por_maquina: 40, por_falla: 10, mb: 8 },
 };
 
 const NOMBRES = {
@@ -25,12 +21,12 @@ const NOMBRES = {
   modelo: 'Modelo', num_serie: 'Serie', capacidad: 'Capacidad', poe: 'Ref. (POE)', tension: 'Tensión',
   corriente: 'Corriente', potencia: 'Potencia', presion_aire: 'Presión de aire',
   presion_vapor: 'Presión de vapor', notas: 'Notas', titulo: 'Falla / error',
-  descripcion: 'Descripción', causa_raiz: 'Causa', sintomas: 'Síntomas', reportado_por: 'Reportado por',
+  descripcion: 'Descripción', causa_raiz: 'Causa', sintomas: 'Síntomas', codigo_alarma: 'Código de alarma',
+  reportado_por: 'Reportado por',
   responsable: 'Responsable', repuestos: 'Repuestos', herramientas: 'Herramientas', tecnico: 'Técnico',
   preventivo: 'Acción preventiva',
 };
 
-/** Rechaza con 400 cualquier texto que supere su máximo de caracteres. */
 export const limitar = (datos, maximos) => {
   for (const [campo, max] of Object.entries(maximos)) {
     const v = datos[campo];

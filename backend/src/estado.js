@@ -1,7 +1,6 @@
 import { db, row, ahora } from './db.js';
 import { ABIERTAS_SQL } from './catalogos.js';
 
-/** Mantiene el estado de la máquina alineado con sus fallas abiertas de severidad Alta/Crítica. */
 export function sincronizarMaquina(maquinaId) {
   const maquina = row(db.prepare('SELECT * FROM maquinas WHERE id = ?'), maquinaId);
   if (!maquina || maquina.estado === 'Mantenimiento' || maquina.estado === 'Fuera de servicio') return;
@@ -15,10 +14,6 @@ export function sincronizarMaquina(maquinaId) {
   }
 }
 
-/**
- * Tras editar o borrar una solución efectiva: una falla con alguna solución efectiva queda Resuelta;
- * si ya no le queda ninguna, vuelve a "En proceso" (o "Abierta" si no tiene intervenciones).
- */
 export function recalcularFalla(fallaId) {
   const falla = row(db.prepare('SELECT * FROM fallas WHERE id = ?'), fallaId);
   if (!falla || falla.estado === 'Anulada') return;

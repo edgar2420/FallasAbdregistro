@@ -24,8 +24,6 @@
   max-width: 62ch;
 }
 
-/* ---------------------------------------------------------------- tarjetas */
-
 .module-card {
   box-shadow: var(--shadow-card);
   padding: 22px;
@@ -155,8 +153,6 @@
   color: var(--accent-hover);
 }
 
-/* ------------------------------------------------------------------ tablas */
-
 .table-card {
   padding: 8px 22px 14px;
 }
@@ -207,8 +203,6 @@
   font-size: 11px;
 }
 
-/* ------------------------------------------------------------------ chips */
-
 .tag,
 .priority {
   display: inline-flex;
@@ -239,8 +233,6 @@
   background: var(--warn-tint);
   color: var(--warn-text);
 }
-
-/* ------------------------------------------------------- campos y acciones */
 
 input,
 select,
@@ -368,8 +360,6 @@ textarea::placeholder {
   margin-top: 18px;
 }
 
-/* ------------------------------------------------------- mensajes y estados */
-
 .form-error {
   display: flex;
   align-items: center;
@@ -390,8 +380,6 @@ textarea::placeholder {
   font-size: 12px;
   text-align: center;
 }
-
-/* ------------------------------------------------------------------ usuarios */
 
 .user-row {
   display: flex;

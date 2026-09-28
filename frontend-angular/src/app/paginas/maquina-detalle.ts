@@ -51,7 +51,11 @@ import { contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../
         </app-modal>
       }
 
-      <section class="module-card">
+      <section class="module-card ficha-equipo">
+        <div class="ficha-equipo-fotos">
+          <app-galeria [adjuntos]="fotosEquipo" [maquinaId]="m.id" [maximo]="2" [conPestanas]="false"
+                       categoriaInicial="Ficha técnica" (cambio)="cargar()" />
+        </div>
         <h2>Ficha técnica</h2>
         <dl class="ficha">
           <div><dt>Departamento</dt><dd>{{ m.departamento || '—' }}</dd></div>
@@ -108,6 +112,7 @@ import { contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../
                 <th>Código</th>
                 <th class="opcional">Fecha</th>
                 <th class="th-falla">Falla / error</th>
+                <th class="opcional">Alarma</th>
                 <th class="opcional">Categoría</th>
                 <th class="th-solucion">Solución aplicada</th>
               </tr>
@@ -129,6 +134,13 @@ import { contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../
                         @if (f.descripcion) { <small class="subline recorte">{{ f.descripcion }}</small> }
                       </div>
                     </div>
+                  </td>
+                  <td class="opcional">
+                    @if (f.codigo_alarma) {
+                      <span class="codigo-alarma">{{ f.codigo_alarma }}</span>
+                    } @else {
+                      <span class="sin-alarma">Sin código</span>
+                    }
                   </td>
                   <td class="opcional"><span class="cat" [attr.data-cat]="slug(f.categoria)">{{ f.categoria }}</span></td>
                   <td class="solucion-celda">
@@ -155,11 +167,11 @@ import { contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../
                 </tr>
                 @if (abiertaId === f.id) {
                   <tr class="fila-detalle">
-                    <td colspan="5"><app-falla-detalle [fallaId]="f.id" (cambio)="cargar()" /></td>
+                    <td colspan="6"><app-falla-detalle [fallaId]="f.id" (cambio)="cargar()" /></td>
                   </tr>
                 }
               } @empty {
-                <tr><td colspan="5" class="muted">
+                <tr><td colspan="6" class="muted">
                   {{ (m.fallas?.length ?? 0) ? 'Ninguna falla coincide con la búsqueda' : 'Esta máquina no tiene fallas registradas' }}
                 </td></tr>
               }
@@ -197,7 +209,6 @@ export class MaquinaDetallePage implements OnInit {
   editando = false;
   nuevaFalla = false;
   abiertaId: number | null = null;
-  /** Las fotos van al final y plegadas: la tabla de fallas es lo que se viene a ver. */
   verFotos = false;
   q = '';
   categoria = '';
@@ -216,13 +227,11 @@ export class MaquinaDetallePage implements OnInit {
     { valor: 'sin', texto: 'Sin solución', clave: 'sin' },
   ];
 
-  /** resuelta = solución efectiva · intento = hubo intervención sin éxito · pendiente = nada todavía. */
   estadoFila(f: Falla) {
     if (f.estado === 'Resuelta') return 'resuelta';
     return f.ultima_solucion ? 'intento' : 'pendiente';
   }
 
-  /** Cantidades para el filtro rápido (con la búsqueda y la categoría aplicadas). */
   get conteo(): Record<string, number> {
     const base = this.filtrar('');
     const con = base.filter((f) => f.estado === 'Resuelta').length;
@@ -231,6 +240,10 @@ export class MaquinaDetallePage implements OnInit {
 
   get fallasPagina() {
     return paginar(this.fallas, this.pagina, this.porPagina);
+  }
+
+  get fotosEquipo() {
+    return (this.m?.adjuntos ?? []).filter((a) => !a.falla_id);
   }
 
   get fallas(): Falla[] {

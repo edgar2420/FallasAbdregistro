@@ -4,7 +4,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-// Base temporaria: las pruebas nunca tocan backend/data.
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fallas-test-'));
 process.env.DATA_DIR = dir;
 process.env.FRONTEND_DIST = path.join(dir, 'sin-frontend');
@@ -78,7 +77,6 @@ test('el operador sólo consulta: no crea tipos, máquinas, fallas ni soluciones
   assert.equal((await api('POST', '/api/tipos', { token: operadorToken, body: { nombre: 'X' } })).status, 403);
   assert.equal((await api('POST', '/api/maquinas', { token: operadorToken, body: { codigo: 'X', nombre: 'X' } })).status, 403);
   assert.equal((await api('POST', '/api/fallas', { token: operadorToken, body: { maquina_id: maquina.id, titulo: 'x' } })).status, 403);
-  // La falla la crea el admin: al operador se le comprueba que la puede consultar.
   await api('POST', '/api/fallas', { token: adminToken, body: { maquina_id: maquina.id, titulo: 'Consulta del operador' } });
   const lista = await api('GET', `/api/fallas?q=${encodeURIComponent('OSM-01')}`, { token: operadorToken });
   assert.equal(lista.status, 200);
@@ -231,7 +229,6 @@ test('máquinas: la lista se pagina y los filtros llegan aparte', async () => {
     assert.equal(r.status, 201);
   }
 
-  // Sin "limite" siguen viniendo todas: los formularios dependen de la lista completa.
   const todas = await api('GET', '/api/maquinas', { token: adminToken });
   assert.ok(todas.datos.length >= 4);
 
@@ -243,7 +240,6 @@ test('máquinas: la lista se pagina y los filtros llegan aparte', async () => {
   const segunda = await api('GET', '/api/maquinas?limite=2&pagina=2', { token: adminToken });
   assert.notEqual(segunda.datos[0].id, pagina.datos[0].id);
 
-  // El total refleja el filtro, no el parque completo.
   const filtrada = await api('GET', '/api/maquinas?departamento=Producción&limite=2&pagina=1', { token: adminToken });
   assert.ok(Number(filtrada.headers.get('x-total-count')) >= 3);
   assert.ok(filtrada.datos.every((m) => m.departamento === 'Producción'));

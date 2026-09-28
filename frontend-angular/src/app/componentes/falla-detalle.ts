@@ -8,7 +8,6 @@ import { Galeria } from './galeria';
 import { SolucionForm } from './solucion-form';
 import { LIMITES } from '../limites';
 
-/** Categoría de foto sugerida según el tipo de falla. */
 function categoriaFoto(categoria: string) {
   if (categoria === 'Eléctrica') return 'Eléctrica';
   if (categoria === 'Electrónica / Control' || categoria === 'Software / HMI') return 'Electrónica';
@@ -16,7 +15,6 @@ function categoriaFoto(categoria: string) {
   return 'Otra';
 }
 
-/** Ficha completa de una falla: datos, soluciones aplicadas y fotos. */
 @Component({
   selector: 'app-falla-detalle',
   imports: [FallaForm, SolucionForm, Galeria, Modal],
@@ -87,6 +85,19 @@ function categoriaFoto(categoria: string) {
         <dl class="ficha">
           <div><dt>Fecha</dt><dd>{{ larga(f.fecha_deteccion) }} <small class="subline">{{ hace(f.fecha_deteccion) }}</small></dd></div>
           <div><dt>Categoría</dt><dd>{{ f.categoria }}</dd></div>
+          <div>
+            <dt>Alarma HMI</dt>
+            <dd>
+              @if (f.codigo_alarma) {
+                <span class="codigo-grande">{{ f.codigo_alarma }}</span>
+              } @else {
+                <span class="muted">Sin código</span>
+              }
+            </dd>
+          </div>
+          @if (f.causa_raiz) {
+            <div class="wide"><dt>Causa probable</dt><dd class="texto">{{ f.causa_raiz }}</dd></div>
+          }
         </dl>
 
         @if (api.esAdmin()) {

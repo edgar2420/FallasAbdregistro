@@ -1,5 +1,3 @@
-/** Utilidades de presentación compartidas por las páginas. */
-
 export function claseSeveridad(severidad: string | null | undefined) {
   if (severidad === 'Crítica' || severidad === 'Alta') return 'red';
   return severidad === 'Media' ? 'orange' : 'green';
@@ -18,7 +16,6 @@ export function claseEstadoMaquina(estado: string | null | undefined) {
   return 'orange';
 }
 
-/** "2026-09-22 14:30:00" → "22/09/2026 14:30". */
 export function fechaCorta(valor: string | null | undefined, conHora = true) {
   if (!valor) return '—';
   const m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/.exec(valor);
@@ -27,7 +24,6 @@ export function fechaCorta(valor: string | null | undefined, conHora = true) {
   return conHora && m[4] ? `${dia} ${m[4]}:${m[5]}` : dia;
 }
 
-/** Valor para <input type="datetime-local">. */
 export function aInputFecha(valor: string | null | undefined) {
   return valor ? valor.replace(' ', 'T').slice(0, 16) : '';
 }
@@ -43,7 +39,6 @@ export function tamano(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-/** Llama a fn cuando el usuario deja de escribir. */
 export function conPausa<T extends unknown[]>(fn: (...args: T) => void, ms = 300) {
   let t: ReturnType<typeof setTimeout> | undefined;
   return (...args: T) => {
@@ -52,7 +47,6 @@ export function conPausa<T extends unknown[]>(fn: (...args: T) => void, ms = 300
   };
 }
 
-/** Arma "?a=1&b=2" omitiendo los filtros vacíos. */
 export function consulta(filtros: Record<string, string | number | boolean | null | undefined>) {
   const p = new URLSearchParams();
   for (const [k, v] of Object.entries(filtros)) {
@@ -62,8 +56,6 @@ export function consulta(filtros: Record<string, string | number | boolean | nul
   return s ? `?${s}` : '';
 }
 
-/* ---------------- Fechas legibles ---------------- */
-
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
 function aFecha(valor: string | null | undefined) {
@@ -71,13 +63,11 @@ function aFecha(valor: string | null | undefined) {
   return m ? new Date(+m[1], +m[2] - 1, +m[3], +(m[4] ?? 0), +(m[5] ?? 0)) : null;
 }
 
-/** "2026-09-22 14:30:00" → "22 sep 2026". */
 export function fechaLarga(valor: string | null | undefined) {
   const d = aFecha(valor);
   return d ? `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}` : '—';
 }
 
-/** "hoy", "ayer", "hace 3 días", "hace 2 semanas", "hace 4 meses"… */
 export function haceCuanto(valor: string | null | undefined) {
   const d = aFecha(valor);
   if (!d) return '';
@@ -96,7 +86,6 @@ export function haceCuanto(valor: string | null | undefined) {
   return plural(Math.floor(dias / 365), 'año', 'años');
 }
 
-/** Fecha local en formato de <input type="date"> (YYYY-MM-DD). */
 export function diaISO(d: Date) {
   const dos = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
@@ -112,7 +101,6 @@ export const PERIODOS = [
   { id: 'personalizado', texto: 'Personalizado…' },
 ];
 
-/** Rango desde/hasta de un período rápido (personalizado conserva lo que haya). */
 export function rangoPeriodo(id: string): { desde: string; hasta: string } | null {
   const hoy = new Date();
   if (!id) return { desde: '', hasta: '' };
@@ -127,7 +115,6 @@ export function rangoPeriodo(id: string): { desde: string; hasta: string } | nul
   return null;
 }
 
-/** Categoría → identificador para su color (ver .cat[data-cat] en _tablas.scss). */
 export function slugCategoria(c: string | null | undefined) {
   return (c ?? 'otra')
     .normalize('NFD')
@@ -136,9 +123,6 @@ export function slugCategoria(c: string | null | undefined) {
     .split(/[\s/(]/)[0];
 }
 
-/* ---------------- Color por departamento ---------------- */
-
-/** Paleta de departamentos: tonos bien distintos entre sí y legibles en claro y oscuro. */
 const PALETA_DEPARTAMENTOS = ['#3b82f6', '#14b8a6', '#8b5cf6', '#f59e0b', '#f43f5e', '#10b981', '#0ea5e9', '#d946ef'];
 const DEPARTAMENTOS_CONOCIDOS: Record<string, string> = {
   produccion: '#3b82f6',
@@ -150,7 +134,6 @@ const DEPARTAMENTOS_CONOCIDOS: Record<string, string> = {
   almacen: '#0ea5e9',
 };
 
-/** Color fijo para cada departamento: el mismo nombre siempre da el mismo color. */
 export function colorDepartamento(nombre: string | null | undefined) {
   const clave = (nombre ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
   if (!clave) return '#94a3b8';

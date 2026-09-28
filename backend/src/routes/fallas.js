@@ -42,7 +42,6 @@ fallasRouter.get('/', wrap((req, res) => {
   if (severidad) { cond.push('f.severidad = ?'); args.push(String(severidad)); }
   if (desde) { cond.push('date(f.fecha_deteccion) >= date(?)'); args.push(fecha(desde, 'desde')); }
   if (hasta) { cond.push('date(f.fecha_deteccion) <= date(?)'); args.push(fecha(hasta, 'hasta')); }
-  // Filtros sin el de estado: sirven para contar cuántas fallas tienen y no tienen solución.
   const whereBase = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
   const argsBase = [...args];
   if (estado === 'abiertas') cond.push(`f.estado IN ${ABIERTAS_SQL}`);
@@ -75,7 +74,8 @@ fallasRouter.get('/:id', wrap((req, res) => {
 }));
 
 const CAMPOS = ['maquina_id', 'titulo', 'descripcion', 'sintomas', 'categoria', 'severidad', 'estado',
-  'causa_raiz', 'reportado_por', 'responsable', 'turno', 'fecha_deteccion', 'fecha_resolucion', 'paro_minutos'];
+  'causa_raiz', 'codigo_alarma', 'reportado_por', 'responsable', 'turno', 'fecha_deteccion', 'fecha_resolucion',
+  'paro_minutos'];
 
 const normalizar = (v) => {
   const d = {
@@ -87,6 +87,7 @@ const normalizar = (v) => {
     severidad: unoDe(v.severidad, SEVERIDADES, 'severidad') || 'Media',
     estado: unoDe(v.estado, ESTADOS_FALLA, 'estado') || 'Abierta',
     causa_raiz: texto(v.causa_raiz),
+    codigo_alarma: texto(v.codigo_alarma),
     reportado_por: texto(v.reportado_por),
     responsable: texto(v.responsable),
     turno: unoDe(v.turno, TURNOS, 'turno'),
@@ -108,7 +109,6 @@ const normalizar = (v) => {
   return d;
 };
 
-/** El código lo escribe quien registra la falla; si lo deja vacío se genera uno correlativo. */
 const codigoFalla = (valor, id = 0) => {
   const codigo = limitar({ codigo: texto(valor) }, LIMITES.falla).codigo || siguienteCodigoFalla();
   if (row(db.prepare('SELECT id FROM fallas WHERE codigo = ? COLLATE NOCASE AND id <> ?'), codigo, id)) {
@@ -124,7 +124,6 @@ const insertarSolucion = (fallaId, s) => db.prepare(`
 `).run(fallaId, s.descripcion, p(s.repuestos), p(s.herramientas), s.tiempo_minutos, s.costo,
   p(s.tecnico), s.efectiva, p(s.preventivo), s.fecha);
 
-/** Alta de falla; si trae `solucion` con descripción, se registra en el mismo paso y la falla queda resuelta. */
 fallasRouter.post('/', admin, wrap((req, res) => {
   const conSolucion = texto(req.body.solucion?.descripcion);
   const solucion = conSolucion ? normalizarSolucion(req.body.solucion) : null;
@@ -175,8 +174,6 @@ fallasRouter.delete('/:id', admin, wrap((req, res) => {
   res.json({ ok: true });
 }));
 
-/* ---------- Soluciones de una falla ---------- */
-
 fallasRouter.get('/:id/soluciones', wrap((req, res) => {
   res.json(rows(listarSoluciones, Number(req.params.id)));
 }));
@@ -187,8 +184,6 @@ fallasRouter.post('/:id/soluciones', admin, wrap((req, res) => {
   const s = normalizarSolucion(req.body);
   const id = transaccion(() => {
     const { lastInsertRowid } = insertarSolucion(falla.id, s);
-
-    // Una solución efectiva cierra la falla; una fallida la deja "En proceso".
     if (s.efectiva && !['Resuelta', 'Anulada'].includes(falla.estado)) {
       const cierre = s.fecha > falla.fecha_deteccion ? s.fecha : ahora();
       db.prepare('UPDATE fallas SET estado = ?, fecha_resolucion = ?, actualizado_en = ? WHERE id = ?')

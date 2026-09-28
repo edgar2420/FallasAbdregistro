@@ -63,7 +63,6 @@ export interface Solucion {
   efectiva: number;
   preventivo: string | null;
   fecha: string;
-  // Presentes en la base de conocimiento (/soluciones)
   falla_codigo?: string;
   falla_titulo?: string;
   categoria?: string;
@@ -84,6 +83,7 @@ export interface Falla {
   severidad: string;
   estado: string;
   causa_raiz: string | null;
+  codigo_alarma: string | null;
   reportado_por: string | null;
   responsable: string | null;
   turno: string | null;

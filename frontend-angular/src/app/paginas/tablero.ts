@@ -6,7 +6,6 @@ import { Falla, Maquina } from '../modelos';
 import { colorDepartamento, consulta, contiene } from '../util';
 import { Paginador, paginar } from '../componentes/paginador';
 
-/** Tablero: las máquinas como fichas de placa; un clic abre su ficha, fotos y fallas. */
 @Component({
   selector: 'app-tablero-page',
   imports: [FormsModule, RouterLink, Paginador],
@@ -127,7 +126,6 @@ export class TableroPage implements OnInit {
 
   readonly color = colorDepartamento;
 
-  /** Departamentos con su color y cantidad de equipos (sirve de leyenda y de filtro rápido). */
   get leyenda() {
     const cuenta = new Map<string, number>();
     for (const m of this.maquinas) {
@@ -158,7 +156,6 @@ export class TableroPage implements OnInit {
     }
   }
 
-  /** Enter: abre la ficha si el código coincide con un equipo (o con una falla, FAL-0001). */
   async ir() {
     const q = this.q.trim().toUpperCase();
     if (!q) return;
@@ -175,7 +172,6 @@ export class TableroPage implements OnInit {
         return;
       }
     } catch {
-      /* si falla la búsqueda se deja la lista filtrada */
     }
     if (!this.visibles.length) await this.router.navigate(['/fallas'], { queryParams: { q: this.q.trim() } });
   }

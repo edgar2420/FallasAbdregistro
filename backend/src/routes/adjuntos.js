@@ -13,7 +13,6 @@ export const adjuntosRouter = Router();
 
 export const MAX_BYTES = LIMITES.adjunto.mb * 1024 * 1024;
 
-/** El tipo se decide por la firma del archivo, no por lo que declare el navegador. */
 const FORMATOS = [
   { mime: 'image/jpeg', ext: 'jpg', es: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
   { mime: 'image/png', ext: 'png', es: (b) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) },
@@ -28,7 +27,6 @@ const SELECT = `
   LEFT JOIN fallas f ON f.id = a.falla_id
   LEFT JOIN usuarios u ON u.id = a.subido_por`;
 
-/** campo es siempre una constante interna ('maquina_id' | 'falla_id'). */
 export const listarAdjuntos = (campo, id) =>
   rows(db.prepare(`${SELECT} WHERE a.${campo} = ? ORDER BY datetime(a.creado_en) DESC, a.id DESC`), id);
 
@@ -75,8 +73,13 @@ adjuntosRouter.post('/', admin, wrap((req, res) => {
   }
   limitar({ descripcion: texto(req.body.descripcion) }, LIMITES.adjunto);
   const cuenta = (campo, id) => row(db.prepare(`SELECT COUNT(*) AS n FROM adjuntos WHERE ${campo} = ?`), id).n;
+  const cuentaDirecta = (id) =>
+    row(db.prepare('SELECT COUNT(*) AS n FROM adjuntos WHERE maquina_id = ? AND falla_id IS NULL'), id).n;
   if (fallaId && cuenta('falla_id', fallaId) >= LIMITES.adjunto.por_falla) {
     throw new HttpError(409, `Cada falla admite como máximo ${LIMITES.adjunto.por_falla} fotos o documentos. Quita alguno para subir otro.`);
+  }
+  if (!fallaId && cuentaDirecta(maquinaId) >= LIMITES.adjunto.equipo) {
+    throw new HttpError(409, `El equipo admite como máximo ${LIMITES.adjunto.equipo} fotos generales (equipo y placa). Quita alguna para subir otra.`);
   }
   if (cuenta('maquina_id', maquinaId) >= LIMITES.adjunto.por_maquina) {
     throw new HttpError(409, `Cada máquina admite como máximo ${LIMITES.adjunto.por_maquina} fotos o documentos (incluidas las de sus fallas). Quita alguno para subir otro.`);

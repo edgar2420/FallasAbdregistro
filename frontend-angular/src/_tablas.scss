@@ -1,5 +1,3 @@
-/* ------------------------------------------------------ filtros y búsqueda */
-
 .filtros {
   display: flex;
   flex-wrap: wrap;
@@ -46,8 +44,6 @@
   white-space: nowrap;
 }
 
-/* ------------------------------------------------------------------ tablas */
-
 .tabla-card {
   padding: 18px 0 8px;
 }
@@ -77,7 +73,6 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
-  /* Cifras de igual ancho: las columnas de códigos y fechas dejan de bailar al paginar. */
   font-variant-numeric: tabular-nums;
 }
 
@@ -204,8 +199,6 @@ a.tag {
   text-decoration: none;
 }
 
-/* --------------------------------------------------- ficha técnica y detalle */
-
 .volver {
   display: inline-block;
   margin-bottom: 14px;
@@ -245,7 +238,6 @@ a.tag {
   overflow: hidden;
 }
 
-/* Líneas de la cuadrícula sin rellenar las celdas vacías de la última fila. */
 .ficha > div {
   padding: 11px 14px;
   box-shadow: 1px 0 0 var(--line), 0 1px 0 var(--line);
@@ -352,8 +344,6 @@ a.tag {
 .crud-grid .dos {
   grid-column: span 2;
 }
-
-/* ------------------------------------------------------------ fotos */
 
 .tabs {
   display: flex;
@@ -494,8 +484,6 @@ a.tag {
   background: var(--surface);
 }
 
-/* ---------------------------------------------------- búsqueda del tablero */
-
 .busqueda-rapida {
   margin: 18px 0 22px;
 }
@@ -571,8 +559,6 @@ a.issue-card {
 a.live {
   text-decoration: none;
 }
-
-/* ------------------------------------------------------ mensajes y cuentas */
 
 .aviso {
   margin: 0 0 14px;
@@ -710,14 +696,12 @@ a.live {
   }
 }
 
-/* Tarjetas con una sombra suave en el tema claro (en oscuro --shadow-card es none). */
 .metrics article,
 .issue-card,
 .kanban-column {
   box-shadow: var(--shadow-card);
 }
 
-/* El botón principal conserva su color aunque esté dentro de una fila de acciones. */
 .row-actions .primary {
   border-color: transparent;
   background: var(--accent);
@@ -728,8 +712,6 @@ a.live {
   background: var(--accent-hover);
   color: var(--on-accent);
 }
-
-/* ------------------------------------------------ mostrar / ocultar contraseña */
 
 .con-clave {
   position: relative;
@@ -770,7 +752,6 @@ a.live {
   flex: 0 1 220px;
 }
 
-/* Requisitos de contraseña que se marcan mientras se escribe */
 .reglas {
   display: grid;
   gap: 4px;
@@ -808,8 +789,6 @@ a.live {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
-
-/* ------------------------------------------------------------------ modales */
 
 .modal {
   width: min(1040px, calc(100vw - 32px));
@@ -868,7 +847,6 @@ a.live {
   margin-top: 18px;
 }
 
-/* Botones siempre visibles al pie del modal, aunque el formulario sea largo. */
 .modal-form .form-actions {
   position: sticky;
   bottom: 0;
@@ -892,8 +870,6 @@ body.con-modal {
     transform: translateY(10px) scale(0.99);
   }
 }
-
-/* ------------------------------------------------- fichas de placa (tablero) */
 
 .tablero-filtros {
   margin-bottom: 18px;
@@ -1032,7 +1008,6 @@ a.primary {
   }
 }
 
-/* Botón para quitar una foto o documento (visible siempre para el administrador) */
 .foto {
   position: relative;
 }
@@ -1064,8 +1039,6 @@ a.primary {
   color: var(--muted);
   font-size: 12px;
 }
-
-/* ------------------------------------------------ galería minimalista */
 
 .galeria-barra {
   display: flex;
@@ -1195,7 +1168,6 @@ a.primary {
   color: var(--crit-text);
 }
 
-/* En pantallas táctiles no hay "hover": el botón se ve siempre. */
 @media (hover: none) {
   .mini-quitar {
     opacity: 1;
@@ -1241,8 +1213,6 @@ a.primary {
 .lightbox-desc {
   flex: 1 1 260px;
 }
-
-/* ------------------------------------------------------------ paginación */
 
 .paginador {
   display: flex;
@@ -1314,8 +1284,6 @@ a.primary {
   color: var(--faint);
 }
 
-/* ------------------------------------------------ contador de caracteres */
-
 .contador-car {
   justify-self: end;
   margin-top: -3px;
@@ -1330,9 +1298,6 @@ a.primary {
   font-weight: 700;
 }
 
-/* ======================================== fallas y soluciones con color */
-
-/* Panel de filtros en dos filas, todos los controles del mismo alto */
 .panel-filtros {
   display: grid;
   gap: 12px;
@@ -1378,7 +1343,6 @@ a.primary {
   padding-left: 38px;
 }
 
-/* Control segmentado: Todas · Con solución · Sin solución */
 .segmento {
   display: inline-flex;
   flex: none;
@@ -1443,7 +1407,6 @@ a.primary {
   background: var(--crit-tint);
 }
 
-/* Período de fechas: un solo bloque del mismo alto que los demás filtros */
 .rango-fechas {
   display: inline-flex;
   flex: 1 1 220px;
@@ -1483,7 +1446,6 @@ a.primary {
   background: var(--surface);
 }
 
-/* Tabla: la franja izquierda indica el estado de la falla */
 .tabla-fallas tbody tr[data-estado] > td:first-child {
   box-shadow: inset 3px 0 0 var(--franja);
 }
@@ -1568,7 +1530,6 @@ a.primary {
   white-space: nowrap;
 }
 
-/* Categoría: punto de color por familia */
 .cat {
   display: inline-flex;
   gap: 7px;
@@ -1596,7 +1557,6 @@ a.primary {
 .cat[data-cat='calidad'] { --cat: #10b981; }
 .cat[data-cat='servicios'] { --cat: #0ea5e9; }
 
-/* Detalle de la falla */
 .estado-banda {
   display: flex;
   flex-wrap: wrap;
@@ -1670,15 +1630,12 @@ a.primary {
   }
 }
 
-/* Mismo tamaño de letra en todos los controles de filtro */
 .filtros-fila > select,
 .rango-fechas select,
 .rango-fechas input,
 .buscador-icono input {
   font-size: 13px;
 }
-
-/* ================================== tablero: color por departamento */
 
 .placa {
   --dep: var(--accent);
@@ -1733,7 +1690,6 @@ a.primary {
   background: var(--dep);
 }
 
-/* Leyenda de departamentos (también filtra) */
 .leyenda-deptos {
   display: flex;
   flex-wrap: wrap;
@@ -1777,7 +1733,6 @@ a.primary {
   text-align: center;
 }
 
-/* Encabezado que pliega una sección (fotos de la máquina). */
 .plegable {
   display: flex;
   align-items: center;
@@ -1814,10 +1769,6 @@ a.primary {
   margin-top: 16px;
 }
 
-/* ===================================== acabado tecnico (IBM Plex)
- * Todo dato identificable va en mono: series, modelos, referencias y
- * capacidades se leen como placa de equipo, no como texto corrido.
- */
 .placa dd,
 .placa-depto .depto-n,
 .metrics strong,
@@ -1832,7 +1783,6 @@ a.primary {
   font-weight: 500;
 }
 
-/* La ficha se asienta en vez de flotar: el equipo esta anclado, no es una tarjeta de marketing. */
 .placa {
   transition: border-color var(--step), box-shadow var(--step), background var(--step);
 }
@@ -1847,4 +1797,70 @@ a.primary {
 .placa:focus-visible {
   outline: 2px solid var(--dep, var(--accent));
   outline-offset: 2px;
+}
+
+.tipo-alarma {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.tipo-alarma-opcion {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color var(--step), background var(--step);
+}
+
+.tipo-alarma-opcion input {
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
+
+.tipo-alarma-opcion strong {
+  display: block;
+  font-size: 13px;
+}
+
+.tipo-alarma-opcion small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.tipo-alarma-opcion.activa {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+@media (max-width: 600px) {
+  .tipo-alarma {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ficha-equipo-fotos {
+  margin-bottom: 18px;
+}
+
+.codigo-alarma {
+  padding: 2px 8px;
+  border-radius: var(--r-sm);
+  background: var(--crit-tint);
+  color: var(--crit-text);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.sin-alarma {
+  color: var(--faint);
+  font-size: 11px;
 }

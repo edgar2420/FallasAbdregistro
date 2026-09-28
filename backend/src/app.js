@@ -21,13 +21,11 @@ export const app = express();
 
 app.disable('x-powered-by');
 
-// Detrás de un proxy (Caddy/Nginx) la IP real llega en X-Forwarded-For: TRUST_PROXY=1 indica un salto.
 if (process.env.TRUST_PROXY) {
   const v = process.env.TRUST_PROXY;
   app.set('trust proxy', /^\d+$/.test(v) ? Number(v) : v);
 }
 
-/** Política de contenido: sólo se ejecuta y carga lo que sirve esta misma aplicación. */
 const CSP = [
   "default-src 'self'",
   "script-src 'self'",
@@ -53,7 +51,6 @@ app.use((req, res, next) => {
   next();
 });
 
-/* Límite general de peticiones por IP: frena abusos y scripts desbocados sin afectar el uso normal. */
 const VENTANA_MS = 60_000;
 const MAX_POR_MINUTO = Number(process.env.LIMITE_PETICIONES) || 600;
 const peticiones = new Map();
@@ -76,12 +73,9 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-// Sin CORS: el frontend se sirve desde el mismo origen (proxy de Angular en desarrollo, Express en planta).
-// Las fotos viajan en base64 y necesitan un límite mayor; se aplica sólo después de autenticar.
 const jsonChico = express.json({ limit: '200kb' });
 app.use((req, res, next) => (req.path.startsWith('/api/adjuntos') ? next() : jsonChico(req, res, next)));
 
-// Chequeo de salud para Docker/monitoreo: también verifica que la base responda.
 app.get('/api/salud', (req, res) => {
   try {
     db.prepare('SELECT 1').get();
@@ -104,7 +98,6 @@ app.use('/api/adjuntos', auth, express.json({ limit: '12mb' }), adjuntosRouter);
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
 
-// En producción sirve el frontend Angular compilado.
 const dist = process.env.FRONTEND_DIST
   || path.join(__dirname, '..', '..', 'frontend-angular', 'dist', 'frontend-angular', 'browser');
 if (fs.existsSync(path.join(dist, 'index.html'))) {

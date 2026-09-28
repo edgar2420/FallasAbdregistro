@@ -1,10 +1,3 @@
-/*
- * Paleta industrial: pizarra como color estructural (menú, encabezados, botones primarios) y
- * verde operativo como acento de estado y foco. El rojo queda reservado para fallas críticas,
- * errores y acciones de borrar; el naranja identifica la falla como problema.
- * Contrastes verificados sobre WCAG AA: ningún par de texto baja de 4.5:1.
- * El modo oscuro se activa con data-theme="dark" en <html> (botón del encabezado).
- */
 :root {
   color-scheme: light;
 
@@ -22,7 +15,6 @@
   --muted: #475569;
   --faint: #64748b;
 
-  /* Acción primaria: pizarra. Blanco sobre este tono da 10.4:1. */
   --accent: #334155;
   --accent-hover: #3d4d63;
   --accent-press: #263241;
@@ -30,7 +22,6 @@
   --accent-text: #2b3a4d;
   --on-accent: #ffffff;
 
-  /* Verde operativo: acento de estado, foco y marcador del menú. */
   --ok: #047857;
   --ok-tint: #e7f6ef;
   --ok-text: #046c4e;
@@ -46,12 +37,10 @@
   --info-tint: #eef2f6;
   --info-text: #2b3a4d;
 
-  /* Falla (problema) en naranja; la solución usa --ok (verde) y lo pendiente --crit (rojo). */
   --falla: #c2670c;
   --falla-tint: #fdf0e3;
   --falla-text: #9a4a05;
 
-  /* Menú lateral: pizarra profunda */
   --side-bg: #1e293b;
   --side-bg-2: #172030;
   --side-tip: #0f172a;
@@ -65,7 +54,6 @@
 
   --topbar-bg: rgb(245 247 249 / 88%);
 
-  /* Color propio de cada sección (menú lateral y encabezado de cada página) */
   --sec-tablero: #0e7490;
   --sec-fallas: #c2670c;
   --sec-maquinaria: #047857;
@@ -85,8 +73,6 @@
 
   --ring: 0 0 0 3px rgb(4 120 87 / 30%);
 
-  /* IBM Plex: familia de producto tecnico. Sans para la interfaz, Mono para todo dato
-     identificable (codigos, series, fechas, cifras). */
   --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --display: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;

@@ -1,4 +1,3 @@
-/** Valores permitidos (espejo de los CHECK del esquema). Única fuente para validar y para el frontend. */
 export const CATEGORIAS = ['Mecánica', 'Eléctrica', 'Neumática', 'Hidráulica', 'Electrónica / Control',
   'Software / HMI', 'Operativa', 'Calidad de producto', 'Servicios (agua/vapor/aire)', 'Otra'];
 export const SEVERIDADES = ['Baja', 'Media', 'Alta', 'Crítica'];

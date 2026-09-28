@@ -1,8 +1,3 @@
-/**
- * Respaldo completo: copia consistente de la base (VACUUM INTO, seguro con el servidor en marcha)
- * y de los adjuntos, en data/respaldos/AAAA-MM-DD-HH-MM/. Conserva los últimos RESPALDOS_GUARDAR (14).
- * Uso manual:  npm run respaldo      Automático: variable RESPALDO_HORAS=24 en el servidor.
- */
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -35,7 +30,6 @@ export function respaldar() {
   return destino;
 }
 
-/** Horas desde el último respaldo (Infinity si no hay ninguno). */
 export function horasDesdeUltimo() {
   const ultimo = listar().pop();
   if (!ultimo) return Infinity;

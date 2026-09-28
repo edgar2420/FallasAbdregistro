@@ -8,7 +8,6 @@ interface Regla {
   texto: string;
 }
 
-/** Cambio de la propia contraseña; obligatorio en el primer ingreso. */
 @Component({
   selector: 'app-cambiar-password',
   imports: [FormsModule, VerClave],
@@ -66,7 +65,6 @@ export class CambiarPassword {
   ok = false;
   guardando = false;
 
-  /** Se recalcula en cada tecla: cada requisito se pone en verde cuando se cumple. */
   get reglas(): Regla[] {
     const n = this.nueva;
     return [

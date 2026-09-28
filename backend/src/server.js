@@ -11,7 +11,6 @@ asegurarAdmin();
 limpiar();
 setInterval(limpiar, 6 * 60 * 60 * 1000).unref();
 
-/* Respaldo automático opcional (RESPALDO_HORAS=24): uno al iniciar si el último es viejo y luego periódico. */
 const respaldoSeguro = () => {
   try {
     console.log(`Respaldo automático creado en ${respaldar()}`);
@@ -28,12 +27,10 @@ const server = app.listen(PORT, HOST, () => {
   console.log(`API Control de Fallas escuchando en http://localhost:${PORT}`);
 });
 
-// Límites de tiempo: una conexión lenta o colgada no puede retener el servidor.
 server.requestTimeout = 120_000;
 server.headersTimeout = 30_000;
 server.keepAliveTimeout = 65_000;
 
-/* Apagado ordenado: termina las peticiones en curso y cierra la base sin corromperla. */
 let cerrando = false;
 const apagar = (motivo, codigo = 0) => {
   if (cerrando) return;
@@ -52,7 +49,6 @@ const apagar = (motivo, codigo = 0) => {
 process.on('SIGTERM', () => apagar('SIGTERM'));
 process.on('SIGINT', () => apagar('SIGINT'));
 process.on('unhandledRejection', (e) => console.error('Promesa rechazada sin manejar:', e));
-// Un error imprevisto deja el proceso en estado dudoso: se registra y se reinicia (Docker/systemd lo levantan).
 process.on('uncaughtException', (e) => {
   console.error('Error no controlado:', e);
   apagar('uncaughtException', 1);

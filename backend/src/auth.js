@@ -17,7 +17,6 @@ export const valido = (password, stored) => {
   return crypto.timingSafeEqual(actual, Buffer.from(digest, 'hex'));
 };
 
-/** Hash fijo para comparar cuando el usuario no existe: el tiempo de respuesta no delata cuentas. */
 export const HASH_SEÑUELO = crearHash(crypto.randomBytes(12).toString('hex'));
 
 export const politica = (password) => {
@@ -28,7 +27,6 @@ export const politica = (password) => {
   return p;
 };
 
-/** En la base sólo se guarda el SHA-256 del token: un respaldo filtrado no sirve para entrar. */
 export const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
 const buscarSesion = db.prepare(`
@@ -42,10 +40,9 @@ export const registrar = (usuarioId, accion, ruta, detalle = null) =>
 
 const VERBOS = { POST: 'crear', PUT: 'editar', PATCH: 'editar', DELETE: 'borrar' };
 
-/** Registra cambios y consultas de detalle; los listados y búsquedas no llenan la bitácora. */
 const auditar = (req, res, usuarioId) => {
   const ruta = req.originalUrl.split('?')[0];
-  if (req.baseUrl === '/api/auth') return; // esas rutas registran su propia acción
+  if (req.baseUrl === '/api/auth') return;
   if (req.method === 'GET') {
     if (/^\/\d+$/.test(req.path)) registrar(usuarioId, 'consulta', ruta);
     return;
@@ -72,7 +69,6 @@ const autenticar = (permitirCambio) => (req, res, next) => {
 };
 
 export const auth = autenticar(false);
-/** Para /me, /logout y /cambiar-password: funcionan aunque la contraseña deba cambiarse. */
 export const authPermitirCambio = autenticar(true);
 
 export const admin = (req, _res, next) =>
@@ -91,14 +87,12 @@ export const cerrarSesiones = (usuarioId, exceptoToken = null) => {
   else db.prepare('DELETE FROM sesiones WHERE usuario_id = ?').run(usuarioId);
 };
 
-/** Borra sesiones vencidas y bitácora antigua para que la base no crezca sin límite. */
 export const limpiar = () => {
   db.prepare('DELETE FROM sesiones WHERE expira_en < ?').run(new Date().toISOString());
   db.prepare(`DELETE FROM actividad_usuarios WHERE creado_en < datetime('now','localtime', ?)`)
     .run(`-${ACTIVIDAD_DIAS} days`);
 };
 
-/** Una instalación nueva sin cuentas recibe un administrador que debe cambiar su clave al entrar. */
 export const asegurarAdmin = () => {
   if (row(db.prepare('SELECT COUNT(*) AS n FROM usuarios')).n > 0) return;
   const clave = process.env.ADMIN_PASSWORD || 'Admin1234!';

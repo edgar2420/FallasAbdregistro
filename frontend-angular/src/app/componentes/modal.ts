@@ -1,10 +1,5 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, input, output, viewChild } from '@angular/core';
 
-/**
- * Ventana modal ancha sobre un <dialog> nativo: mantiene el foco dentro, se cierra con Esc o con la X
- * y no se cierra al hacer clic fuera (para no perder lo escrito en un formulario).
- * Uso: @if (abierto) { <app-modal titulo="..." (cerrar)="abierto = false"> ... </app-modal> }
- */
 @Component({
   selector: 'app-modal',
   template: `
@@ -31,7 +26,6 @@ export class Modal implements AfterViewInit, OnDestroy {
   private static siguiente = 0;
   readonly titulo = input.required<string>();
   readonly subtitulo = input('');
-  /** 'mediano' ≈ 720 px, 'ancho' ≈ 1040 px. */
   readonly tamano = input<'mediano' | 'ancho'>('ancho');
   readonly cerrar = output<void>();
 

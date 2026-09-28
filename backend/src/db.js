@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** DATA_DIR permite mover la base y los adjuntos (Docker, pruebas). */
 export const dataDir = process.env.DATA_DIR
   ? path.resolve(process.env.DATA_DIR)
   : path.join(__dirname, '..', 'data');
@@ -13,11 +12,9 @@ export const adjuntosDir = path.join(dataDir, 'adjuntos');
 fs.mkdirSync(adjuntosDir, { recursive: true });
 
 export const db = new DatabaseSync(path.join(dataDir, 'fallas.db'));
-// WAL: lecturas y escrituras simultáneas sin bloquearse; busy_timeout espera en vez de fallar si la base está ocupada.
 db.exec('PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000; PRAGMA synchronous = NORMAL; PRAGMA foreign_keys = ON;');
 db.exec(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'));
 
-/** node:sqlite devuelve objetos con prototipo null; los normalizamos para JSON. */
 export const rows = (stmt, ...params) => stmt.all(...params).map((r) => ({ ...r }));
 export const row = (stmt, ...params) => {
   const r = stmt.get(...params);
@@ -26,7 +23,6 @@ export const row = (stmt, ...params) => {
 
 export const ahora = () => new Date().toLocaleString('sv-SE').replace('T', ' ');
 
-/** Ejecuta fn dentro de una transacción: o se guardan todos los cambios o ninguno. */
 export const transaccion = (fn) => {
   db.exec('BEGIN');
   try {
@@ -39,7 +35,6 @@ export const transaccion = (fn) => {
   }
 };
 
-/* Migraciones: las bases creadas con versiones anteriores reciben las columnas nuevas. */
 const agregarColumnas = (tabla, columnas) => {
   const existentes = new Set(rows(db.prepare(`PRAGMA table_info(${tabla})`)).map((c) => c.name));
   for (const [nombre, definicion] of Object.entries(columnas)) {
@@ -60,3 +55,4 @@ agregarColumnas('maquinas', {
   presion_vapor: 'TEXT',
   consumo_vapor: 'TEXT',
 });
+agregarColumnas('fallas', { codigo_alarma: 'TEXT' });

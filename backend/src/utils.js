@@ -1,6 +1,5 @@
 import { HttpError } from './errors.js';
 
-/** node:sqlite sólo acepta null, number, string, bigint o Uint8Array como parámetros. */
 export const p = (v) => {
   if (v === undefined || v === null || v === '') return null;
   if (typeof v === 'boolean') return v ? 1 : 0;
@@ -17,7 +16,6 @@ export const texto = (v) => (v === undefined || v === null ? null : String(v).tr
 
 const vacio = (v) => v === undefined || v === null || String(v).trim() === '';
 
-/** Valida que el valor pertenezca a un catálogo; null/vacío pasa como null. */
 export const unoDe = (valor, lista, campo) => {
   const v = texto(valor);
   if (v === null) return null;
@@ -41,7 +39,6 @@ export const decimal = (v, campo, { min = 0, max = 1e12 } = {}) => {
   return n;
 };
 
-/** Acepta "YYYY-MM-DD", "YYYY-MM-DDTHH:mm" o "YYYY-MM-DD HH:mm:ss" y guarda siempre "YYYY-MM-DD HH:mm:ss". */
 export const fecha = (v, campo) => {
   const t = texto(v);
   if (t === null) return null;
@@ -54,7 +51,6 @@ export const fecha = (v, campo) => {
   return `${m[1]}-${m[2]}-${m[3]} ${m[4] ?? '00'}:${m[5] ?? '00'}:${m[6] ?? '00'}`;
 };
 
-/** Condición LIKE sobre varias columnas con los comodines del usuario escapados. */
 export const busqueda = (columnas, q) => {
   const patron = `%${String(q).trim().replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
   return {

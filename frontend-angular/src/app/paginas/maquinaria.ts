@@ -164,7 +164,6 @@ export class MaquinariaPage implements OnInit {
 
   readonly buscarConPausa = conPausa(() => this.buscar());
 
-  /** Cualquier cambio de filtro vuelve a la primera página y vuelve a pedir al servidor. */
   buscar() {
     this.pagina = 1;
     void this.cargar();
@@ -194,7 +193,6 @@ export class MaquinariaPage implements OnInit {
         this.api.get<Tipo[]>('/tipos'),
         this.api.get<{ areas: string[]; departamentos: string[] }>('/maquinas/filtros'),
       ]);
-      // Una respuesta vieja que llega tarde no debe pisar a la última.
       if (pedido !== this.pedido) return;
       this.items = lista.items;
       this.total = lista.total;

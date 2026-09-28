@@ -1,17 +1,8 @@
-/**
- * Carga datos iniciales: tipos de maquinaria, equipos y un catálogo de fallas
- * frecuentes con sus soluciones. Ejecutar con:  npm run seed
- * Usar  npm run seed -- --reset  para vaciar la base antes de cargar.
- */
 import fs from 'node:fs';
 import { db, row, adjuntosDir } from './db.js';
 import { p } from './utils.js';
 import { crearHash } from './auth.js';
 
-/*
- * Cuentas iniciales: sólo se crean si no existen y deben cambiar su contraseña en el primer ingreso.
- * Las claves pueden definirse con ADMIN_PASSWORD y OPERADOR_PASSWORD.
- */
 const crearUsuario = db.prepare(`INSERT OR IGNORE INTO usuarios (nombre, email, password_hash, rol, debe_cambiar) VALUES (?, ?, ?, ?, 1)`);
 crearUsuario.run('Administrador', 'admin', crearHash(process.env.ADMIN_PASSWORD || 'Admin1234!'), 'admin');
 crearUsuario.run('Operador de planta', 'operador', crearHash(process.env.OPERADOR_PASSWORD || 'Operador1234!'), 'operador');
@@ -47,15 +38,9 @@ const MAQUINAS = [
   ['ETI-01', 'Etiquetadora autoadhesiva doble cara', 'Etiquetadora', 'Herma', '400', 'Acondicionado', 2019],
   ['COM-01', 'Compresor de tornillo 75 HP', 'Compresor', 'Atlas Copco', 'GA55', 'Servicios', 2014],
   ['ENV-01', 'Blistera alternativa', 'Envasadora', 'Uhlmann', 'UPS4', 'Sólidos', 2013],
-  // Datos tomados de la placa real del equipo (Laboratorios ABD).
   ['AM-015-01', 'Osmosis inversa IPA', 'Ósmosis inversa', 'N.A', 'DP-050-SV', 'Osmosis', null],
 ];
 
-/**
- * Ficha técnica: [departamento, capacidad, ref. POE, tensión, corriente, potencia, presión aire,
- * presión vapor]. Salvo AM-015-01 (placa real), son valores de
- * ejemplo que deben reemplazarse por los datos de placa de cada equipo.
- */
 const FICHAS = {
   'BP-460': ['Producción', '4000 u/h', 'POE-MAN-011; POE-PRO-021', '380 V trifásico 60 Hz', '95 A', '45 kW', '6-8 bar', '3 bar'],
   'BP-321': ['Producción', '3000 u/h', 'POE-MAN-012; POE-PRO-022', '380 V trifásico 60 Hz', '70 A', '32 kW', '6-8 bar', '3 bar'],
@@ -70,7 +55,6 @@ const FICHAS = {
   'AM-015-01': ['Servicios de apoyo', '1400 L/H', 'ASA-POE-003', null, null, null, null, null],
 };
 
-/** [maquina, titulo, sintomas, categoria, severidad, causa_raiz, paro_min, dias_atras, solucion] */
 const CASOS = [
   ['BP-460', 'Sellado deficiente en ampollas BFS',
     'Fugas en el cordón de sellado, ampollas con goteo en control visual',
@@ -185,7 +169,6 @@ const CASOS = [
       preventivo: 'Verificación de uniformidad térmica de la placa cada 3 meses' }],
 ];
 
-/** Fallas abiertas actualmente (sin solución registrada todavía). */
 const ABIERTAS = [
   ['BP-460', 'Ruido anormal en el reductor del extrusor',
     'Golpeteo metálico al aumentar revoluciones, vibración perceptible',
@@ -229,7 +212,6 @@ TIPOS.forEach(([nombre, desc]) => insertTipo.run(nombre, desc));
 MAQUINAS.forEach(([codigo, nombre, tipo, marca, modelo, area, anio]) =>
   insertMaquina.run(codigo, nombre, p(idTipo(tipo)), marca, modelo, area, anio, 'Operativa'));
 
-// Sólo completa la ficha de las máquinas que todavía no tienen esos datos cargados.
 const completarFicha = db.prepare(`
   UPDATE maquinas SET departamento = ?, capacidad = ?, poe = ?, tension = ?, corriente = ?, potencia = ?,
     presion_aire = ?, presion_vapor = ?
@@ -265,7 +247,6 @@ if (yaHayFallas > 0) {
     );
   });
 
-  // Las máquinas con fallas abiertas de severidad Alta/Crítica quedan marcadas "En falla".
   db.exec(`
     UPDATE maquinas SET estado = 'En falla' WHERE id IN (
       SELECT maquina_id FROM fallas

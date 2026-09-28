@@ -8,7 +8,6 @@ import { LIMITES, limitar } from '../limites.js';
 
 export const solucionesRouter = Router();
 
-/** Valida una solución; `previo` aporta los valores actuales al editar. */
 export const normalizarSolucion = (v, previo = {}) => {
   const m = { ...previo, ...v };
   const descripcion = texto(m.descripcion);
@@ -26,7 +25,6 @@ export const normalizarSolucion = (v, previo = {}) => {
   }, LIMITES.solucion);
 };
 
-/** Base de conocimiento: soluciones con el contexto de su falla y su máquina. */
 solucionesRouter.get('/', wrap((req, res) => {
   const { q, tipo_id, maquina_id, categoria, solo_efectivas } = req.query;
   const cond = [];

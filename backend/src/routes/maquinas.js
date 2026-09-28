@@ -34,7 +34,6 @@ maquinasRouter.get('/', wrap((req, res) => {
   if (area) { cond.push('m.area = ?'); args.push(String(area)); }
   if (departamento) { cond.push('m.departamento = ?'); args.push(String(departamento)); }
   const where = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
-  // Sin "limite" devuelve todo: los selectores de máquina de los formularios necesitan la lista completa.
   const limite = entero(req.query.limite, 'limite', { min: 1, max: 200 });
   if (!limite) {
     return res.json(rows(db.prepare(`${SELECT_BASE} ${where} ORDER BY m.codigo`), ...args));
@@ -46,11 +45,6 @@ maquinasRouter.get('/', wrap((req, res) => {
     ...args, limite, (pagina - 1) * limite));
 }));
 
-/**
- * Valores para los desplegables de filtro. Van aparte porque con la lista paginada
- * el cliente ya no ve todas las máquinas y no puede deducirlos.
- * Se declara antes de "/:id" para que Express no lo tome por un identificador.
- */
 maquinasRouter.get('/filtros', wrap((_req, res) => {
   const distintos = (columna) => rows(db.prepare(
     `SELECT DISTINCT ${columna} AS v FROM maquinas WHERE ${columna} IS NOT NULL AND ${columna} <> '' ORDER BY v`,
@@ -73,7 +67,6 @@ maquinasRouter.get('/:id', wrap((req, res) => {
   res.json(maquina);
 }));
 
-/** Ficha técnica: datos de texto libre para admitir valores como "380 V trifásico" o "6-8 bar". */
 const TEXTOS = ['codigo', 'nombre', 'departamento', 'marca', 'modelo', 'num_serie', 'capacidad', 'area', 'poe', 'tension', 'corriente',
   'potencia', 'presion_aire', 'presion_vapor', 'notas'];
 const CAMPOS = [...TEXTOS, 'tipo_id', 'anio', 'estado'];
@@ -113,7 +106,6 @@ maquinasRouter.put('/:id', admin, wrap((req, res) => {
   transaccion(() => {
     db.prepare(`UPDATE maquinas SET ${CAMPOS.map((c) => `${c} = ?`).join(', ')}, actualizado_en = ? WHERE id = ?`)
       .run(...CAMPOS.map((c) => p(d[c])), ahora(), actual.id);
-    // Al salir de un estado manual, el estado vuelve a depender de las fallas abiertas.
     if (d.estado !== actual.estado) sincronizarMaquina(actual.id);
   });
   res.json(row(obtener, actual.id));

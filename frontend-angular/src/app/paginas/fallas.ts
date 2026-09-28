@@ -21,7 +21,6 @@ const FILTROS_VACIOS = {
   hasta: '',
 };
 
-/** Filtro rápido por solución: el valor es el parámetro "estado" que entiende la API. */
 const SEGMENTOS = [
   { valor: '', texto: 'Todas', clave: 'todas' },
   { valor: 'Resuelta', texto: 'Con solución', clave: 'con' },
@@ -214,7 +213,6 @@ export class FallasPage implements OnInit {
     return Object.values(this.f).some((v) => v);
   }
 
-  /** resuelta = solución efectiva · intento = hubo intervención sin éxito · pendiente = nada todavía. */
   estadoFila(x: Falla) {
     if (x.estado === 'Resuelta') return 'resuelta';
     return x.ultima_solucion ? 'intento' : 'pendiente';
