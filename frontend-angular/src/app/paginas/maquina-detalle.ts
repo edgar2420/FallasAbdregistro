@@ -88,29 +88,27 @@ type Pestana = 'registro' | 'tecnico' | 'documentacion' | 'mantenimiento';
             </div>
           </div>
         </div>
-      </section>
 
-      <div class="tabs" role="tablist" aria-label="Secciones de la máquina">
-        <button type="button" role="tab" [attr.aria-selected]="tab === 'registro'" [class.activo]="tab === 'registro'"
-                (click)="tab = 'registro'">
-          <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>Registro de fallas
-        </button>
-        <button type="button" role="tab" [attr.aria-selected]="tab === 'tecnico'" [class.activo]="tab === 'tecnico'"
-                (click)="tab = 'tecnico'">
-          <svg class="icon" aria-hidden="true"><use href="#i-machine"></use></svg>Datos técnicos
-        </button>
-        <button type="button" role="tab" [attr.aria-selected]="tab === 'documentacion'" [class.activo]="tab === 'documentacion'"
-                (click)="tab = 'documentacion'">
-          <svg class="icon" aria-hidden="true"><use href="#i-board"></use></svg>Documentación
-        </button>
-        <button type="button" role="tab" [attr.aria-selected]="tab === 'mantenimiento'" [class.activo]="tab === 'mantenimiento'"
-                (click)="tab = 'mantenimiento'">
-          <svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg>Historial de mantenimiento
-        </button>
-      </div>
+        <div class="tabs" role="tablist" aria-label="Secciones de la máquina">
+          <button type="button" role="tab" [attr.aria-selected]="tab === 'registro'" [class.activo]="tab === 'registro'"
+                  (click)="tab = 'registro'">
+            <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>Registro de fallas
+          </button>
+          <button type="button" role="tab" [attr.aria-selected]="tab === 'tecnico'" [class.activo]="tab === 'tecnico'"
+                  (click)="tab = 'tecnico'">
+            <svg class="icon" aria-hidden="true"><use href="#i-machine"></use></svg>Datos técnicos
+          </button>
+          <button type="button" role="tab" [attr.aria-selected]="tab === 'documentacion'" [class.activo]="tab === 'documentacion'"
+                  (click)="tab = 'documentacion'">
+            <svg class="icon" aria-hidden="true"><use href="#i-board"></use></svg>Documentación
+          </button>
+          <button type="button" role="tab" [attr.aria-selected]="tab === 'mantenimiento'" [class.activo]="tab === 'mantenimiento'"
+                  (click)="tab = 'mantenimiento'">
+            <svg class="icon" aria-hidden="true"><use href="#i-wrench"></use></svg>Historial de mantenimiento
+          </button>
+        </div>
 
-      @if (tab === 'registro') {
-        <section class="module-card tabla-card">
+        @if (tab === 'registro') {
           @if (api.esAdmin()) {
             <div class="registro-falla">
               <h2>Registrar nueva falla</h2>
@@ -228,27 +226,23 @@ type Pestana = 'registro' | 'tecnico' | 'documentacion' | 'mantenimiento';
           </div>
           <app-paginador [total]="fallas.length" [pagina]="pagina" [porPagina]="porPagina"
                          (cambio)="pagina = $event.pagina; porPagina = $event.porPagina" />
-        </section>
-      }
+        }
 
-      @if (tab === 'tecnico') {
-        <section class="module-card">
-          <p class="muted">Los datos técnicos y de placa de esta máquina se muestran arriba, en «Información de la máquina».</p>
-        </section>
-      }
+        @if (tab === 'tecnico') {
+          <p class="muted tab-panel">Los datos técnicos y de placa de esta máquina se muestran arriba, en «Información de la máquina».</p>
+        }
 
-      @if (tab === 'documentacion') {
-        <section class="module-card">
-          <h2>Fotos y documentos ({{ m.adjuntos?.length ?? 0 }})</h2>
-          <app-galeria [adjuntos]="m.adjuntos ?? []" [maquinaId]="m.id" (cambio)="cargar()" />
-        </section>
-      }
+        @if (tab === 'documentacion') {
+          <div class="tab-panel">
+            <h2>Fotos y documentos ({{ m.adjuntos?.length ?? 0 }})</h2>
+            <app-galeria [adjuntos]="m.adjuntos ?? []" [maquinaId]="m.id" (cambio)="cargar()" />
+          </div>
+        }
 
-      @if (tab === 'mantenimiento') {
-        <section class="module-card">
-          <p class="muted">El historial de mantenimiento preventivo estará disponible próximamente.</p>
-        </section>
-      }
+        @if (tab === 'mantenimiento') {
+          <p class="muted tab-panel">El historial de mantenimiento preventivo estará disponible próximamente.</p>
+        }
+      </section>
     } @else if (!error) {
       <p class="muted">Cargando máquina…</p>
     }

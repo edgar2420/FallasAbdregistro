@@ -49,17 +49,20 @@
 }
 
 .registro-falla {
-  padding: 4px 22px 22px;
+  padding-bottom: 22px;
   margin-bottom: 18px;
   border-bottom: 1px solid var(--line);
 }
 
-.registro-falla h2 {
-  margin: 0 0 14px;
+.tab-panel {
+  margin-top: 18px;
 }
 
-.tabla-card > h2,
-.tabla-titulo {
+.registro-falla h2 {
+  margin: 18px 0 14px;
+}
+
+.tabla-card > h2 {
   padding: 0 22px 12px;
 }
 
@@ -69,6 +72,12 @@
   gap: 12px;
   align-items: center;
   justify-content: space-between;
+  margin-top: 18px;
+}
+
+.tabla-card .tabla-titulo {
+  padding: 0 22px 12px;
+  margin-top: 0;
 }
 
 .tabla-titulo h2 {
@@ -1235,7 +1244,8 @@ a.primary {
   font-size: 12px;
 }
 
-.placas + app-paginador .paginador {
+.placas + app-paginador .paginador,
+.ficha-equipo app-paginador .paginador {
   padding: 18px 0 0;
 }
 
@@ -1328,6 +1338,10 @@ a.primary {
 }
 
 .filtros-tabla {
+  padding-bottom: 14px;
+}
+
+.tabla-card .filtros-tabla {
   padding: 0 22px 14px;
 }
 
