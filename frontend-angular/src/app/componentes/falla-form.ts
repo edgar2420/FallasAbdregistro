@@ -12,6 +12,10 @@ function ahoraLocal() {
   return d.toISOString().slice(0, 16);
 }
 
+function hoyLocal() {
+  return ahoraLocal().slice(0, 10);
+}
+
 @Component({
   selector: 'app-falla-form',
   imports: [FormsModule, Contador],
@@ -73,7 +77,10 @@ function ahoraLocal() {
       </div>
 
       <div class="crud-grid tres">
-        <label class="wide">Categoría
+        <label>Fecha *
+          <input name="fecha" type="date" required [(ngModel)]="d.fecha">
+        </label>
+        <label class="dos">Categoría
           <input name="categoria" [maxlength]="L.falla.categoria" placeholder="Ej.: Mecánica" [(ngModel)]="d.categoria">
         </label>
       </div>
@@ -113,6 +120,7 @@ export class FallaForm implements OnInit {
     titulo: '',
     categoria: 'Mecánica',
     responsable: '',
+    fecha: hoyLocal(),
     fecha_deteccion: ahoraLocal(),
     codigo_alarma: '',
     causa_raiz: '',
@@ -126,13 +134,15 @@ export class FallaForm implements OnInit {
   async ngOnInit() {
     const f = this.falla();
     if (f) {
+      const fechaCompleta = aInputFecha(f.fecha_deteccion) || ahoraLocal();
       this.d = {
         maquina_id: f.maquina_id,
         codigo: f.codigo,
         titulo: f.titulo,
         categoria: f.categoria,
         responsable: f.responsable ?? '',
-        fecha_deteccion: aInputFecha(f.fecha_deteccion) || ahoraLocal(),
+        fecha: fechaCompleta.slice(0, 10),
+        fecha_deteccion: fechaCompleta,
         codigo_alarma: f.codigo_alarma ?? '',
         causa_raiz: f.causa_raiz ?? '',
       };
@@ -168,7 +178,12 @@ export class FallaForm implements OnInit {
     this.error = '';
     this.guardando = true;
     try {
-      const datos = { ...this.d, codigo_alarma: this.conAlarma ? this.d.codigo_alarma.trim() : '' };
+      const hora = this.d.fecha_deteccion.slice(11) || '00:00';
+      const datos = {
+        ...this.d,
+        fecha_deteccion: `${this.d.fecha}T${hora}`,
+        codigo_alarma: this.conAlarma ? this.d.codigo_alarma.trim() : '',
+      };
       const r = f
         ? await this.api.put<Falla>(`/fallas/${f.id}`, datos)
         : await this.api.post<Falla>('/fallas', {
