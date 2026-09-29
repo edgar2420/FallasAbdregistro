@@ -10,7 +10,7 @@ import { MaquinaForm } from '../componentes/maquina-form';
 import { Modal } from '../componentes/modal';
 import { Paginador, paginar } from '../componentes/paginador';
 import { POR_PAGINA } from '../limites';
-import { claseEstadoFalla, contiene, fechaCorta, fechaLarga, haceCuanto, slugCategoria } from '../util';
+import { claseEstadoFalla, contiene, fechaCorta, fechaLarga, haceCuanto } from '../util';
 
 type Pestana = 'registro' | 'documentacion';
 
@@ -71,7 +71,6 @@ type Pestana = 'registro' | 'documentacion';
               <dl class="ficha">
                 <div><dt>Departamento</dt><dd>{{ m.departamento || '—' }}</dd></div>
                 <div><dt>Área</dt><dd>{{ m.area || '—' }}</dd></div>
-                <div><dt>Código</dt><dd><b>{{ m.codigo }}</b></dd></div>
                 <div class="dos"><dt>Equipo</dt><dd>{{ m.nombre }}</dd></div>
                 <div><dt>Marca</dt><dd>{{ m.marca || '—' }}</dd></div>
                 <div><dt>Modelo</dt><dd>{{ m.modelo || '—' }}</dd></div>
@@ -85,11 +84,13 @@ type Pestana = 'registro' | 'documentacion';
             <div class="ficha-col">
               <h4>Datos eléctricos y de servicios</h4>
               <dl class="ficha servicios">
-                <div><dt>Tensión</dt><dd>{{ m.tension || '—' }}</dd></div>
-                <div><dt>Corriente</dt><dd>{{ m.corriente || '—' }}</dd></div>
+                <div><dt>Tensión de servicio</dt><dd>{{ m.tension || '—' }}</dd></div>
+                <div><dt>Tensión de mando</dt><dd>{{ m.tension_mando || '—' }}</dd></div>
+                <div><dt>Intensidad nominal</dt><dd>{{ m.corriente || '—' }}</dd></div>
                 <div><dt>Potencia</dt><dd>{{ m.potencia || '—' }}</dd></div>
                 <div><dt>Presión de aire</dt><dd>{{ m.presion_aire || '—' }}</dd></div>
                 <div><dt>Presión de vapor</dt><dd>{{ m.presion_vapor || '—' }}</dd></div>
+                <div><dt>Presión hidráulica</dt><dd>{{ m.presion_hidraulica || '—' }}</dd></div>
               </dl>
             </div>
           </div>
@@ -131,12 +132,6 @@ type Pestana = 'registro' | 'documentacion';
               <input type="search" placeholder="Buscar por código, descripción o responsable…"
                      aria-label="Buscar en las fallas de esta máquina" [(ngModel)]="q" (ngModelChange)="pagina = 1">
             </label>
-            <select aria-label="Filtrar por categoría" [(ngModel)]="categoria" (ngModelChange)="pagina = 1">
-              <option value="">Todas las categorías</option>
-              @for (c of categorias; track c) {
-                <option>{{ c }}</option>
-              }
-            </select>
           </div>
           <div class="tabla-scroll">
             <table class="data-table tabla-fallas">
@@ -246,16 +241,13 @@ export class MaquinaDetallePage implements OnInit {
   private aAbrir: number | null = null;
   tab: Pestana = 'registro';
   q = '';
-  categoria = '';
   estado = '';
-  categorias: string[] = [];
   pagina = 1;
   porPagina = POR_PAGINA[0];
 
   readonly fecha = fechaCorta;
   readonly larga = fechaLarga;
   readonly hace = haceCuanto;
-  readonly slug = slugCategoria;
   readonly claseEstado = claseEstadoFalla;
   readonly segmentos = [
     { valor: '', texto: 'Todas', clave: 'todas' },
@@ -289,7 +281,6 @@ export class MaquinaDetallePage implements OnInit {
   private filtrar(estado: string): Falla[] {
     return (this.m?.fallas ?? []).filter(
       (f) =>
-        (!this.categoria || f.categoria === this.categoria) &&
         (!estado || (estado === 'con') === (f.estado === 'Resuelta')) &&
         contiene(`${f.codigo} ${f.titulo} ${f.descripcion ?? ''} ${f.causa_raiz ?? ''} ${f.ultima_solucion ?? ''} ${f.responsable ?? ''}`, this.q),
     );
@@ -301,7 +292,6 @@ export class MaquinaDetallePage implements OnInit {
       this.aAbrir = Number(this.route.snapshot.queryParamMap.get('falla')) || null;
       void this.cargar();
     });
-    this.api.catalogos().then((c) => (this.categorias = c.categorias)).catch(() => undefined);
   }
 
   async cargar() {

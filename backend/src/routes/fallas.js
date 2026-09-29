@@ -3,7 +3,7 @@ import { db, rows, row, ahora, transaccion } from '../db.js';
 import { HttpError, wrap } from '../errors.js';
 import { p, texto, unoDe, entero, fecha, busqueda } from '../utils.js';
 import { admin } from '../auth.js';
-import { ABIERTAS_SQL, CATEGORIAS, SEVERIDADES, ESTADOS_FALLA, TURNOS } from '../catalogos.js';
+import { ABIERTAS_SQL, SEVERIDADES, ESTADOS_FALLA, TURNOS } from '../catalogos.js';
 import { sincronizarMaquina, siguienteCodigoFalla } from '../estado.js';
 import { normalizarSolucion } from './soluciones.js';
 import { LIMITES, limitar } from '../limites.js';
@@ -83,7 +83,7 @@ const normalizar = (v) => {
     titulo: texto(v.titulo),
     descripcion: texto(v.descripcion),
     sintomas: texto(v.sintomas),
-    categoria: unoDe(v.categoria, CATEGORIAS, 'categoria') || 'Mecánica',
+    categoria: texto(v.categoria) || 'Sin categoría',
     severidad: unoDe(v.severidad, SEVERIDADES, 'severidad') || 'Media',
     estado: unoDe(v.estado, ESTADOS_FALLA, 'estado') || 'Abierta',
     causa_raiz: texto(v.causa_raiz),

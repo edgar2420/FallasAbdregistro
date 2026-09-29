@@ -117,10 +117,12 @@ export interface Maquina {
   estado: string;
   poe: string | null;
   tension: string | null;
+  tension_mando: string | null;
   corriente: string | null;
   potencia: string | null;
   presion_aire: string | null;
   presion_vapor: string | null;
+  presion_hidraulica: string | null;
   notas: string | null;
   total_fallas?: number;
   fallas_abiertas?: number;

@@ -17,10 +17,12 @@ const VACIA = {
   poe: '',
   anio: null as number | null,
   tension: '',
+  tension_mando: '',
   corriente: '',
   potencia: '',
   presion_aire: '',
   presion_vapor: '',
+  presion_hidraulica: '',
 };
 
 @Component({
@@ -64,11 +66,13 @@ const VACIA = {
 
       <h4>Datos eléctricos y de servicios</h4>
       <div class="crud-grid tres">
-        <label>Tensión<input name="tension" [maxlength]="L.tension" placeholder="380 V trifásico 60 Hz" [(ngModel)]="d.tension"></label>
-        <label>Corriente<input name="corriente" [maxlength]="L.corriente" placeholder="32 A" [(ngModel)]="d.corriente"></label>
+        <label>Tensión de servicio<input name="tension" [maxlength]="L.tension" placeholder="380 V trifásico 60 Hz" [(ngModel)]="d.tension"></label>
+        <label>Tensión de mando<input name="tension_mando" [maxlength]="L.tension_mando" placeholder="DC 24 V" [(ngModel)]="d.tension_mando"></label>
+        <label>Intensidad nominal<input name="corriente" [maxlength]="L.corriente" placeholder="32 A" [(ngModel)]="d.corriente"></label>
         <label>Potencia<input name="potencia" [maxlength]="L.potencia" placeholder="15 kW" [(ngModel)]="d.potencia"></label>
         <label>Presión de aire<input name="presion_aire" [maxlength]="L.presion_aire" placeholder="6 bar" [(ngModel)]="d.presion_aire"></label>
         <label>Presión de vapor<input name="presion_vapor" [maxlength]="L.presion_vapor" placeholder="3 bar" [(ngModel)]="d.presion_vapor"></label>
+        <label>Presión hidráulica<input name="presion_hidraulica" [maxlength]="L.presion_hidraulica" placeholder="150 bar" [(ngModel)]="d.presion_hidraulica"></label>
       </div>
 
       <div class="form-actions">

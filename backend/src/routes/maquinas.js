@@ -69,8 +69,8 @@ maquinasRouter.get('/:id', wrap((req, res) => {
   res.json(maquina);
 }));
 
-const TEXTOS = ['codigo', 'nombre', 'departamento', 'marca', 'modelo', 'num_serie', 'capacidad', 'area', 'poe', 'tension', 'corriente',
-  'potencia', 'presion_aire', 'presion_vapor', 'notas'];
+const TEXTOS = ['codigo', 'nombre', 'departamento', 'marca', 'modelo', 'num_serie', 'capacidad', 'area', 'poe',
+  'tension', 'tension_mando', 'corriente', 'potencia', 'presion_aire', 'presion_vapor', 'presion_hidraulica', 'notas'];
 const CAMPOS = [...TEXTOS, 'tipo_id', 'anio', 'estado'];
 
 const normalizar = (v) => {

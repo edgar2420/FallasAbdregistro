@@ -48,11 +48,38 @@ agregarColumnas('maquinas', {
   capacidad: 'TEXT',
   poe: 'TEXT',
   tension: 'TEXT',
+  tension_mando: 'TEXT',
   corriente: 'TEXT',
   potencia: 'TEXT',
   presion_aire: 'TEXT',
   consumo_aire: 'TEXT',
   presion_vapor: 'TEXT',
   consumo_vapor: 'TEXT',
+  presion_hidraulica: 'TEXT',
 });
 agregarColumnas('fallas', { codigo_alarma: 'TEXT' });
+
+// La categoría de falla dejó de tener una lista fija: reconstruye la tabla si todavía
+// trae el CHECK antiguo (SQLite no permite quitar un CHECK con ALTER TABLE).
+const tablaFallas = row(db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'fallas'"));
+if (tablaFallas?.sql && /CHECK\s*\(\s*categoria/i.test(tablaFallas.sql)) {
+  const columnas = rows(db.prepare('PRAGMA table_info(fallas)')).map((c) => c.name).join(',');
+  db.exec('PRAGMA foreign_keys = OFF');
+  db.exec('BEGIN');
+  try {
+    db.exec('ALTER TABLE fallas RENAME TO fallas_migracion_categoria');
+    // Los índices se quedan atados a la tabla renombrada: se sueltan para que el
+    // schema.sql de abajo los vuelva a crear sobre la tabla "fallas" nueva.
+    db.exec('DROP INDEX IF EXISTS idx_fallas_maquina');
+    db.exec('DROP INDEX IF EXISTS idx_fallas_estado');
+    db.exec('DROP INDEX IF EXISTS idx_fallas_fecha');
+    db.exec(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'));
+    db.exec(`INSERT INTO fallas (${columnas}) SELECT ${columnas} FROM fallas_migracion_categoria`);
+    db.exec('DROP TABLE fallas_migracion_categoria');
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+  db.exec('PRAGMA foreign_keys = ON');
+}

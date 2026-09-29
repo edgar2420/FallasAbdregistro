@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../api';
-import { Catalogos, Falla, Maquina } from '../modelos';
+import { Falla, Maquina } from '../modelos';
 import { aInputFecha } from '../util';
 import { LIMITES } from '../limites';
 import { Contador } from './contador';
@@ -37,23 +37,17 @@ function ahoraLocal() {
       <div class="tipo-alarma" role="radiogroup" aria-label="Tipo de falla">
         <label class="tipo-alarma-opcion" [class.activa]="conAlarma">
           <input type="radio" name="tipo_alarma" [value]="true" [(ngModel)]="conAlarma">
-          <div>
-            <strong>Con código de alarma</strong>
-            <small>La máquina muestra un código en el HMI</small>
-          </div>
+          <strong>Código de alarma</strong>
         </label>
         <label class="tipo-alarma-opcion" [class.activa]="!conAlarma">
           <input type="radio" name="tipo_alarma" [value]="false" [(ngModel)]="conAlarma">
-          <div>
-            <strong>Sin código de alarma</strong>
-            <small>Falla sin alarma en el HMI (falla operativa)</small>
-          </div>
+          <strong>Sin código de alarma</strong>
         </label>
       </div>
 
       <div class="crud-grid tres">
         @if (conAlarma) {
-          <label>Código de alarma (HMI) *
+          <label>Código de alarma *
             <input name="codigo_alarma" [maxlength]="L.falla.codigo_alarma" required
                    placeholder="Ej.: E-101" [(ngModel)]="d.codigo_alarma">
           </label>
@@ -72,33 +66,15 @@ function ahoraLocal() {
           <textarea name="causa_raiz" [maxlength]="L.falla.causa_raiz" placeholder="Sensor sucio, sobrecarga, desajuste…"
                     [(ngModel)]="d.causa_raiz"></textarea>
         </label>
-        <label>Solución / Acción correctiva {{ falla() ? '' : '*' }}
+        <label class="dos">Solución / Acción correctiva {{ falla() ? '' : '*' }}
           <textarea name="sol_descripcion" [maxlength]="L.solucion.descripcion" [required]="!falla()"
                     placeholder="Describa la solución realizada…" [(ngModel)]="s.descripcion"></textarea>
-        </label>
-        <label>Fecha y hora *
-          <input name="fecha" type="datetime-local" required [(ngModel)]="d.fecha_deteccion">
         </label>
       </div>
 
       <div class="crud-grid tres">
-        <label>Responsable {{ falla() ? '' : '*' }}
-          <input name="responsable" [maxlength]="L.falla.responsable" [required]="!falla()"
-                 placeholder="Nombre del técnico" [(ngModel)]="d.responsable">
-        </label>
-        <label>Estado
-          <select name="estado" [(ngModel)]="d.estado">
-            @for (e of cat?.estados_falla ?? []; track e) {
-              <option>{{ e }}</option>
-            }
-          </select>
-        </label>
-        <label>Categoría
-          <select name="categoria" [(ngModel)]="d.categoria">
-            @for (c of cat?.categorias ?? []; track c) {
-              <option>{{ c }}</option>
-            }
-          </select>
+        <label class="wide">Categoría
+          <input name="categoria" [maxlength]="L.falla.categoria" placeholder="Ej.: Mecánica" [(ngModel)]="d.categoria">
         </label>
       </div>
 
@@ -127,7 +103,6 @@ export class FallaForm implements OnInit {
   readonly cancelar = output<void>();
 
   readonly L = LIMITES;
-  cat?: Catalogos;
   maquinas: Maquina[] = [];
   error = '';
   guardando = false;
@@ -137,7 +112,6 @@ export class FallaForm implements OnInit {
     codigo: '',
     titulo: '',
     categoria: 'Mecánica',
-    estado: 'Abierta',
     responsable: '',
     fecha_deteccion: ahoraLocal(),
     codigo_alarma: '',
@@ -157,7 +131,6 @@ export class FallaForm implements OnInit {
         codigo: f.codigo,
         titulo: f.titulo,
         categoria: f.categoria,
-        estado: f.estado,
         responsable: f.responsable ?? '',
         fecha_deteccion: aInputFecha(f.fecha_deteccion) || ahoraLocal(),
         codigo_alarma: f.codigo_alarma ?? '',
@@ -169,13 +142,12 @@ export class FallaForm implements OnInit {
       this.d.responsable = this.api.usuario()?.nombre ?? '';
       this.s.tecnico = this.api.usuario()?.nombre ?? '';
     }
-    try {
-      [this.cat, this.maquinas] = await Promise.all([
-        this.api.catalogos(),
-        this.api.get<Maquina[]>('/maquinas'),
-      ]);
-    } catch (e: unknown) {
-      this.error = Api.mensaje(e, 'No se pudieron cargar las listas');
+    if (!this.maquinaId()) {
+      try {
+        this.maquinas = await this.api.get<Maquina[]>('/maquinas');
+      } catch (e: unknown) {
+        this.error = Api.mensaje(e, 'No se pudieron cargar las máquinas');
+      }
     }
   }
 
@@ -189,8 +161,8 @@ export class FallaForm implements OnInit {
       this.error = 'Escribe el código de alarma o cambia a «Sin código de alarma»';
       return;
     }
-    if (!f && (!this.d.responsable.trim() || !this.s.descripcion.trim())) {
-      this.error = 'Indica el responsable y la solución aplicada';
+    if (!f && !this.s.descripcion.trim()) {
+      this.error = 'Describe la solución aplicada';
       return;
     }
     this.error = '';

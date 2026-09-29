@@ -49,12 +49,14 @@ CREATE TABLE IF NOT EXISTS maquinas (
   capacidad    TEXT,
   poe          TEXT,
   tension      TEXT,
+  tension_mando TEXT,
   corriente    TEXT,
   potencia     TEXT,
   presion_aire TEXT,
   consumo_aire TEXT,
   presion_vapor TEXT,
   consumo_vapor TEXT,
+  presion_hidraulica TEXT,
   estado       TEXT NOT NULL DEFAULT 'Operativa'
                CHECK (estado IN ('Operativa','En falla','Mantenimiento','Fuera de servicio')),
   notas        TEXT,
@@ -69,10 +71,7 @@ CREATE TABLE IF NOT EXISTS fallas (
   titulo          TEXT NOT NULL,
   descripcion     TEXT,
   sintomas        TEXT,
-  categoria       TEXT NOT NULL DEFAULT 'Mecánica'
-                  CHECK (categoria IN ('Mecánica','Eléctrica','Neumática','Hidráulica',
-                                       'Electrónica / Control','Software / HMI','Operativa',
-                                       'Calidad de producto','Servicios (agua/vapor/aire)','Otra')),
+  categoria       TEXT NOT NULL DEFAULT 'Mecánica',
   severidad       TEXT NOT NULL DEFAULT 'Media'
                   CHECK (severidad IN ('Baja','Media','Alta','Crítica')),
   estado          TEXT NOT NULL DEFAULT 'Abierta'
