@@ -33,7 +33,7 @@ type Pestana = 'registro' | 'documentacion';
         </div>
         @if (api.esAdmin()) {
           <div class="row-actions">
-            <button type="button" (click)="editando = true">Editar ficha</button>
+            <button type="button" (click)="editando = true">Editar máquina</button>
             <button type="button" class="danger" (click)="borrar(m)">Borrar máquina</button>
           </div>
         }
@@ -67,7 +67,7 @@ type Pestana = 'registro' | 'documentacion';
           </div>
           <div class="ficha-equipo-datos">
             <div class="ficha-col">
-              <h4>Datos de la placa y ficha técnica</h4>
+              <h4>Datos de la placa y de servicios</h4>
               <dl class="ficha">
                 <div><dt>Departamento</dt><dd>{{ m.departamento || '—' }}</dd></div>
                 <div><dt>Área</dt><dd>{{ m.area || '—' }}</dd></div>
@@ -77,7 +77,6 @@ type Pestana = 'registro' | 'documentacion';
                 <div><dt>Serie</dt><dd>{{ m.num_serie || '—' }}</dd></div>
                 <div><dt>Capacidad</dt><dd>{{ m.capacidad || '—' }}</dd></div>
                 <div><dt>Ref. (POE)</dt><dd>{{ m.poe || '—' }}</dd></div>
-                <div><dt>Tipo</dt><dd>{{ m.tipo || '—' }}</dd></div>
                 <div><dt>Año</dt><dd>{{ m.anio || '—' }}</dd></div>
               </dl>
             </div>
@@ -132,6 +131,11 @@ type Pestana = 'registro' | 'documentacion';
               <input type="search" placeholder="Buscar por código, descripción o responsable…"
                      aria-label="Buscar en las fallas de esta máquina" [(ngModel)]="q" (ngModelChange)="pagina = 1">
             </label>
+            <select aria-label="Filtrar por código de alarma" [(ngModel)]="conAlarma" (ngModelChange)="pagina = 1">
+              <option value="">Con y sin código</option>
+              <option value="con">Con código</option>
+              <option value="sin">Sin código</option>
+            </select>
           </div>
           <div class="tabla-scroll">
             <table class="data-table tabla-fallas">
@@ -139,8 +143,7 @@ type Pestana = 'registro' | 'documentacion';
                 <tr>
                   <th>N.°</th>
                   <th>Fecha y hora</th>
-                  <th>Tipo</th>
-                  <th class="opcional">Código HMI</th>
+                  <th class="opcional">Código de alarma</th>
                   <th class="th-falla">Descripción</th>
                   <th class="opcional th-solucion">Causa probable</th>
                   <th class="th-solucion">Solución</th>
@@ -157,18 +160,11 @@ type Pestana = 'registro' | 'documentacion';
                       {{ larga(f.fecha_deteccion) }}
                       <small class="subline">{{ hace(f.fecha_deteccion) }}</small>
                     </td>
-                    <td>
-                      @if (f.codigo_alarma) {
-                        <span class="tag red">Con código</span>
-                      } @else {
-                        <span class="tag blue">Sin código</span>
-                      }
-                    </td>
                     <td class="opcional">
                       @if (f.codigo_alarma) {
                         <span class="codigo-alarma">{{ f.codigo_alarma }}</span>
                       } @else {
-                        <span class="sin-alarma">—</span>
+                        <span class="tag blue">Sin código</span>
                       }
                     </td>
                     <td>
@@ -205,7 +201,7 @@ type Pestana = 'registro' | 'documentacion';
                     </td>
                   </tr>
                 } @empty {
-                  <tr><td colspan="10" class="muted">
+                  <tr><td colspan="9" class="muted">
                     {{ (m.fallas?.length ?? 0) ? 'Ninguna falla coincide con la búsqueda' : 'Esta máquina no tiene fallas registradas' }}
                   </td></tr>
                 }
@@ -242,6 +238,7 @@ export class MaquinaDetallePage implements OnInit {
   tab: Pestana = 'registro';
   q = '';
   estado = '';
+  conAlarma = '';
   pagina = 1;
   porPagina = POR_PAGINA[0];
 
@@ -282,6 +279,7 @@ export class MaquinaDetallePage implements OnInit {
     return (this.m?.fallas ?? []).filter(
       (f) =>
         (!estado || (estado === 'con') === (f.estado === 'Resuelta')) &&
+        (!this.conAlarma || (this.conAlarma === 'con') === !!f.codigo_alarma) &&
         contiene(`${f.codigo} ${f.titulo} ${f.descripcion ?? ''} ${f.causa_raiz ?? ''} ${f.ultima_solucion ?? ''} ${f.responsable ?? ''}`, this.q),
     );
   }
