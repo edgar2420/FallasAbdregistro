@@ -294,10 +294,6 @@ a.tag {
   font-weight: 600;
 }
 
-.ficha.servicios dd {
-  color: var(--info-text);
-}
-
 .texto {
   white-space: pre-wrap;
   line-height: 1.6;
@@ -1933,8 +1929,7 @@ a.primary {
   display: grid;
   flex: 1;
   min-width: 0;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: 1fr;
 }
 
 .ficha-col h4 {

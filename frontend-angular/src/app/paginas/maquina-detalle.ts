@@ -67,7 +67,7 @@ type Pestana = 'registro' | 'documentacion';
           </div>
           <div class="ficha-equipo-datos">
             <div class="ficha-col">
-              <h4>Datos de la placa y de servicios</h4>
+              <h4>Datos de la máquina y de servicios</h4>
               <dl class="ficha">
                 <div><dt>Departamento</dt><dd>{{ m.departamento || '—' }}</dd></div>
                 <div><dt>Área</dt><dd>{{ m.area || '—' }}</dd></div>
@@ -78,11 +78,6 @@ type Pestana = 'registro' | 'documentacion';
                 <div><dt>Capacidad</dt><dd>{{ m.capacidad || '—' }}</dd></div>
                 <div><dt>Ref. (POE)</dt><dd>{{ m.poe || '—' }}</dd></div>
                 <div><dt>Año</dt><dd>{{ m.anio || '—' }}</dd></div>
-              </dl>
-            </div>
-            <div class="ficha-col">
-              <h4>Datos eléctricos y de servicios</h4>
-              <dl class="ficha servicios">
                 <div><dt>Tensión de servicio</dt><dd>{{ m.tension || '—' }}</dd></div>
                 <div><dt>Tensión de mando</dt><dd>{{ m.tension_mando || '—' }}</dd></div>
                 <div><dt>Intensidad nominal</dt><dd>{{ m.corriente || '—' }}</dd></div>
